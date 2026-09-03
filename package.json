@@ -1,0 +1,15 @@
+{
+  "name": "next-nest-ecommerce",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev --prefix apps/api",
+    "dev:web": "npm run dev --prefix apps/web",
+    "build:api": "npm run build --prefix apps/api",
+    "build:web": "npm run build --prefix apps/web",
+    "lint:api": "npm run lint --prefix apps/api",
+    "lint:web": "npm run lint --prefix apps/web"
+  }
+}
