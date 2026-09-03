@@ -413,14 +413,19 @@ export default function Header() {
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* Admin Portal Button */}
+              {/* Admin Portal Icon */}
               <Link
                 href="/admin/login"
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/20 transition-all transform hover:scale-105 active:scale-95"
-                title="Admin Control Center"
+                className={`p-2 transition-all relative group ${
+                  isTransparentTop ? 'text-white hover:text-amber-400' : 'text-slate-700 hover:text-amber-600'
+                }`}
+                title="Admin Panel & Control Center"
+                id="header-admin-icon"
               >
-                <span>🛡️</span>
-                <span>Admin</span>
+                <Shield className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
+                <span className="absolute -top-1 -right-1.5 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-[8px] font-black px-1 py-0.2 rounded-full shadow-md leading-tight">
+                  ADMIN
+                </span>
               </Link>
 
               {/* Account */}
