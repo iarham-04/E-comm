@@ -186,10 +186,7 @@ export default function Header() {
         }`}
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center font-medium tracking-wide">
-          <Link href="/admin/login" className="hidden sm:inline-flex items-center space-x-1.5 text-[11px] text-amber-400 hover:text-amber-300 font-bold transition-colors">
-            <span>🛡️</span>
-            <span>Admin Portal</span>
-          </Link>
+          <div className="hidden sm:block" />
           <p className="text-center flex-1 text-[11px] uppercase tracking-wider">⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999</p>
 
           <div className="flex items-center space-x-1 bg-slate-800/80 px-2.5 py-0.5 rounded-full text-[11px]">
@@ -428,21 +425,6 @@ export default function Header() {
                   <User className="w-5 h-5" />
                 </Link>
               </SignedOut>
-
-              {/* Admin Shield Icon */}
-              <Link
-                href="/admin/login"
-                className={`p-2 transition-colors relative ${
-                  isTransparentTop ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'
-                }`}
-                title="Admin Panel Login"
-                id="header-admin-icon"
-              >
-                <Shield className="w-5 h-5" />
-                <span className="absolute top-0.5 right-0.5 bg-amber-500 text-slate-950 text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm">
-                  ★
-                </span>
-              </Link>
 
               {/* Wishlist */}
               <Link href="/wishlist" className={`p-2 transition-colors relative ${isTransparentTop ? 'text-white' : 'text-slate-700 hover:text-slate-900'}`} title="Wishlist">

@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import AdminQuickAccess from '@/components/AdminQuickAccess';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,7 +17,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
-      <AdminQuickAccess />
     </>
   );
 }

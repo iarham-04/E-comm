@@ -113,7 +113,6 @@ export default function Footer() {
               <li><Link href="/pages/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/pages/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link></li>
               <li><Link href="/pages/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</Link></li>
-              <li><Link href="/admin/login" className="text-amber-400 hover:text-amber-300 font-bold transition-colors">Admin Portal 🛡️</Link></li>
             </ul>
           </div>
 
