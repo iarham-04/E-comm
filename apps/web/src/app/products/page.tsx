@@ -272,7 +272,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
         </div>
       ) : (
         <EmptyState
-          icon={Package}
+          icon={<Package className="w-8 h-8" />}
           title="No pieces found"
           description="Try broadening your search or resetting active filters."
           actionLabel="View All Pieces"
