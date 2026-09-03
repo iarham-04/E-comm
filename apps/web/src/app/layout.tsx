@@ -1,8 +1,6 @@
 import { ClerkProvider } from '@clerk/nextjs';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import AppShell from '@/components/AppShell';
 import Script from 'next/script';
-import AdminQuickAccess from '@/components/AdminQuickAccess';
 import './globals.css';
 
 export const metadata = {
@@ -64,12 +62,9 @@ export default function RootLayout({
           />
         </head>
         <body className="min-h-screen flex flex-col antialiased bg-parchment text-slate-900 font-body">
-          <Header />
-          <main className="flex-1">
+          <AppShell>
             {children}
-          </main>
-          <Footer />
-          <AdminQuickAccess />
+          </AppShell>
 
           {/* Microsoft Clarity */}
           {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
