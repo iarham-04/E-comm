@@ -12,7 +12,7 @@ import {
   ShieldCheck, Truck, RotateCcw, Lock, Maximize2, X, MessageSquarePlus, Check, Sparkles
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_URL } from '@/lib/api';
 
 // Fallback demo product if backend isn't populated or slug isn't found
 const FALLBACK_PRODUCT = {

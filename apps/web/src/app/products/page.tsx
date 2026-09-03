@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ProductGridCard from '@/components/ProductGridCard';
-import { Search, Package, X } from 'lucide-react';
+import { Search, Package, X, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { API_URL } from '@/lib/api';
 
 const DEMO_PRODUCTS = [
   { id: 'p-1', name: 'Full Suit of Templar Knight Armor', slug: 'templar-knight-armor', category: 'Medieval', price: 34999.00, rating: 4.9, reviewsCount: 84, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=800', stock: 5, material: 'Steel', isLimitedEdition: true },
@@ -15,8 +16,6 @@ const DEMO_PRODUCTS = [
   { id: 'p-6', name: 'Hand-Forged Damascene Steel Dagger', slug: 'damascene-steel-dagger', category: 'Collectibles', price: 7299.00, rating: 4.9, reviewsCount: 31, image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800', stock: 6, material: 'Damascene Steel', isLimitedEdition: true },
 ];
 
-const CATEGORIES = ['All', 'Medieval', 'Viking', 'Roman', 'Home Décor', 'Collectibles', 'Furniture'];
-const MATERIALS  = ['All', 'Steel', 'Brass', 'Iron', 'Oak', 'Damascene Steel'];
 const SORT_OPTIONS = [
   { value: 'newest',     label: 'Newest' },
   { value: 'price_asc',  label: 'Price: Low → High' },
@@ -25,37 +24,102 @@ const SORT_OPTIONS = [
 ];
 
 export default function ProductsPage({ searchParams }: { searchParams?: { search?: string } }) {
+  const [products,    setProducts]    = useState<any[]>(DEMO_PRODUCTS);
+  const [loading,     setLoading]     = useState(true);
   const [search,      setSearch]      = useState(searchParams?.search ?? '');
   const [category,    setCategory]    = useState('All');
   const [material,    setMaterial]    = useState('All');
   const [limitedOnly, setLimitedOnly] = useState(false);
   const [sort,        setSort]        = useState('newest');
 
-  const clearFilters = () => { setSearch(''); setCategory('All'); setMaterial('All'); setLimitedOnly(false); setSort('newest'); };
+  useEffect(() => {
+    fetch(`${API_URL}/products`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const items = Array.isArray(data) ? data : data?.items;
+        if (Array.isArray(items) && items.length > 0) {
+          setProducts(
+            items.map((p) => ({
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              category: typeof p.category === 'object' ? p.category?.name || 'General' : p.category || 'General',
+              price: Number(p.price) || 0,
+              rating: p.rating || 4.9,
+              reviewsCount: p.reviewsCount || 0,
+              image: p.images?.[0] || 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=800',
+              stock: p.stock ?? 10,
+              material: p.material || 'Artisanal Forged',
+              isLimitedEdition: !!p.isLimitedEdition,
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      const c = typeof p.category === 'object' ? p.category?.name : p.category;
+      if (c) set.add(c);
+    });
+    return ['All', ...Array.from(set)];
+  }, [products]);
+
+  const materials = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.material && p.material !== 'Artisanal Forged') set.add(p.material);
+    });
+    return ['All', ...Array.from(set)];
+  }, [products]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setCategory('All');
+    setMaterial('All');
+    setLimitedOnly(false);
+    setSort('newest');
+  };
+
   const hasFilters = search || category !== 'All' || material !== 'All' || limitedOnly;
 
-  const filtered = DEMO_PRODUCTS.filter((p) => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.category.toLowerCase().includes(search.toLowerCase())) return false;
-    if (category !== 'All' && p.category !== category) return false;
-    if (material !== 'All' && p.material !== material) return false;
-    if (limitedOnly && !p.isLimitedEdition) return false;
-    return true;
-  }).sort((a, b) => {
-    if (sort === 'price_asc')  return a.price - b.price;
-    if (sort === 'price_desc') return b.price - a.price;
-    return 0;
-  });
+  const filtered = products
+    .filter((p) => {
+      const catName = typeof p.category === 'object' ? p.category?.name || '' : p.category || '';
+      if (
+        search &&
+        !p.name.toLowerCase().includes(search.toLowerCase()) &&
+        !catName.toLowerCase().includes(search.toLowerCase())
+      )
+        return false;
+      if (category !== 'All' && catName !== category) return false;
+      if (material !== 'All' && p.material !== material) return false;
+      if (limitedOnly && !p.isLimitedEdition) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === 'price_asc') return a.price - b.price;
+      if (sort === 'price_desc') return b.price - a.price;
+      return 0;
+    });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
 
       {/* Page Header */}
       <div className="border-b border-slate-100 pb-8 space-y-2">
-        <Badge variant="gold" size="sm">Curated Collection · {DEMO_PRODUCTS.length} Museum-Grade Pieces</Badge>
+        <Badge variant="gold" size="sm">
+          Curated Collection · {products.length} Museum-Grade Pieces
+        </Badge>
         <h1 className="font-display text-4xl font-black text-slate-900 tracking-tight">
           {search ? `Results for "${search}"` : 'The Collection'}
         </h1>
-        <p className="text-xs text-slate-500">Every piece earns its place. Showing {filtered.length} items.</p>
+        <p className="text-xs text-slate-500">
+          Every piece earns its place. Showing {filtered.length} items.
+        </p>
       </div>
 
       {/* Search Bar */}
@@ -69,7 +133,10 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
           className="w-full pl-11 pr-4 py-3 text-xs bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
         />
         {search && (
-          <button onClick={() => setSearch('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-700">
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-700"
+          >
             <X className="w-4 h-4" />
           </button>
         )}
@@ -77,14 +144,22 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
 
       {/* Filters Row */}
       <div className="flex flex-wrap gap-y-4 gap-x-6 items-start">
-
         {/* Category pills */}
         <div className="space-y-1.5">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Category
+          </p>
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <button key={cat} onClick={() => setCategory(cat)}
-                className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${category === cat ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${
+                  category === cat
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
                 {cat}
               </button>
             ))}
@@ -92,65 +167,117 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
         </div>
 
         {/* Material pills */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Material</p>
-          <div className="flex flex-wrap gap-2">
-            {MATERIALS.map((mat) => (
-              <button key={mat} onClick={() => setMaterial(mat)}
-                className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${material === mat ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                {mat}
-              </button>
-            ))}
+        {materials.length > 1 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Material
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {materials.map((mat) => (
+                <button
+                  key={mat}
+                  onClick={() => setMaterial(mat)}
+                  className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${
+                    material === mat
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {mat}
+                </button>
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* Limited Edition Toggle */}
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Rarity
+          </p>
+          <button
+            onClick={() => setLimitedOnly(!limitedOnly)}
+            className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all ${
+              limitedOnly
+                ? 'bg-amber-500 border-amber-500 text-slate-950 font-black'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Numbered Limited Editions
+          </button>
         </div>
 
-        {/* Limited Edition toggle + Sort */}
-        <div className="flex items-end gap-4 flex-wrap">
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Edition</p>
-            <button
-              onClick={() => setLimitedOnly((v) => !v)}
-              className={`flex items-center space-x-2 text-xs font-bold px-4 py-2 rounded-xl border transition-all ${limitedOnly ? 'bg-amber-500 text-white border-amber-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-            >
-              <span>Limited Edition Only</span>
-            </button>
-          </div>
-
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sort</p>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="text-xs font-bold border border-slate-200 bg-white rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 text-slate-700"
-            >
-              {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
-
-          {hasFilters && (
-            <button onClick={clearFilters} className="flex items-center space-x-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-900 transition-colors pb-2">
-              <X className="w-3.5 h-3.5" />
-              <span>Clear filters</span>
-            </button>
-          )}
+        {/* Sort */}
+        <div className="space-y-1.5 ml-auto">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Sort
+          </p>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Grid / Empty State */}
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon={<Package className="w-8 h-8 text-slate-300" />}
-          title="No pieces match your filters"
-          description="We curate a tight selection — try broadening your search or resetting filters."
-          actionLabel="Clear all filters"
-          onAction={clearFilters}
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Clear Filters bar */}
+      {hasFilters && (
+        <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 text-xs">
+          <span className="text-amber-900 font-semibold">
+            Filtered view: Showing {filtered.length} of {products.length} pieces
+          </span>
+          <button
+            onClick={clearFilters}
+            className="text-amber-800 font-black hover:underline"
+          >
+            Reset all filters
+          </button>
+        </div>
+      )}
+
+      {/* Product Grid */}
+      {loading ? (
+        <div className="py-20 text-center text-slate-400 text-xs">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-amber-500" />
+          <span>Loading collection catalog...</span>
+        </div>
+      ) : filtered.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map((product) => (
-            <ProductGridCard key={product.id} {...product} />
+            <ProductGridCard
+              key={product.id}
+              id={product.id}
+              name={product.name}
+              slug={product.slug}
+              category={
+                typeof product.category === 'object'
+                  ? product.category?.name || 'General'
+                  : product.category || 'General'
+              }
+              price={product.price}
+              rating={product.rating}
+              reviewsCount={product.reviewsCount}
+              image={product.image}
+              stock={product.stock}
+              material={product.material}
+              isLimitedEdition={product.isLimitedEdition}
+            />
           ))}
         </div>
+      ) : (
+        <EmptyState
+          icon={Package}
+          title="No pieces found"
+          description="Try broadening your search or resetting active filters."
+          actionLabel="View All Pieces"
+          onAction={clearFilters}
+        />
       )}
     </div>
   );
