@@ -79,12 +79,19 @@ export default function Home() {
 
             {/* Action Buttons: Single Primary CTA */}
             <div className="flex flex-wrap gap-4 pt-4">
-              <Button href="/products" size="lg" variant="primary" icon={<ArrowRight className="w-4 h-4" />} iconPosition="right">
-                Explore Issue #01
-              </Button>
-              <Button href="/journal/forging-toledo-steel" size="lg" variant="outline" className="border-slate-700 text-white hover:bg-slate-900">
-                Read Toledo Monograph
-              </Button>
+              <Link
+                href="/products"
+                className="inline-flex items-center justify-center space-x-2.5 text-sm font-black px-7 py-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all transform active:scale-95"
+              >
+                <span>Explore Issue #01</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/journal/forging-toledo-steel"
+                className="inline-flex items-center justify-center space-x-2 text-sm font-bold px-7 py-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-100 border border-slate-700 hover:border-amber-400/50 backdrop-blur-md transition-all active:scale-95"
+              >
+                <span>Read Toledo Monograph</span>
+              </Link>
             </div>
 
           </div>
