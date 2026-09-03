@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Save, UserCheck, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface CustomerData {
   id: string;
@@ -23,7 +24,7 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/admin/users');
+      const res = await fetch(`${API_URL}/admin/users`);
       if (res.ok) {
         const data: CustomerData[] = await res.json();
         setCustomers(data);
@@ -45,7 +46,7 @@ export default function CustomersPage() {
   const handleSaveNotes = async (customerId: string) => {
     setMessage(null);
     try {
-      const res = await fetch(`http://localhost:4000/admin/customers/${customerId}/notes`, {
+      const res = await fetch(`${API_URL}/admin/customers/${customerId}/notes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: notesMap[customerId] }),

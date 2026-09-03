@@ -12,6 +12,12 @@ import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDt
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  // ─── Master PIN Authentication ────────────────────────────────────────────
+  @Post('verify-pin')
+  verifyPin(@Body('pin') pin: string, @Body('identifier') identifier?: string) {
+    return this.adminService.verifyPin(pin, identifier);
+  }
+
   // ─── Telemetry ────────────────────────────────────────────────────────────
   @Post('telemetry')
   logTelemetry(@Body('event') event: string, @Body('payload') payload?: any) {

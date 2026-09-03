@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface BannerItem {
   id: string;
@@ -34,7 +35,7 @@ export default function BannersPage() {
   const fetchBanners = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/admin/banners');
+      const res = await fetch(`${API_URL}/admin/banners`);
       if (res.ok) setBanners(await res.json());
     } catch {
       setMessage({ type: 'error', text: 'Failed to load banners.' });
@@ -51,7 +52,7 @@ export default function BannersPage() {
     e.preventDefault();
     setMessage(null);
     try {
-      const res = await fetch('http://localhost:4000/admin/banners', {
+      const res = await fetch(`${API_URL}/admin/banners`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -71,7 +72,7 @@ export default function BannersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this banner?')) return;
     try {
-      const res = await fetch(`http://localhost:4000/admin/banners/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/admin/banners/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Banner deleted.' });
         fetchBanners();

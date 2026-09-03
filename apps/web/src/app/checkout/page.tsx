@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
 import { Lock, CreditCard, Banknote, ShieldCheck } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function CheckoutPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch('http://localhost:4000/orders', {
+      const res = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

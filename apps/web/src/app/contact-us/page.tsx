@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -13,7 +14,7 @@ export default function ContactUsPage() {
     setSubmitting(true);
 
     try {
-      await fetch('http://localhost:4000/contact', {
+      await fetch(`${API_URL}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

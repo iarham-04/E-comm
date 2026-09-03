@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, TrendingUp, DollarSign, ShoppingBag, Percent, Filter, RefreshCw } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 export default function AnalyticsReportsPage() {
   const [fromDate, setFromDate] = useState('');
@@ -24,11 +25,11 @@ export default function AnalyticsReportsPage() {
 
     try {
       const [resRev, resProd, resCat, resAov, resCpn] = await Promise.all([
-        fetch(`http://localhost:4000/admin/reports/revenue${qs}`),
-        fetch(`http://localhost:4000/admin/reports/sales-by-product${qs}`),
-        fetch(`http://localhost:4000/admin/reports/top-categories${qs}`),
-        fetch(`http://localhost:4000/admin/reports/average-order-value${qs}`),
-        fetch(`http://localhost:4000/admin/reports/coupon-performance${qs}`),
+        fetch(`${API_URL}/admin/reports/revenue${qs}`),
+        fetch(`${API_URL}/admin/reports/sales-by-product${qs}`),
+        fetch(`${API_URL}/admin/reports/top-categories${qs}`),
+        fetch(`${API_URL}/admin/reports/average-order-value${qs}`),
+        fetch(`${API_URL}/admin/reports/coupon-performance${qs}`),
       ]);
 
       if (resRev.ok) setRevenueReport(await resRev.json());

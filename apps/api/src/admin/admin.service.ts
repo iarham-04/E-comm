@@ -1,6 +1,7 @@
 import {
-  Injectable, NotFoundException, BadRequestException, Logger,
+  Injectable, NotFoundException, BadRequestException, UnauthorizedException, Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { ElasticsearchService, EsProductDoc } from '../search/elasticsearch.service';
 import { MailService } from '../mail/mail.service';
@@ -16,7 +17,31 @@ export class AdminService {
     private prisma: PrismaService,
     private es: ElasticsearchService,
     private mailService: MailService,
+    private configService: ConfigService,
   ) {}
+
+  // ─── Master PIN Verification ──────────────────────────────────────────────
+
+  async verifyPin(pin: string, identifier?: string) {
+    const masterPin = this.configService.get<string>('ADMIN_MASTER_PIN') || 'Corazon@2026';
+    if (!pin || pin.trim() !== masterPin.trim()) {
+      throw new UnauthorizedException('Invalid master security passcode.');
+    }
+
+    const adminName = identifier?.trim() || 'Store Administrator';
+    const token = `adm_${Buffer.from(`${adminName}:${Date.now()}`).toString('base64')}`;
+
+    return {
+      success: true,
+      role: 'OWNER',
+      token,
+      user: {
+        name: adminName,
+        email: 'owner@corazontouch.com',
+        role: 'OWNER',
+      },
+    };
+  }
 
   // ─── Telemetry ────────────────────────────────────────────────────────────
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Save, Loader2, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface ProductInventory {
   id: string;
@@ -25,7 +26,7 @@ export default function BulkInventoryPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/admin/products');
+      const res = await fetch(`${API_URL}/admin/products`);
       if (res.ok) {
         const data = await res.json();
         setProducts(data);
@@ -77,7 +78,7 @@ export default function BulkInventoryPage() {
         return;
       }
 
-      const res = await fetch('http://localhost:4000/admin/products/bulk-stock', {
+      const res = await fetch(`${API_URL}/admin/products/bulk-stock`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items }),

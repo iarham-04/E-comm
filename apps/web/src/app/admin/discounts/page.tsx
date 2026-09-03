@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2, Tag, Percent, Calendar, CheckCircle2, AlertCircle, Layers } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface CollectionOption {
   id: string;
@@ -45,8 +46,8 @@ export default function DiscountsPage() {
     setLoading(true);
     try {
       const [resCoupons, resCats] = await Promise.all([
-        fetch('http://localhost:4000/admin/coupons'),
-        fetch('http://localhost:4000/categories'),
+        fetch(`${API_URL}/admin/coupons`),
+        fetch(`${API_URL}/categories`),
       ]);
       if (resCoupons.ok) setCoupons(await resCoupons.json());
       if (resCats.ok) setCollections(await resCats.json());
@@ -89,7 +90,7 @@ export default function DiscountsPage() {
       if (form.startsAt) payload.startsAt = new Date(form.startsAt).toISOString();
       if (form.expiresAt) payload.expiresAt = new Date(form.expiresAt).toISOString();
 
-      const res = await fetch('http://localhost:4000/admin/coupons', {
+      const res = await fetch(`${API_URL}/admin/coupons`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -115,7 +116,7 @@ export default function DiscountsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this promotion?')) return;
     try {
-      const res = await fetch(`http://localhost:4000/admin/coupons/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/admin/coupons/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Promotion deleted.' });
         fetchData();

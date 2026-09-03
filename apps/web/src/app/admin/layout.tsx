@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/api';
 import {
   LayoutDashboard, Package, Tag, ShoppingBag, Percent,
-  Image as ImageIcon, Settings, BarChart3, Users, ShieldAlert, ChevronRight, UserCheck
+  Image as ImageIcon, Settings, BarChart3, Users, ChevronRight, UserCheck, LogOut
 } from 'lucide-react';
 
 export type UserRole = 'CUSTOMER' | 'SUPPORT' | 'MANAGER' | 'OWNER';
@@ -40,20 +41,56 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [userRole, setUserRole] = useState<UserRole>('OWNER'); // Defaults to OWNER in admin UI, updated from /me API
-  const [userEmail, setUserEmail] = useState<string>('');
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<UserRole>('OWNER');
+  const [adminName, setAdminName] = useState<string>('Store Administrator');
+  const [userEmail, setUserEmail] = useState<string>('owner@corazontouch.com');
+  const [checkedAuth, setCheckedAuth] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:4000/me')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.user?.role) {
-          setUserRole(data.user.role as UserRole);
-          setUserEmail(data.user.email || '');
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (pathname === '/admin/login') {
+      setCheckedAuth(true);
+      return;
+    }
+
+    try {
+      const sessionStr = localStorage.getItem('corazon_admin_session');
+      if (!sessionStr) {
+        router.push('/admin/login');
+        return;
+      }
+
+      const session = JSON.parse(sessionStr);
+      if (session?.role) {
+        setUserRole(session.role as UserRole);
+        if (session.name) setAdminName(session.name);
+        if (session.email) setUserEmail(session.email);
+      }
+      setCheckedAuth(true);
+    } catch {
+      router.push('/admin/login');
+    }
+  }, [pathname, router]);
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('corazon_admin_session');
+    } catch {}
+    router.push('/admin/login');
+  };
+
+  // If on login page, render login page directly without sidebar
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  if (!checkedAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs">
+        Verifying admin authorization...
+      </div>
+    );
+  }
 
   const userLevel = ROLE_LEVEL[userRole] || 4;
 
@@ -103,17 +140,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
 
-        {/* User Info Footer */}
-        <div className="p-4 border-t border-slate-900 bg-slate-950/80">
+        {/* User Info & Logout Footer */}
+        <div className="p-4 border-t border-slate-900 bg-slate-950/80 space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-amber-400">
-              {userEmail ? userEmail.charAt(0).toUpperCase() : 'A'}
+              {adminName ? adminName.charAt(0).toUpperCase() : 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate">{userEmail || 'Admin User'}</p>
+              <p className="text-xs font-bold text-white truncate">{adminName}</p>
               <p className="text-[10px] text-slate-500 uppercase">{userRole} ACCESS</p>
             </div>
           </div>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Lock / Exit Portal</span>
+          </button>
         </div>
       </aside>
 

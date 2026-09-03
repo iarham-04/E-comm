@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Users, ShieldCheck, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface UserData {
   id: string;
@@ -23,7 +24,7 @@ export default function UserRolesPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/admin/users');
+      const res = await fetch(`${API_URL}/admin/users`);
       if (res.ok) setUsers(await res.json());
     } catch {
       setMessage({ type: 'error', text: 'Failed to load users.' });
@@ -39,7 +40,7 @@ export default function UserRolesPage() {
   const handleRoleChange = async (userId: string, newRole: string) => {
     setMessage(null);
     try {
-      const res = await fetch(`http://localhost:4000/admin/users/${userId}/role`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),

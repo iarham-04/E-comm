@@ -8,6 +8,7 @@ import { Search, ShoppingBag, Heart, ChevronDown, User, Globe, Shield, Clock, Ho
 import { useCurrencyStore, CurrencyCode } from '@/store/useCurrencyStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useWishlistStore } from '@/store/useWishlistStore';
+import { API_URL } from '@/lib/api';
 
 const COLLECTIONS = [
   { name: 'Medieval', href: '/collections/medieval' },
@@ -131,7 +132,7 @@ export default function Header() {
     }
 
     try {
-      const res = await fetch(`http://localhost:4000/products/suggest?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`${API_URL}/products/suggest?q=${encodeURIComponent(q)}`);
       if (res.ok) {
         const data = await res.json();
         setSuggestions(data);
