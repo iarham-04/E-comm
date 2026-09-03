@@ -92,22 +92,22 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
         <div>
-          <Link href="/admin" className="text-xs font-bold text-slate-400 hover:text-white transition-colors">
+          <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-white tracking-tight mt-1">
+          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Store Settings &amp; Resend Email Templates
           </h1>
-          <p className="text-xs text-slate-400">Configure global shipping fees, tax rates, payment gateways, and transactional email copy.</p>
+          <p className="text-xs text-neutral-400">Configure global shipping fees, tax rates, payment gateways, and transactional email copy.</p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center space-x-2 bg-white p-1 rounded-xl border border-neutral-200">
           <button
             onClick={() => setActiveTab('settings')}
             className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors ${
-              activeTab === 'settings' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+              activeTab === 'settings' ? 'bg-neutral-900 text-white shadow-md' : 'text-neutral-400 hover:text-neutral-900'
             }`}
           >
             Store Settings
@@ -115,7 +115,7 @@ export default function SettingsPage() {
           <button
             onClick={() => setActiveTab('email')}
             className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors ${
-              activeTab === 'email' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+              activeTab === 'email' ? 'bg-neutral-900 text-white shadow-md' : 'text-neutral-400 hover:text-neutral-900'
             }`}
           >
             Email Templates
@@ -126,7 +126,7 @@ export default function SettingsPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300' : 'bg-rose-950/80 border border-rose-500/40 text-rose-300'
+            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -135,54 +135,54 @@ export default function SettingsPage() {
       )}
 
       {activeTab === 'settings' ? (
-        <form onSubmit={handleSaveSettings} className="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-6 max-w-2xl text-xs">
+        <form onSubmit={handleSaveSettings} className="bg-white border border-neutral-200 rounded-2xl p-6 space-y-6 max-w-2xl text-xs">
           <div className="space-y-4">
-            <h2 className="font-bold text-sm text-white border-b border-slate-800 pb-2">Shipping &amp; Tax Configuration</h2>
+            <h2 className="font-bold text-sm text-neutral-900 border-b border-neutral-200 pb-2">Shipping &amp; Tax Configuration</h2>
 
             <div>
-              <label className="block font-bold text-slate-300 mb-1">Flat Shipping Fee (₹)</label>
+              <label className="block font-bold text-neutral-400 mb-1">Flat Shipping Fee (₹)</label>
               <input
                 type="number"
                 min="0"
                 value={settings.flatShippingFee}
                 onChange={(e) => setSettings({ ...settings, flatShippingFee: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
+                className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
               />
-              <p className="text-[10px] text-slate-500 mt-1">Standard shipping fee applied when order subtotal is below threshold.</p>
+              <p className="text-[10px] text-neutral-500 mt-1">Standard shipping fee applied when order subtotal is below threshold.</p>
             </div>
 
             <div>
-              <label className="block font-bold text-slate-300 mb-1">Free Shipping Threshold (₹)</label>
+              <label className="block font-bold text-neutral-400 mb-1">Free Shipping Threshold (₹)</label>
               <input
                 type="number"
                 min="0"
                 value={settings.freeShippingThreshold ?? ''}
                 onChange={(e) => setSettings({ ...settings, freeShippingThreshold: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
+                className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
               />
-              <p className="text-[10px] text-slate-500 mt-1">Orders equal or above this value qualify for free express shipping.</p>
+              <p className="text-[10px] text-neutral-500 mt-1">Orders equal or above this value qualify for free express shipping.</p>
             </div>
 
             <div>
-              <label className="block font-bold text-slate-300 mb-1">Tax / GST Percentage (%)</label>
+              <label className="block font-bold text-neutral-400 mb-1">Tax / GST Percentage (%)</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={settings.taxPercent}
                 onChange={(e) => setSettings({ ...settings, taxPercent: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
+                className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-slate-800">
-            <h2 className="font-bold text-sm text-white border-b border-slate-800 pb-2">Payment Method Enablement</h2>
+          <div className="space-y-4 pt-4 border-t border-neutral-200">
+            <h2 className="font-bold text-sm text-neutral-900 border-b border-neutral-200 pb-2">Payment Method Enablement</h2>
 
-            <div className="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between p-3 bg-[#fafafa] rounded-xl border border-neutral-200">
               <div>
-                <span className="font-bold text-white block">Razorpay Online Gateway</span>
-                <span className="text-[10px] text-slate-400">Cards, Netbanking, UPI &amp; Wallets</span>
+                <span className="font-bold text-neutral-900 block">Razorpay Online Gateway</span>
+                <span className="text-[10px] text-neutral-400">Cards, Netbanking, UPI &amp; Wallets</span>
               </div>
               <input
                 type="checkbox"
@@ -192,10 +192,10 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between p-3 bg-[#fafafa] rounded-xl border border-neutral-200">
               <div>
-                <span className="font-bold text-white block">Cash on Delivery (COD)</span>
-                <span className="text-[10px] text-slate-400">Allow customers to pay upon delivery</span>
+                <span className="font-bold text-neutral-900 block">Cash on Delivery (COD)</span>
+                <span className="text-[10px] text-neutral-400">Allow customers to pay upon delivery</span>
               </div>
               <input
                 type="checkbox"
@@ -206,11 +206,11 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex justify-end">
+          <div className="pt-4 border-t border-neutral-200 flex justify-end">
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center space-x-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+              className="flex items-center space-x-2 bg-neutral-900 hover:bg-amber-400 text-neutral-900 font-bold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{saving ? 'Saving...' : 'Save Settings'}</span>
@@ -219,24 +219,24 @@ export default function SettingsPage() {
         </form>
       ) : (
         <div className="space-y-6 text-xs">
-          <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-start space-x-3 text-slate-300">
-            <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="bg-white border border-neutral-200 p-4 rounded-xl flex items-start space-x-3 text-neutral-400">
+            <Info className="w-4 h-4 text-neutral-600 flex-shrink-0 mt-0.5" />
             <p>
-              Available placeholder variables for email templates: <code className="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;customerName&#125;&#125;</code>, <code className="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;orderNumber&#125;&#125;</code>, <code className="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;total&#125;&#125;</code>, <code className="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;carrier&#125;&#125;</code>, <code className="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;trackingNumber&#125;&#125;</code>.
+              Available placeholder variables for email templates: <code className="bg-[#fafafa] text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;customerName&#125;&#125;</code>, <code className="bg-[#fafafa] text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;orderNumber&#125;&#125;</code>, <code className="bg-[#fafafa] text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;total&#125;&#125;</code>, <code className="bg-[#fafafa] text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;carrier&#125;&#125;</code>, <code className="bg-[#fafafa] text-amber-300 px-1.5 py-0.5 rounded font-mono">&#123;&#123;trackingNumber&#125;&#125;</code>.
             </p>
           </div>
 
           <div className="space-y-6">
             {templates.map((tpl) => (
-              <div key={tpl.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div key={tpl.id} className="bg-white border border-neutral-200 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
                   <div>
-                    <h3 className="font-bold text-white text-sm">{tpl.key.toUpperCase()}</h3>
-                    <p className="text-[10px] text-slate-500">Updated: {new Date(tpl.updatedAt).toLocaleString()}</p>
+                    <h3 className="font-bold text-neutral-900 text-sm">{tpl.key.toUpperCase()}</h3>
+                    <p className="text-[10px] text-neutral-500">Updated: {new Date(tpl.updatedAt).toLocaleString()}</p>
                   </div>
                   <button
                     onClick={() => handleUpdateTemplate(tpl.id, tpl.subject, tpl.bodyHtml)}
-                    className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 px-4 py-2 rounded-xl font-bold transition-colors"
+                    className="flex items-center space-x-1.5 bg-slate-800 hover:bg-neutral-100 text-neutral-600 px-4 py-2 rounded-xl font-bold transition-colors"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>Save Template</span>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">Email Subject Line</label>
+                  <label className="block font-bold text-neutral-400 mb-1">Email Subject Line</label>
                   <input
                     type="text"
                     value={tpl.subject}
@@ -252,12 +252,12 @@ export default function SettingsPage() {
                       const updated = templates.map((t) => (t.id === tpl.id ? { ...t, subject: e.target.value } : t));
                       setTemplates(updated);
                     }}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">HTML Body</label>
+                  <label className="block font-bold text-neutral-400 mb-1">HTML Body</label>
                   <textarea
                     rows={5}
                     value={tpl.bodyHtml}
@@ -265,7 +265,7 @@ export default function SettingsPage() {
                       const updated = templates.map((t) => (t.id === tpl.id ? { ...t, bodyHtml: e.target.value } : t));
                       setTemplates(updated);
                     }}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono text-[11px]"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-mono text-[11px]"
                   />
                 </div>
               </div>

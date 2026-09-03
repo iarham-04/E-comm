@@ -92,7 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!checkedAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 text-xs">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center text-neutral-500 text-xs">
         Verifying admin authorization...
       </div>
     );
@@ -118,7 +118,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Close button for mobile drawer */}
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+            className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-800 hover:bg-neutral-100"
             aria-label="Close navigation"
           >
             <X className="w-5 h-5" />
@@ -139,8 +139,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-neutral-900 text-white font-bold shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100'
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -155,21 +155,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* User Info & Logout Footer */}
-      <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
+      <div className="p-4 border-t border-neutral-200 bg-[#fafafa] space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white border border-neutral-200 shadow-xs flex items-center justify-center text-xs font-bold text-neutral-700 flex-shrink-0">
               {adminName ? adminName.charAt(0).toUpperCase() : 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate">{adminName}</p>
-              <p className="text-[10px] text-slate-500 font-semibold uppercase">{userRole} ACCESS</p>
+              <p className="text-xs font-bold text-neutral-900 truncate">{adminName}</p>
+              <p className="text-[10px] text-neutral-400 font-semibold uppercase">{userRole} ACCESS</p>
             </div>
           </div>
           <Link
             href="/"
             target="_blank"
-            className="p-1.5 text-slate-500 hover:text-amber-600 transition-colors"
+            className="p-1.5 text-neutral-400 hover:text-neutral-700 transition-colors"
             title="View Storefront"
           >
             <ExternalLink className="w-4 h-4" />
@@ -188,13 +188,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col lg:flex-row font-body">
+    <div className="min-h-screen bg-[#fafafa] text-neutral-900 flex flex-col lg:flex-row font-body">
       {/* Mobile Top Navigation Header (<lg) */}
-      <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs">
+      <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200 px-4 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900"
+            className="p-2 rounded-xl bg-[#fafafa] border border-neutral-200 text-neutral-700 hover:text-neutral-900"
             aria-label="Open admin menu"
           >
             <Menu className="w-5 h-5" />
@@ -202,14 +202,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center space-x-2">
             <span className="text-lg">🛡️</span>
             <div>
-              <p className="text-xs font-bold text-slate-900 leading-tight">Admin Portal</p>
+              <p className="text-xs font-bold text-neutral-900 leading-tight">Admin Portal</p>
               <p className="text-[10px] text-amber-700 font-bold">{userRole} Panel</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-[11px] font-bold text-amber-800">
+          <div className="w-7 h-7 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[11px] font-bold text-neutral-700">
             {adminName ? adminName.charAt(0).toUpperCase() : 'A'}
           </div>
           <button
@@ -226,22 +226,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 w-72 bg-white border-r border-slate-200 shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
+          <aside className="fixed inset-y-0 left-0 w-72 bg-white border-r border-neutral-200 shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
             <NavContent />
           </aside>
         </div>
       )}
 
       {/* Desktop Permanent Sidebar (>=lg) */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 flex-col flex-shrink-0 sticky top-0 h-screen shadow-xs">
+      <aside className="hidden lg:flex w-64 bg-white border-r border-neutral-200 flex-col flex-shrink-0 sticky top-0 h-screen">
         <NavContent />
       </aside>
 
       {/* Main Responsive Content Area */}
-      <main className="flex-1 bg-slate-100/70 overflow-y-auto p-4 sm:p-6 lg:p-8 min-w-0">
+      <main className="flex-1 bg-[#fafafa] overflow-y-auto p-4 sm:p-6 lg:p-8 min-w-0">
         <div className="max-w-7xl mx-auto space-y-6">{children}</div>
       </main>
     </div>

@@ -131,18 +131,18 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 pb-5 gap-4">
         <div>
           <Link
             href="/admin"
-            className="text-xs font-bold text-slate-400 hover:text-amber-400 transition-colors"
+            className="text-xs font-bold text-neutral-400 hover:text-neutral-600 transition-colors"
           >
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mt-1">
             Category Management
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-neutral-400 mt-1">
             {categories.length} store categories ·{' '}
             {categories.filter((c) => c.isFeaturedCollection).length} featured on homepage
           </p>
@@ -151,7 +151,7 @@ export default function AdminCategoriesPage() {
           <button
             onClick={fetchCategories}
             disabled={loading}
-            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition"
+            className="p-2.5 bg-slate-800 hover:bg-neutral-100 text-neutral-400 rounded-xl border border-neutral-200 transition"
             title="Refresh Categories"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -161,7 +161,7 @@ export default function AdminCategoriesPage() {
               resetForm();
               setShowForm(true);
             }}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center space-x-1.5"
+            className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-neutral-900 text-xs font-black px-4 py-2.5 rounded-xl shadow-lg shadow-neutral-300/20 transition-all flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>New Category</span>
@@ -171,13 +171,13 @@ export default function AdminCategoriesPage() {
 
       {/* Inline Create/Edit Form */}
       {showForm && (
-        <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3">
+        <div className="bg-white border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <h2 className="text-sm font-bold text-neutral-900 border-b border-neutral-200 pb-3">
             {editingId ? 'Edit Category' : 'Create New Category'}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300">Category Name *</label>
+              <label className="text-xs font-bold text-neutral-400">Category Name *</label>
               <input
                 value={form.name}
                 onChange={(e) =>
@@ -188,11 +188,11 @@ export default function AdminCategoriesPage() {
                   })
                 }
                 placeholder="e.g. Damascus Steel Artifacts"
-                className="w-full px-3 py-2.5 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full px-3 py-2.5 text-xs bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300">URL Slug *</label>
+              <label className="text-xs font-bold text-neutral-400">URL Slug *</label>
               <input
                 value={form.slug}
                 onChange={(e) =>
@@ -202,7 +202,7 @@ export default function AdminCategoriesPage() {
                   })
                 }
                 placeholder="e.g. damascus-steel-artifacts"
-                className="w-full px-3 py-2.5 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono"
+                className="w-full px-3 py-2.5 text-xs bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono"
               />
             </div>
           </div>
@@ -219,22 +219,22 @@ export default function AdminCategoriesPage() {
               <span className="text-xs font-bold text-slate-200">
                 Featured Collection on Homepage
               </span>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-neutral-400">
                 Highlighted with special showcase cards on the storefront.
               </p>
             </div>
           </label>
-          <div className="flex gap-2 pt-2 border-t border-slate-800">
+          <div className="flex gap-2 pt-2 border-t border-neutral-200">
             <button
               onClick={handleSave}
               disabled={saving || !form.name || !form.slug}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black px-6 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
+              className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-neutral-900 text-xs font-black px-6 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
             >
               {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Category'}
             </button>
             <button
               onClick={resetForm}
-              className="text-xs font-semibold text-slate-400 hover:text-white border border-slate-800 bg-slate-900 px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-colors"
+              className="text-xs font-semibold text-neutral-400 hover:text-neutral-900 border border-neutral-200 bg-[#fafafa] px-4 py-2.5 rounded-xl hover:bg-neutral-100 transition-colors"
             >
               Cancel
             </button>
@@ -243,9 +243,9 @@ export default function AdminCategoriesPage() {
       )}
 
       {/* Category Table */}
-      <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
         <table className="w-full text-left text-xs">
-          <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase font-bold tracking-wider text-[10px]">
+          <thead className="bg-[#fafafa] border-b border-neutral-200 text-neutral-400 uppercase font-bold tracking-wider text-[10px]">
             <tr>
               <th className="px-5 py-4">Name</th>
               <th className="px-5 py-4">Slug</th>
@@ -253,22 +253,22 @@ export default function AdminCategoriesPage() {
               <th className="px-5 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-850">
+          <tbody className="divide-y divide-neutral-100">
             {loading ? (
               <tr>
-                <td colSpan={4} className="text-center py-12 text-slate-400 text-xs">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-amber-400" />
+                <td colSpan={4} className="text-center py-12 text-neutral-400 text-xs">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-neutral-600" />
                   <span>Loading categories...</span>
                 </td>
               </tr>
             ) : (
               categories.map((cat) => (
-                <tr key={cat.id} className="hover:bg-slate-900/60 transition-colors">
-                  <td className="px-5 py-4 font-bold text-white flex items-center space-x-2">
-                    <Tag className="w-3.5 h-3.5 text-amber-400" />
+                <tr key={cat.id} className="hover:bg-[#fafafa]/60 transition-colors">
+                  <td className="px-5 py-4 font-bold text-neutral-900 flex items-center space-x-2">
+                    <Tag className="w-3.5 h-3.5 text-neutral-600" />
                     <span>{cat.name}</span>
                   </td>
-                  <td className="px-5 py-4 font-mono text-slate-400">/{cat.slug}</td>
+                  <td className="px-5 py-4 font-mono text-neutral-400">/{cat.slug}</td>
                   <td className="px-5 py-4">
                     <button
                       onClick={() =>
@@ -276,13 +276,13 @@ export default function AdminCategoriesPage() {
                       }
                       className={`flex items-center space-x-1.5 text-[10px] font-bold px-3 py-1 rounded-full transition-all ${
                         cat.isFeaturedCollection
-                          ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
-                          : 'bg-slate-900 text-slate-500 border border-slate-800'
+                          ? 'bg-neutral-900/10 text-amber-300 border border-neutral-300'
+                          : 'bg-[#fafafa] text-neutral-500 border border-neutral-200'
                       }`}
                     >
                       <Star
                         className={`w-3 h-3 ${
-                          cat.isFeaturedCollection ? 'fill-amber-400 text-amber-400' : ''
+                          cat.isFeaturedCollection ? 'fill-amber-400 text-neutral-600' : ''
                         }`}
                       />
                       <span>{cat.isFeaturedCollection ? 'Featured' : 'Standard'}</span>
@@ -292,14 +292,14 @@ export default function AdminCategoriesPage() {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleEdit(cat)}
-                        className="p-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 rounded-lg border border-slate-800 transition"
+                        className="p-1.5 bg-[#fafafa] hover:bg-neutral-100 text-neutral-600 rounded-lg border border-neutral-200 transition"
                         title="Edit Category"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id)}
-                        className="p-1.5 bg-slate-900 hover:bg-rose-500/20 text-rose-400 rounded-lg border border-slate-800 hover:border-rose-500/30 transition"
+                        className="p-1.5 bg-[#fafafa] hover:bg-rose-50 text-rose-600 rounded-lg border border-neutral-200 hover:border-rose-200 transition"
                         title="Delete Category"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

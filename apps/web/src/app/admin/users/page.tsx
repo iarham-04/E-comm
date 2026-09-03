@@ -60,22 +60,22 @@ export default function UserRolesPage() {
 
   return (
     <div className="space-y-6 text-xs text-slate-100">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
         <div>
-          <Link href="/admin" className="text-xs font-bold text-slate-400 hover:text-white transition-colors">
+          <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-white tracking-tight mt-1">
+          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             User Roles &amp; Staff Access Governance
           </h1>
-          <p className="text-xs text-slate-400">Assign role-based permissions (Support, Manager, Owner). System enforces last Owner safeguard.</p>
+          <p className="text-xs text-neutral-400">Assign role-based permissions (Support, Manager, Owner). System enforces last Owner safeguard.</p>
         </div>
       </div>
 
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300' : 'bg-rose-950/80 border border-rose-500/40 text-rose-300'
+            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -84,9 +84,9 @@ export default function UserRolesPage() {
       )}
 
       {/* Users Table */}
-      <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
         <table className="w-full text-left">
-          <thead className="bg-slate-900 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-800">
+          <thead className="bg-[#fafafa] text-neutral-400 font-bold uppercase tracking-wider text-[10px] border-b border-neutral-200">
             <tr>
               <th className="py-3.5 px-4">User Name</th>
               <th className="py-3.5 px-4">Email Address</th>
@@ -97,19 +97,19 @@ export default function UserRolesPage() {
           </thead>
           <tbody className="divide-y divide-slate-900 font-medium">
             {users.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-900/50 transition-colors">
-                <td className="py-3 px-4 font-bold text-white flex items-center space-x-2">
+              <tr key={u.id} className="hover:bg-[#fafafa]/50 transition-colors">
+                <td className="py-3 px-4 font-bold text-neutral-900 flex items-center space-x-2">
                   <span>{u.name || 'Anonymous User'}</span>
-                  {u.role === 'OWNER' && <ShieldCheck className="w-4 h-4 text-amber-400" />}
+                  {u.role === 'OWNER' && <ShieldCheck className="w-4 h-4 text-neutral-600" />}
                 </td>
-                <td className="py-3 px-4 font-mono text-slate-300">{u.email}</td>
-                <td className="py-3 px-4 text-slate-400">{new Date(u.createdAt).toLocaleDateString()}</td>
-                <td className="py-3 px-4 font-mono text-amber-400 font-bold">{u._count?.orders ?? 0}</td>
+                <td className="py-3 px-4 font-mono text-neutral-400">{u.email}</td>
+                <td className="py-3 px-4 text-neutral-400">{new Date(u.createdAt).toLocaleDateString()}</td>
+                <td className="py-3 px-4 font-mono text-neutral-600 font-bold">{u._count?.orders ?? 0}</td>
                 <td className="py-3 px-4 text-right">
                   <select
                     value={u.role}
                     onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                    className="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                    className="px-3 py-1.5 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold text-xs focus:outline-none focus:border-amber-400"
                   >
                     <option value="CUSTOMER">CUSTOMER (Storefront Buyer)</option>
                     <option value="SUPPORT">SUPPORT (Orders &amp; Invoices Only)</option>
