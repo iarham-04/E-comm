@@ -416,15 +416,15 @@ export default function Header() {
               {/* Admin Portal Icon */}
               <Link
                 href="/admin/login"
-                className={`p-2 transition-all relative group ${
-                  isTransparentTop ? 'text-white hover:text-amber-400' : 'text-slate-700 hover:text-amber-600'
+                className={`p-2 transition-colors relative ${
+                  isTransparentTop ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'
                 }`}
-                title="Admin Panel & Control Center"
+                title="Admin Security Portal & Login"
                 id="header-admin-icon"
               >
-                <Shield className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
-                <span className="absolute -top-1 -right-1.5 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-[8px] font-black px-1 py-0.2 rounded-full shadow-md leading-tight">
-                  ADMIN
+                <Shield className="w-5 h-5" />
+                <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-slate-950 text-[7px] font-black px-1 rounded-full uppercase tracking-tighter">
+                  Admin
                 </span>
               </Link>
 
