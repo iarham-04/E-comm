@@ -174,32 +174,32 @@ export default function Header() {
     return false;
   };
 
-  // Section 10: Navigation Behavior (Transparent on hero, white + shadow on scroll)
-  const isTransparentTop = isHomepage && !isScrolled;
+  // Always light nav — no transparent dark mode
+  const isTransparentTop = false;
 
   return (
     <header className="sticky top-0 z-50 transition-all duration-300">
       {/* Top Announcement Bar */}
       <div
-        className={`bg-slate-900 text-white text-xs py-2 px-4 transition-all duration-300 ${
+        className={`bg-[#fafafa] text-neutral-700 text-xs py-2 px-4 transition-all duration-300 border-b border-neutral-200 ${
           isScrolled ? 'h-0 py-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
         }`}
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center font-medium tracking-wide">
           <div className="hidden sm:block" />
-          <p className="text-center flex-1 text-[11px] uppercase tracking-wider">⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999</p>
+          <p className="text-center flex-1 text-[11px] uppercase tracking-wider text-neutral-600">⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999</p>
 
-          <div className="flex items-center space-x-1 bg-slate-800/80 px-2.5 py-0.5 rounded-full text-[11px]">
-            <Globe className="w-3 h-3 text-amber-400" />
+          <div className="flex items-center space-x-1 bg-neutral-100 px-2.5 py-0.5 rounded-full text-[11px]">
+            <Globe className="w-3 h-3 text-neutral-500" />
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-              className="bg-transparent text-white font-bold cursor-pointer focus:outline-none text-[11px]"
+              className="bg-transparent text-neutral-800 font-bold cursor-pointer focus:outline-none text-[11px]"
             >
-              <option value="INR" className="bg-slate-900 text-white">INR (₹)</option>
-              <option value="USD" className="bg-slate-900 text-white">USD ($)</option>
-              <option value="EUR" className="bg-slate-900 text-white">EUR (€)</option>
-              <option value="GBP" className="bg-slate-900 text-white">GBP (£)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
             </select>
           </div>
         </div>
@@ -208,11 +208,9 @@ export default function Header() {
       {/* Main Navigation Bar — Section 10: Transparent at top of homepage, white + shadow after scroll */}
       <div
         className={`transition-all duration-300 ${
-          isTransparentTop
-            ? 'bg-slate-950/80 backdrop-blur-md text-white border-b border-slate-800/60 py-2'
-            : isScrolled
-            ? 'bg-white/95 backdrop-blur-md text-slate-900 border-b border-slate-200 shadow-md py-1'
-            : 'bg-white/95 backdrop-blur-md text-slate-900 border-b border-slate-200 py-2'
+          isScrolled
+            ? 'bg-white/95 backdrop-blur-md text-neutral-900 border-b border-neutral-200 shadow-sm py-1'
+            : 'bg-white text-neutral-900 border-b border-neutral-100 py-2'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -331,11 +329,7 @@ export default function Header() {
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onFocus={() => searchQuery.trim().length >= 2 && setSuggestOpen(true)}
-                    className={`w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs rounded-full focus:bg-white focus:border-slate-300 focus:outline-none transition-all ${
-                      isTransparentTop
-                        ? 'bg-slate-900/90 text-white placeholder-slate-400 border border-slate-700'
-                        : 'bg-slate-100 text-slate-900 placeholder-slate-400 border border-transparent'
-                    }`}
+                    className="w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs rounded-full bg-[#fafafa] text-neutral-900 placeholder-neutral-400 border border-neutral-200 focus:bg-white focus:border-neutral-300 focus:outline-none transition-all"
                   />
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                 </form>
@@ -430,7 +424,7 @@ export default function Header() {
               <Link href="/wishlist" className={`p-2 transition-colors relative ${isTransparentTop ? 'text-white' : 'text-slate-700 hover:text-slate-900'}`} title="Wishlist">
                 <Heart className="w-5 h-5" />
                 {wishlistItemsCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-amber-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-neutral-900 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
                     {wishlistItemsCount}
                   </span>
                 )}
@@ -440,7 +434,7 @@ export default function Header() {
               <Link href="/cart" className={`p-2 transition-colors relative ${isTransparentTop ? 'text-white' : 'text-slate-700 hover:text-slate-900'}`} title="Shopping Cart">
                 <ShoppingBag className="w-5 h-5" />
                 {totalCartItems > 0 && (
-                  <span className="absolute top-1 right-1 bg-amber-500 text-slate-950 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-neutral-900 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
                     {totalCartItems}
                   </span>
                 )}
@@ -454,7 +448,7 @@ export default function Header() {
 
       {/* Mobile Search Overlay */}
       {mobileSearchOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex flex-col p-4 md:hidden">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex flex-col p-4 md:hidden">
           <div className="bg-white rounded-2xl p-4 space-y-4 shadow-2xl text-slate-900">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-900">Search Catalog &amp; Lore</span>

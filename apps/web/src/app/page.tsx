@@ -52,43 +52,43 @@ export default function Home() {
     <div className="space-y-16">
       
       {/* ── 1. HERO: EDITORIAL MAGAZINE COVER ISSUE #01 ─────────────────── */}
-      <section className="relative bg-slate-950 text-white overflow-hidden py-24 sm:py-36 border-b border-slate-800">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-900/30 via-slate-950 to-slate-950" />
+      <section className="relative bg-white text-neutral-900 overflow-hidden py-24 sm:py-36 border-b border-neutral-100">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl space-y-6">
             
             {/* Magazine Cover Issue Pill */}
-            <div className="inline-flex items-center space-x-2 bg-slate-900/90 border border-slate-800 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[11px] text-amber-400 font-bold tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="inline-flex items-center space-x-2 bg-[#fafafa] border border-neutral-200 px-3.5 py-1.5 rounded-full text-[11px] text-neutral-600 font-bold tracking-widest uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-neutral-500" />
               <span>ISSUE #01 · THE COLLECTOR&apos;S EDITION</span>
             </div>
 
-            {/* Editorial Cormorant Garamond Heading */}
-            <h1 className="font-display text-4xl sm:text-6xl font-black tracking-tight leading-tight text-white">
+            {/* Editorial Heading */}
+            <h1 className="font-display text-4xl sm:text-6xl font-black tracking-tight leading-tight text-neutral-900">
               Where Ancient Craftsmanship Meets the{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">
+              <span className="text-neutral-500">
                 Modern Collector&apos;s Heart
               </span>
             </h1>
 
-            {/* Left-Aligned Monograph Copy (60-75 chars line length) */}
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl font-body">
+            {/* Left-Aligned Monograph Copy */}
+            <p className="text-neutral-500 text-sm sm:text-base leading-relaxed max-w-2xl font-body">
               Museum-grade medieval armor, hand-carved Viking battle axes, and bespoke artisanal home decor. Forged by master blacksmiths, historically researched, and built to outlast the century it was inspired by.
             </p>
 
-            {/* Action Buttons: Single Primary CTA */}
+            {/* Action Buttons */}
             <div className="flex flex-wrap gap-4 pt-4">
               <Link
                 href="/products"
-                className="inline-flex items-center justify-center space-x-2.5 text-sm font-black px-7 py-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all transform active:scale-95"
+                className="inline-flex items-center justify-center space-x-2.5 text-sm font-bold px-7 py-4 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white shadow-md transition-all transform active:scale-95"
               >
                 <span>Explore Issue #01</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/journal/forging-toledo-steel"
-                className="inline-flex items-center justify-center space-x-2 text-sm font-bold px-7 py-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-100 border border-slate-700 hover:border-amber-400/50 backdrop-blur-md transition-all active:scale-95"
+                className="inline-flex items-center justify-center space-x-2 text-sm font-bold px-7 py-4 rounded-xl bg-[#fafafa] hover:bg-neutral-100 text-neutral-900 border border-neutral-200 transition-all active:scale-95"
               >
                 <span>Read Toledo Monograph</span>
               </Link>
@@ -122,38 +122,38 @@ export default function Home() {
 
       {/* ── 3. ARTISAN BLACKSMITH MONOGRAPH SPLIT PANEL ─────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-950 text-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 border border-slate-800 shadow-2xl">
+        <div className="bg-[#fafafa] text-neutral-900 rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 border border-neutral-200 shadow-sm">
           <div className="p-8 sm:p-14 space-y-6 flex flex-col justify-center">
-            <div className="flex items-center space-x-2 text-amber-400 text-xs font-bold uppercase tracking-widest">
+            <div className="flex items-center space-x-2 text-neutral-600 text-xs font-bold uppercase tracking-widest">
               <Hammer className="w-4 h-4" />
               <span>Toledo &amp; Nuremberg Metallurgy</span>
             </div>
 
-            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-neutral-900">
               Hand-Forged 1095 Carbon Steel Metallurgy
             </h2>
 
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-body">
+            <p className="text-neutral-500 text-xs sm:text-sm leading-relaxed font-body">
               Every piece in our armor collection is individually hammer-worked from 2mm high-carbon forged steel. Plates are oil-quenched at 58 HRC hardness to achieve the iconic blackened patina that historical knights relied upon for corrosion resistance against field moisture.
             </p>
 
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800 text-center">
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-neutral-200 text-center">
               <div>
-                <p className="text-lg font-black text-amber-400">1095</p>
-                <p className="text-[10px] text-slate-400 uppercase font-bold">Carbon Steel</p>
+                <p className="text-lg font-black text-neutral-900">1095</p>
+                <p className="text-[10px] text-neutral-400 uppercase font-bold">Carbon Steel</p>
               </div>
               <div>
-                <p className="text-lg font-black text-amber-400">58 HRC</p>
-                <p className="text-[10px] text-slate-400 uppercase font-bold">Quenched</p>
+                <p className="text-lg font-black text-neutral-900">58 HRC</p>
+                <p className="text-[10px] text-neutral-400 uppercase font-bold">Quenched</p>
               </div>
               <div>
-                <p className="text-lg font-black text-amber-400">100%</p>
-                <p className="text-[10px] text-slate-400 uppercase font-bold">Hand-Forged</p>
+                <p className="text-lg font-black text-neutral-900">100%</p>
+                <p className="text-[10px] text-neutral-400 uppercase font-bold">Hand-Forged</p>
               </div>
             </div>
           </div>
 
-          <div className="relative min-h-[320px] lg:min-h-full bg-slate-900">
+          <div className="relative min-h-[320px] lg:min-h-full bg-neutral-100">
             <img
               src="https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=1200"
               alt="Artisan Blacksmith Forging Steel"
@@ -252,17 +252,17 @@ export default function Home() {
 
       {/* ── 8. NEWSLETTER SUBSCRIPTION ───────────────────────────────────── */}
       <section className="py-8 max-w-4xl mx-auto px-4">
-        <div className="bg-slate-950 text-white rounded-3xl p-8 sm:p-12 text-center border border-slate-800 shadow-2xl space-y-4">
+        <div className="bg-[#fafafa] text-neutral-900 rounded-3xl p-8 sm:p-12 text-center border border-neutral-200 shadow-sm space-y-4">
           <Badge variant="gold" size="sm">JOIN THE COLLECTOR&apos;S CIRCLE</Badge>
-          <h2 className="font-display text-3xl font-bold tracking-tight">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-neutral-900">
             Priority Workshop Access &amp; Lore Digests
           </h2>
-          <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
             Subscribe to receive priority notifications for rare workshop releases, historical monographs, and artisan stories.
           </p>
 
           {newsletterSubscribed ? (
-            <div className="bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs p-4 rounded-xl font-medium inline-block">
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-4 rounded-xl font-medium inline-block">
               ✓ Welcome to the Collector&apos;s Circle.
             </div>
           ) : (
@@ -272,7 +272,7 @@ export default function Home() {
                 placeholder="Enter email address"
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
-                className="flex-1 px-4 py-3 text-xs bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="flex-1 px-4 py-3 text-xs bg-white border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900"
                 required
               />
               <Button type="submit" variant="primary" size="md">
