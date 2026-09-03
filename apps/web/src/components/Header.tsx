@@ -186,7 +186,10 @@ export default function Header() {
         }`}
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center font-medium tracking-wide">
-          <div className="hidden sm:block" />
+          <Link href="/admin/login" className="hidden sm:inline-flex items-center space-x-1.5 text-[11px] text-amber-400 hover:text-amber-300 font-bold transition-colors">
+            <span>🛡️</span>
+            <span>Admin Portal</span>
+          </Link>
           <p className="text-center flex-1 text-[11px] uppercase tracking-wider">⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999</p>
 
           <div className="flex items-center space-x-1 bg-slate-800/80 px-2.5 py-0.5 rounded-full text-[11px]">
@@ -409,6 +412,20 @@ export default function Header() {
               >
                 <Search className="w-5 h-5" />
               </button>
+
+              {/* Admin Portal Button */}
+              <Link
+                href="/admin/login"
+                className={`hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+                  isTransparentTop
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
+                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/30 hover:bg-amber-500/20'
+                }`}
+                title="Admin Control Center"
+              >
+                <span>🛡️</span>
+                <span>Admin</span>
+              </Link>
 
               {/* Account */}
               <SignedIn>
