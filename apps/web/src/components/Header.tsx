@@ -413,18 +413,18 @@ export default function Header() {
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* Admin Portal Icon */}
+              {/* Admin Portal */}
               <Link
                 href="/admin/login"
                 className={`p-2 transition-colors relative ${
-                  isTransparentTop ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'
+                  isTransparentTop ? 'text-white hover:text-amber-400' : 'text-slate-700 hover:text-slate-900'
                 }`}
                 title="Admin Security Portal & Login"
                 id="header-admin-icon"
               >
                 <Shield className="w-5 h-5" />
-                <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-slate-950 text-[7px] font-black px-1 rounded-full uppercase tracking-tighter">
-                  Admin
+                <span className="absolute top-1 right-1 bg-amber-500 text-slate-950 text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm">
+                  ★
                 </span>
               </Link>
 
