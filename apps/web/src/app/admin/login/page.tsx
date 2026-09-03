@@ -7,7 +7,7 @@ import { API_URL } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState('Store Owner');
+  const [identifier, setIdentifier] = useState('AZRA');
   const [pin, setPin] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);

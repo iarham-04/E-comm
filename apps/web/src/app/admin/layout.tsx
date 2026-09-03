@@ -43,8 +43,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const [userRole, setUserRole] = useState<UserRole>('OWNER');
-  const [adminName, setAdminName] = useState<string>('Store Administrator');
-  const [userEmail, setUserEmail] = useState<string>('owner@corazontouch.com');
+  const [adminName, setAdminName] = useState<string>('AZRA');
+  const [userEmail, setUserEmail] = useState<string>('azra@corazontouch.com');
   const [checkedAuth, setCheckedAuth] = useState(false);
 
   useEffect(() => {

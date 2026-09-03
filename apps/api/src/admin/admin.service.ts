@@ -23,12 +23,12 @@ export class AdminService {
   // ─── Master PIN Verification ──────────────────────────────────────────────
 
   async verifyPin(pin: string, identifier?: string) {
-    const masterPin = this.configService.get<string>('ADMIN_MASTER_PIN') || 'Corazon@2026';
+    const masterPin = this.configService.get<string>('ADMIN_MASTER_PIN') || '9557984200@';
     if (!pin || pin.trim() !== masterPin.trim()) {
       throw new UnauthorizedException('Invalid master security passcode.');
     }
 
-    const adminName = identifier?.trim() || 'Store Administrator';
+    const adminName = identifier?.trim() || 'AZRA';
     const token = `adm_${Buffer.from(`${adminName}:${Date.now()}`).toString('base64')}`;
 
     return {
@@ -37,7 +37,7 @@ export class AdminService {
       token,
       user: {
         name: adminName,
-        email: 'owner@corazontouch.com',
+        email: 'azra@corazontouch.com',
         role: 'OWNER',
       },
     };
