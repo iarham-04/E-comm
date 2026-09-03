@@ -237,17 +237,17 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
     }
   };
 
-  const inputCls = 'w-full px-3 py-2.5 text-xs border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 transition bg-slate-900 text-white placeholder-slate-500';
-  const labelCls = 'block text-xs font-bold text-slate-300 mb-1';
+  const inputCls = 'w-full px-3 py-2.5 text-xs border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 transition bg-white text-neutral-900 placeholder-neutral-400';
+  const labelCls = 'block text-xs font-bold text-neutral-600 mb-1';
 
   return (
     <div className="max-w-4xl mx-auto py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <Link href="/admin/products" className="text-xs font-bold text-slate-400 hover:text-amber-400 transition-colors">
+          <Link href="/admin/products" className="text-xs font-bold text-neutral-500 hover:text-neutral-600 transition-colors">
             ← Back to Products
           </Link>
-          <h1 className="font-display text-3xl font-black text-white tracking-tight mt-1">
+          <h1 className="font-display text-3xl font-black text-neutral-900 tracking-tight mt-1">
             {mode === 'create' ? 'Add New Product' : 'Edit Product'}
           </h1>
         </div>
@@ -257,7 +257,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
             type="button"
             onClick={handleDuplicate}
             disabled={duplicating}
-            className="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+            className="flex items-center space-x-2 bg-[#fafafa] hover:bg-neutral-100 text-neutral-700 text-xs font-bold px-4 py-2.5 rounded-xl border border-neutral-200 transition-colors disabled:opacity-50"
           >
             {duplicating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
             <span>{duplicating ? 'Duplicating...' : 'Duplicate Product'}</span>
@@ -266,8 +266,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
       </div>
 
       {error && (
-        <div className="flex items-start space-x-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-5 py-4 mb-6 text-xs text-rose-300">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
+        <div className="flex items-start space-x-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 mb-6 text-xs text-rose-700">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-600" />
           <span>{error}</span>
         </div>
       )}
@@ -275,10 +275,10 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
       <form onSubmit={handleSubmit} className="space-y-8">
 
         {/* ── Core Info ──────────────────────────────────────────────── */}
-        <section className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center justify-between">
+        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <h2 className="text-sm font-bold text-neutral-900 border-b border-neutral-200 pb-3 flex items-center justify-between">
             <span>Core Product Details</span>
-            <span className="text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">Required</span>
+            <span className="text-[10px] font-semibold text-neutral-600 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">Required</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -343,7 +343,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
             <div>
               <label className={labelCls}>Category *</label>
               {loadingCategories ? (
-                <div className="text-xs text-slate-500 py-2.5">Loading categories...</div>
+                <div className="text-xs text-neutral-500 py-2.5">Loading categories...</div>
               ) : (
                 <select
                   required
@@ -364,7 +364,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               <select
                 value={form.status}
                 onChange={(e) => set('status', e.target.value as any)}
-                className={`${inputCls} font-bold text-amber-400`}
+                className={`${inputCls} font-bold text-neutral-600`}
               >
                 <option value="PUBLISHED">PUBLISHED (Live on Storefront)</option>
                 <option value="DRAFT">DRAFT (Hidden / Preview Only)</option>
@@ -378,26 +378,26 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
                   onChange={(e) => set('isActive', e.target.checked)}
                   className="w-4 h-4 accent-amber-500 rounded"
                 />
-                <span className="text-xs font-bold text-slate-200">Active (Visible in catalog)</span>
+                <span className="text-xs font-bold text-neutral-700">Active (Visible in catalog)</span>
               </label>
             </div>
           </div>
         </section>
 
         {/* ── AWS S3 Image Upload Section ─────────────────────────────── */}
-        <section className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
             <div>
               <h2 className="text-sm font-bold text-white flex items-center space-x-2">
-                <ImageIcon className="w-4 h-4 text-amber-400" />
+                <ImageIcon className="w-4 h-4 text-neutral-600" />
                 <span>Product Images (AWS S3 Cloud Storage)</span>
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              <p className="text-[11px] text-neutral-500 mt-0.5">
                 Upload high-res product photos. The first image serves as the primary storefront image.
               </p>
             </div>
             {uploadingImage && (
-              <span className="flex items-center space-x-1.5 text-xs text-amber-400 font-semibold">
+              <span className="flex items-center space-x-1.5 text-xs text-neutral-600 font-semibold">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Uploading to S3...</span>
               </span>
@@ -405,7 +405,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           </div>
 
           {/* Upload Dropzone */}
-          <label className="border-2 border-dashed border-slate-800 hover:border-amber-500/50 bg-slate-900/50 hover:bg-slate-900 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all group">
+          <label className="border-2 border-dashed border-neutral-200 hover:border-amber-500/50 bg-white/50 hover:bg-white rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all group">
             <input
               type="file"
               multiple
@@ -414,13 +414,13 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               disabled={uploadingImage}
               className="hidden"
             />
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-neutral-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <Upload className="w-6 h-6" />
             </div>
-            <p className="text-xs font-bold text-slate-200">
+            <p className="text-xs font-bold text-neutral-700">
               Click to upload photos to AWS S3
             </p>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-neutral-500 mt-1">
               Supports PNG, JPG, WebP up to 10MB per image
             </p>
           </label>
@@ -431,14 +431,14 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               {form.images.map((url, idx) => (
                 <div
                   key={idx}
-                  className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-900 aspect-square"
+                  className="relative group rounded-xl overflow-hidden border border-neutral-200 bg-white aspect-square"
                 >
                   <img
                     src={url}
                     alt={`Product Preview ${idx + 1}`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-[#fafafa]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
                       type="button"
                       onClick={() => removeImage(idx)}
@@ -460,10 +460,10 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         </section>
 
         {/* ── Craftsmanship & Origin ─────────────────────────────────── */}
-        <section className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <div className="border-b border-slate-800 pb-3">
+        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="border-b border-neutral-200 pb-3">
             <h2 className="text-sm font-bold text-white">Craftsmanship &amp; Historical Origin</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-neutral-500 mt-0.5">
               Tells the blacksmithing, forging, or historical story displayed on the product page.
             </p>
           </div>
@@ -477,8 +477,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         </section>
 
         {/* ── Dimensions & Materials ─────────────────────────────────── */}
-        <section className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <div className="border-b border-slate-800 pb-3">
+        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="border-b border-neutral-200 pb-3">
             <h2 className="text-sm font-bold text-white">Dimensions &amp; Materials Spec Sheet</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -537,8 +537,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         </section>
 
         {/* ── Limited Edition & Gifting ───────────────────────────────── */}
-        <section className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3">
+        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <h2 className="text-sm font-bold text-neutral-900 border-b border-neutral-200 pb-3">
             Limited Edition &amp; Gifting Options
           </h2>
           <label className="flex items-start space-x-2.5 cursor-pointer">
@@ -549,8 +549,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               className="w-4 h-4 accent-amber-500 rounded mt-0.5"
             />
             <div>
-              <span className="text-xs font-bold text-slate-200">Limited Edition Batch</span>
-              <p className="text-[11px] text-slate-400">
+              <span className="text-xs font-bold text-neutral-700">Limited Edition Batch</span>
+              <p className="text-[11px] text-neutral-500">
                 Displays a "127 of 500" numbered badge on the storefront.
               </p>
             </div>
@@ -593,8 +593,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               className="w-4 h-4 accent-amber-500 rounded mt-0.5"
             />
             <div>
-              <span className="text-xs font-bold text-slate-200">Gift Wrapping Eligible</span>
-              <p className="text-[11px] text-slate-400">
+              <span className="text-xs font-bold text-neutral-700">Gift Wrapping Eligible</span>
+              <p className="text-[11px] text-neutral-500">
                 Allows customers to add complimentary wax-sealed gift packaging.
               </p>
             </div>
@@ -602,27 +602,27 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         </section>
 
         {/* ── SEO Section ────────────────────────────────────────────── */}
-        <section className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
           <button
             type="button"
             onClick={() => setSeoOpen(!seoOpen)}
             className="w-full flex items-center justify-between text-left"
           >
             <div className="flex items-center space-x-2">
-              <Globe className="w-4 h-4 text-amber-400" />
+              <Globe className="w-4 h-4 text-neutral-600" />
               <h2 className="text-sm font-bold text-white">
                 SEO &amp; Google Search Meta Tags
               </h2>
             </div>
             {seoOpen ? (
-              <ChevronUp className="w-4 h-4 text-slate-400" />
+              <ChevronUp className="w-4 h-4 text-neutral-500" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              <ChevronDown className="w-4 h-4 text-neutral-500" />
             )}
           </button>
 
           {seoOpen && (
-            <div className="space-y-4 pt-3 border-t border-slate-800">
+            <div className="space-y-4 pt-3 border-t border-neutral-200">
               <div>
                 <label className={labelCls}>Google Snippet Title</label>
                 <input
@@ -651,7 +651,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           <button
             type="submit"
             disabled={saving || uploadingImage}
-            className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black px-8 py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50"
+            className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold px-8 py-3.5 rounded-xl shadow-md transition-all disabled:opacity-50"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -668,7 +668,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           </button>
           <Link
             href="/admin/products"
-            className="text-xs font-semibold text-slate-400 hover:text-white border border-slate-800 bg-slate-900 px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-colors"
+            className="text-xs font-semibold text-neutral-600 hover:text-neutral-900 border border-neutral-200 bg-white px-6 py-3.5 rounded-xl hover:bg-neutral-100 transition-colors"
           >
             Cancel
           </Link>

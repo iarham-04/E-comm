@@ -79,7 +79,7 @@ export default function AnalyticsReportsPage() {
           />
           <button
             onClick={fetchReports}
-            className="p-1.5 bg-neutral-900 hover:bg-amber-400 text-neutral-900 rounded-lg font-bold transition-colors"
+            className="p-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg font-bold transition-colors"
             title="Filter Date Range"
           >
             <Filter className="w-3.5 h-3.5" />

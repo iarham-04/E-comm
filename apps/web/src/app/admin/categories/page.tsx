@@ -151,7 +151,7 @@ export default function AdminCategoriesPage() {
           <button
             onClick={fetchCategories}
             disabled={loading}
-            className="p-2.5 bg-slate-800 hover:bg-neutral-100 text-neutral-400 rounded-xl border border-neutral-200 transition"
+            className="p-2.5 bg-[#fafafa] hover:bg-neutral-100 text-neutral-400 rounded-xl border border-neutral-200 transition"
             title="Refresh Categories"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -161,7 +161,7 @@ export default function AdminCategoriesPage() {
               resetForm();
               setShowForm(true);
             }}
-            className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-neutral-900 text-xs font-black px-4 py-2.5 rounded-xl shadow-lg shadow-neutral-300/20 transition-all flex items-center space-x-1.5"
+            className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-lg shadow-neutral-300/20 transition-all flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>New Category</span>
@@ -216,7 +216,7 @@ export default function AdminCategoriesPage() {
               className="w-4 h-4 accent-amber-500 rounded"
             />
             <div>
-              <span className="text-xs font-bold text-slate-200">
+              <span className="text-xs font-bold text-neutral-700">
                 Featured Collection on Homepage
               </span>
               <p className="text-[11px] text-neutral-400">
@@ -228,7 +228,7 @@ export default function AdminCategoriesPage() {
             <button
               onClick={handleSave}
               disabled={saving || !form.name || !form.slug}
-              className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-neutral-900 text-xs font-black px-6 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
+              className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-white text-xs font-black px-6 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
             >
               {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Category'}
             </button>

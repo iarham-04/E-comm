@@ -97,7 +97,7 @@ export default function BannersPage() {
 
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center space-x-2 bg-neutral-900 hover:bg-amber-400 text-neutral-900 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
+          className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>New Banner</span>
@@ -107,7 +107,7 @@ export default function BannersPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
+            message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -121,7 +121,7 @@ export default function BannersPage() {
           <div key={b.id} className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
             <div className="relative aspect-[16/9] bg-[#fafafa] overflow-hidden">
               <img src={b.imageUrl} alt={b.headline || ''} className="w-full h-full object-cover" />
-              <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold ${b.isActive ? 'bg-emerald-950 text-emerald-700 border border-emerald-800' : 'bg-slate-800 text-neutral-400'}`}>
+              <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold ${b.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#fafafa] text-neutral-400'}`}>
                 {b.isActive ? 'ACTIVE' : 'HIDDEN'}
               </span>
             </div>
@@ -159,7 +159,7 @@ export default function BannersPage() {
                   placeholder="https://images.unsplash.com/photo-..."
                   value={form.imageUrl}
                   onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                 />
               </div>
 
@@ -170,7 +170,7 @@ export default function BannersPage() {
                   placeholder="e.g. Masterwork Toledo Steel Armor"
                   value={form.headline}
                   onChange={(e) => setForm({ ...form, headline: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                 />
               </div>
 
@@ -181,7 +181,7 @@ export default function BannersPage() {
                   placeholder="e.g. Hand-forged limited edition collection"
                   value={form.subtext}
                   onChange={(e) => setForm({ ...form, subtext: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                 />
               </div>
 
@@ -192,7 +192,7 @@ export default function BannersPage() {
                   placeholder="/collections/medieval"
                   value={form.linkUrl}
                   onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-mono"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-mono"
                 />
               </div>
 
@@ -202,7 +202,7 @@ export default function BannersPage() {
                   type="number"
                   value={form.sortOrder}
                   onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                 />
               </div>
 
@@ -217,7 +217,7 @@ export default function BannersPage() {
               </div>
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-neutral-200">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-slate-800 text-neutral-400 rounded-xl">Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-[#fafafa] text-neutral-400 rounded-xl">Cancel</button>
                 <button type="submit" className="px-5 py-2 bg-neutral-900 text-white font-bold rounded-xl hover:bg-amber-400">Save Banner</button>
               </div>
             </form>

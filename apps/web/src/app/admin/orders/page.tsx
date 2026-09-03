@@ -224,13 +224,13 @@ export default function AdminOrdersPage() {
           </p>
         </div>
 
-        <button onClick={fetchOrders} className="p-2.5 bg-slate-800 hover:bg-neutral-100 text-neutral-400 rounded-xl border border-neutral-200">
+        <button onClick={fetchOrders} className="p-2.5 bg-[#fafafa] hover:bg-neutral-100 text-neutral-400 rounded-xl border border-neutral-200">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {message && (
-        <div className={`p-4 rounded-xl text-xs font-semibold ${message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'}`}>
+        <div className={`p-4 rounded-xl text-xs font-semibold ${message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'}`}>
           {message.text}
         </div>
       )}
@@ -240,7 +240,7 @@ export default function AdminOrdersPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setStatusFilter('All')}
-            className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${statusFilter === 'All' ? 'bg-neutral-900 text-white font-bold' : 'bg-slate-800 text-neutral-400 hover:text-neutral-900'}`}
+            className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${statusFilter === 'All' ? 'bg-neutral-900 text-white font-bold' : 'bg-[#fafafa] text-neutral-400 hover:text-neutral-900'}`}
           >
             All Orders ({orders.length})
           </button>
@@ -248,7 +248,7 @@ export default function AdminOrdersPage() {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${statusFilter === s ? 'bg-neutral-900 text-white font-bold' : 'bg-slate-800 text-neutral-400 hover:text-neutral-900'}`}
+              className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${statusFilter === s ? 'bg-neutral-900 text-white font-bold' : 'bg-[#fafafa] text-neutral-400 hover:text-neutral-900'}`}
             >
               {s}
             </button>
@@ -291,7 +291,7 @@ export default function AdminOrdersPage() {
                 </td>
                 <td className="py-3 px-4 font-mono font-bold text-neutral-600">₹{Number(o.total).toLocaleString('en-IN')}</td>
                 <td className="py-3 px-4">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${o.paymentStatus === 'REFUNDED' ? 'bg-rose-950 text-rose-600 border border-rose-800' : 'bg-slate-800 text-neutral-400'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${o.paymentStatus === 'REFUNDED' ? 'bg-rose-950 text-rose-600 border border-rose-200' : 'bg-[#fafafa] text-neutral-400'}`}>
                     {o.paymentMethod} · {o.paymentStatus}
                   </span>
                 </td>
@@ -318,7 +318,7 @@ export default function AdminOrdersPage() {
                 <td className="py-3 px-4 text-right space-x-2">
                   <button
                     onClick={() => handlePrintInvoice(o.id)}
-                    className="p-1.5 bg-slate-800 hover:bg-neutral-100 text-neutral-400 rounded-lg"
+                    className="p-1.5 bg-[#fafafa] hover:bg-neutral-100 text-neutral-400 rounded-lg"
                     title="Print PDF Invoice"
                   >
                     <Printer className="w-3.5 h-3.5" />
@@ -354,7 +354,7 @@ export default function AdminOrdersPage() {
                   max={Number(refundModalOrder.total)}
                   value={refundAmount}
                   onChange={(e) => setRefundAmount(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                 />
               </div>
               <div>
@@ -365,11 +365,11 @@ export default function AdminOrdersPage() {
                   placeholder="e.g. Customer returned item in original condition"
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                 />
               </div>
               <div className="flex justify-end space-x-3 pt-3">
-                <button type="button" onClick={() => setRefundModalOrder(null)} className="px-4 py-2 bg-slate-800 text-neutral-400 rounded-xl">Cancel</button>
+                <button type="button" onClick={() => setRefundModalOrder(null)} className="px-4 py-2 bg-[#fafafa] text-neutral-400 rounded-xl">Cancel</button>
                 <button type="submit" disabled={refunding} className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-neutral-900 font-bold rounded-xl">
                   {refunding ? 'Processing...' : 'Confirm Refund'}
                 </button>
@@ -392,7 +392,7 @@ export default function AdminOrdersPage() {
                   type="text"
                   value={carrier}
                   onChange={(e) => setCarrier(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                 />
               </div>
               <div>
@@ -403,11 +403,11 @@ export default function AdminOrdersPage() {
                   placeholder="e.g. AWB987654321"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-mono"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-mono"
                 />
               </div>
               <div className="flex justify-end space-x-3 pt-3">
-                <button type="button" onClick={() => setTrackingModalOrder(null)} className="px-4 py-2 bg-slate-800 text-neutral-400 rounded-xl">Cancel</button>
+                <button type="button" onClick={() => setTrackingModalOrder(null)} className="px-4 py-2 bg-[#fafafa] text-neutral-400 rounded-xl">Cancel</button>
                 <button type="submit" disabled={savingTracking} className="px-5 py-2 bg-neutral-900 text-white font-bold rounded-xl">
                   Save Tracking
                 </button>

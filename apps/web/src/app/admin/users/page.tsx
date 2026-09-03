@@ -75,7 +75,7 @@ export default function UserRolesPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
+            message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}

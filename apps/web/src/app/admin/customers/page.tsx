@@ -81,7 +81,7 @@ export default function CustomersPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
+            message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -102,7 +102,7 @@ export default function CustomersPage() {
                 <span className="text-xs font-bold text-neutral-600">{c._count?.orders ?? 0} Orders</span>
                 <button
                   onClick={() => handleSaveNotes(c.id)}
-                  className="flex items-center space-x-1.5 bg-neutral-900 hover:bg-amber-400 text-neutral-900 px-3.5 py-1.5 rounded-xl font-bold transition-colors text-xs"
+                  className="flex items-center space-x-1.5 bg-neutral-900 hover:bg-neutral-800 text-white px-3.5 py-1.5 rounded-xl font-bold transition-colors text-xs"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save Note</span>

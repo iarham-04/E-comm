@@ -141,7 +141,7 @@ export default function DiscountsPage() {
 
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center space-x-2 bg-neutral-900 hover:bg-amber-400 text-neutral-900 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
+          className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>New Discount / Sale</span>
@@ -151,7 +151,7 @@ export default function DiscountsPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
+            message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -198,7 +198,7 @@ export default function DiscountsPage() {
                   {c.startsAt ? new Date(c.startsAt).toLocaleDateString() : 'Immediate'} → {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Never'}
                 </td>
                 <td className="py-3 px-4">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.isActive ? 'bg-emerald-950 text-emerald-700 border border-emerald-800' : 'bg-slate-800 text-neutral-400'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#fafafa] text-neutral-400'}`}>
                     {c.isActive ? 'ACTIVE' : 'INACTIVE'}
                   </span>
                 </td>
@@ -225,7 +225,7 @@ export default function DiscountsPage() {
                 <select
                   value={form.isCollectionSale ? 'collection' : 'code'}
                   onChange={(e) => setForm({ ...form, isCollectionSale: e.target.value === 'collection' })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                 >
                   <option value="code">Code-Based Coupon (Entered at checkout)</option>
                   <option value="collection">Automatic Collection Sale (No code needed)</option>
@@ -242,7 +242,7 @@ export default function DiscountsPage() {
                       placeholder="e.g. WELCOME10"
                       value={form.code}
                       onChange={(e) => setForm({ ...form, code: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-mono uppercase"
+                      className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-mono uppercase"
                     />
                   </div>
                   <div>
@@ -252,7 +252,7 @@ export default function DiscountsPage() {
                       placeholder="e.g. 1999"
                       value={form.minOrderValue}
                       onChange={(e) => setForm({ ...form, minOrderValue: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                      className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                     />
                   </div>
                 </>
@@ -263,7 +263,7 @@ export default function DiscountsPage() {
                     required
                     value={form.appliesToCollectionId}
                     onChange={(e) => setForm({ ...form, appliesToCollectionId: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                   >
                     <option value="">Select Collection Target...</option>
                     {collections.map((c) => (
@@ -279,7 +279,7 @@ export default function DiscountsPage() {
                   <select
                     value={form.discountType}
                     onChange={(e) => setForm({ ...form, discountType: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                   >
                     <option value="PERCENTAGE">Percentage (%)</option>
                     <option value="FLAT">Flat Amount (₹)</option>
@@ -294,7 +294,7 @@ export default function DiscountsPage() {
                     placeholder="e.g. 15"
                     value={form.discountValue}
                     onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900 font-bold"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-bold"
                   />
                 </div>
               </div>
@@ -306,7 +306,7 @@ export default function DiscountsPage() {
                     type="date"
                     value={form.startsAt}
                     onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                   />
                 </div>
                 <div>
@@ -315,7 +315,7 @@ export default function DiscountsPage() {
                     type="date"
                     value={form.expiresAt}
                     onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-800 border border-neutral-200 rounded-xl text-neutral-900"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
                   />
                 </div>
               </div>
@@ -334,7 +334,7 @@ export default function DiscountsPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-neutral-400 rounded-xl hover:text-neutral-900"
+                  className="px-4 py-2 bg-[#fafafa] text-neutral-400 rounded-xl hover:text-neutral-900"
                 >
                   Cancel
                 </button>

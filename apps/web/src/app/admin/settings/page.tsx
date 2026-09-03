@@ -126,7 +126,7 @@ export default function SettingsPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
+            message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -210,7 +210,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center space-x-2 bg-neutral-900 hover:bg-amber-400 text-neutral-900 font-bold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+              className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{saving ? 'Saving...' : 'Save Settings'}</span>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleUpdateTemplate(tpl.id, tpl.subject, tpl.bodyHtml)}
-                    className="flex items-center space-x-1.5 bg-slate-800 hover:bg-neutral-100 text-neutral-600 px-4 py-2 rounded-xl font-bold transition-colors"
+                    className="flex items-center space-x-1.5 bg-[#fafafa] hover:bg-neutral-100 text-neutral-600 px-4 py-2 rounded-xl font-bold transition-colors"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>Save Template</span>

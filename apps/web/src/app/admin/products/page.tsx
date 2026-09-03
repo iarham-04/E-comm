@@ -177,7 +177,7 @@ export default function AdminProductsPage() {
           </button>
           <Link
             href="/admin/products/new"
-            className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-neutral-900 text-xs font-black px-4 py-2.5 rounded-xl shadow-md shadow-amber-500/10 transition-all flex items-center space-x-1.5"
+            className="bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-md shadow-amber-500/10 transition-all flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Product</span>

@@ -214,7 +214,7 @@ export default function AdminDashboardPage() {
                     className="w-full rounded-t-lg bg-slate-200 hover:bg-neutral-900 transition-all duration-300 relative group cursor-pointer"
                     style={{ height: `${pct}%` }}
                   >
-                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
+                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-white text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
                       ₹{val.toLocaleString('en-IN')}
                     </div>
                   </div>

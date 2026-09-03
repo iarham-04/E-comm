@@ -114,7 +114,7 @@ export default function BulkInventoryPage() {
           <button
             onClick={fetchProducts}
             disabled={loading}
-            className="p-2.5 bg-slate-800 text-neutral-400 hover:text-neutral-900 rounded-xl border border-neutral-200 transition-colors"
+            className="p-2.5 bg-[#fafafa] text-neutral-400 hover:text-neutral-900 rounded-xl border border-neutral-200 transition-colors"
             title="Refresh Inventory"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -122,7 +122,7 @@ export default function BulkInventoryPage() {
           <button
             onClick={handleBulkSave}
             disabled={saving || loading}
-            className="flex items-center space-x-2 bg-neutral-900 hover:bg-amber-400 text-neutral-900 text-xs font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+            className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
@@ -133,7 +133,7 @@ export default function BulkInventoryPage() {
       {message && (
         <div
           className={`flex items-center space-x-2 p-4 rounded-xl text-xs font-semibold ${
-            message.type === 'success' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
+            message.type === 'success' ? 'bg-emerald-50/80 border border-emerald-500/40 text-emerald-700' : 'bg-rose-950/80 border border-rose-500/40 text-rose-700'
           }`}
         >
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -168,7 +168,7 @@ export default function BulkInventoryPage() {
                   <td className="py-3 px-4 text-neutral-400">{p.category?.name || '—'}</td>
                   <td className="py-3 px-4 font-mono text-neutral-600 font-bold">₹{Number(p.price).toLocaleString('en-IN')}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${p.status === 'PUBLISHED' ? 'bg-emerald-950 text-emerald-700 border border-emerald-800' : 'bg-slate-800 text-neutral-400'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${p.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#fafafa] text-neutral-400'}`}>
                       {p.status}
                     </span>
                   </td>
