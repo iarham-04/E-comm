@@ -413,21 +413,6 @@ export default function Header() {
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* Admin Portal */}
-              <Link
-                href="/admin/login"
-                className={`p-2 transition-colors relative ${
-                  isTransparentTop ? 'text-white hover:text-amber-400' : 'text-slate-700 hover:text-slate-900'
-                }`}
-                title="Admin Security Portal & Login"
-                id="header-admin-icon"
-              >
-                <Shield className="w-5 h-5" />
-                <span className="absolute top-1 right-1 bg-amber-500 text-slate-950 text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm">
-                  ★
-                </span>
-              </Link>
-
               {/* Account */}
               <SignedIn>
                 <div className="flex items-center space-x-1">
@@ -443,6 +428,21 @@ export default function Header() {
                   <User className="w-5 h-5" />
                 </Link>
               </SignedOut>
+
+              {/* Admin Shield Icon */}
+              <Link
+                href="/admin/login"
+                className={`p-2 transition-colors relative ${
+                  isTransparentTop ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'
+                }`}
+                title="Admin Panel Login"
+                id="header-admin-icon"
+              >
+                <Shield className="w-5 h-5" />
+                <span className="absolute top-0.5 right-0.5 bg-amber-500 text-slate-950 text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm">
+                  ★
+                </span>
+              </Link>
 
               {/* Wishlist */}
               <Link href="/wishlist" className={`p-2 transition-colors relative ${isTransparentTop ? 'text-white' : 'text-slate-700 hover:text-slate-900'}`} title="Wishlist">
