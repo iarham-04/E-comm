@@ -1,5 +1,8 @@
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:4000';
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ||
+  (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
+    ? 'https://corazonetouch-api.onrender.com'
+    : 'https://corazonetouch-api.onrender.com');
 
 export async function apiFetch<T = any>(
   path: string,

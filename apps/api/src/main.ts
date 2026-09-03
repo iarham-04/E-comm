@@ -14,9 +14,31 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: [frontendUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const allowedDomains = [
+        frontendUrl,
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://corazontouch.com',
+        'https://www.corazontouch.com',
+      ];
+
+      if (
+        allowedDomains.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('corazontouch.com') ||
+        origin.includes('localhost')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive CORS for public API endpoints
+    },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization,Accept,X-Requested-With',
   });
 
   // Attach Clerk middleware for JWT decoding
