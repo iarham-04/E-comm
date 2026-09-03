@@ -7,7 +7,7 @@ import { API_URL } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState('AZRA');
+  const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -119,7 +119,8 @@ export default function AdminLoginPage() {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. Store Owner, Inventory Manager"
+                  placeholder="Enter Admin Name"
+                  autoComplete="off"
                   className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                 />
               </div>

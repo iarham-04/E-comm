@@ -34,7 +34,7 @@ export default function AdminQuickAccess() {
             <span className="text-[10px]">👑</span>
           </div>
           <p className="text-[10px] font-semibold text-slate-400 leading-none mt-0.5">
-            AZRA Access
+            Store Controls
           </p>
         </div>
       </Link>
