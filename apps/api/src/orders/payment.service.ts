@@ -10,8 +10,8 @@ export class PaymentService {
   constructor() {
     const Razorpay = require('razorpay');
     this.razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
+      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TY2qvYiQLtCh6a',
+      key_secret: process.env.RAZORPAY_KEY_SECRET || 'YteIW4Tdn1h2q7E3AwMG4RtB',
     });
   }
 
@@ -21,9 +21,8 @@ export class PaymentService {
    * Returns the Razorpay order ID that the frontend uses to open the payment popup.
    */
   async createRazorpayOrder(amountInRupees: number, receiptId: string) {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      throw new InternalServerErrorException('Razorpay is not configured on the server.');
-    }
+    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_TY2qvYiQLtCh6a';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'YteIW4Tdn1h2q7E3AwMG4RtB';
 
     const amountInPaise = Math.round(amountInRupees * 100);
 
@@ -39,7 +38,7 @@ export class PaymentService {
         id: order.id,          // rzp_order_id — sent to frontend
         amount: order.amount,  // in paise
         currency: order.currency,
-        keyId: process.env.RAZORPAY_KEY_ID,
+        keyId: keyId,
       };
     } catch (err: any) {
       console.error('Razorpay createOrder failed:', err);
@@ -52,7 +51,7 @@ export class PaymentService {
    * Must be verified server-side before marking any order as PAID.
    */
   verifyPaymentSignature(razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string): boolean {
-    const secret = process.env.RAZORPAY_KEY_SECRET!;
+    const secret = process.env.RAZORPAY_KEY_SECRET || 'YteIW4Tdn1h2q7E3AwMG4RtB';
     const body = `${razorpayOrderId}|${razorpayPaymentId}`;
     const expectedSignature = crypto.createHmac('sha256', secret).update(body).digest('hex');
     return expectedSignature === razorpaySignature;

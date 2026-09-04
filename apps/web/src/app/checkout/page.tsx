@@ -7,7 +7,7 @@ import { Lock, CreditCard, Banknote, ShieldCheck, AlertCircle, Loader2 } from 'l
 import { API_URL } from '@/lib/api';
 import { loadRazorpayScript, openRazorpayCheckout } from '@/lib/razorpay';
 
-const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!;
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TY2qvYiQLtCh6a';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
 
     // Step 3: Open Razorpay popup
     const payment = await openRazorpayCheckout({
-      key: RAZORPAY_KEY_ID,
+      key: rzpOrder.keyId || RAZORPAY_KEY_ID || 'rzp_test_TY2qvYiQLtCh6a',
       amount: rzpOrder.amount,        // in paise from backend
       currency: rzpOrder.currency,
       name: 'Corazonetouch',
