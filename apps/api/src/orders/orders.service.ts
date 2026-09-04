@@ -26,6 +26,8 @@ export interface CreateOrderDto {
     phone: string;
   };
   paymentMethod: 'COD' | 'RAZORPAY' | 'STRIPE';
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
   deliverySpeed?: 'STANDARD' | 'EXPRESS';
   couponCode?: string;
   items: {
