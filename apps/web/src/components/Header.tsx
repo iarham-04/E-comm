@@ -189,19 +189,27 @@ export default function Header() {
           <div className="hidden sm:block" />
           <p className="text-center flex-1 text-[11px] uppercase tracking-wider text-neutral-600">⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999</p>
 
-          <div className="flex items-center space-x-1 bg-neutral-100 px-2.5 py-0.5 rounded-full text-[11px]">
-            <Globe className="w-3 h-3 text-neutral-500" />
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-              className="bg-transparent text-neutral-800 font-bold cursor-pointer focus:outline-none text-[11px]"
-            >
-              <option value="INR">INR (₹)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-            </select>
-          </div>
+          {/* Currency Selector: Locked to INR in Cart/Checkout to prevent price mismatch */}
+          {pathname?.startsWith('/cart') || pathname?.startsWith('/checkout') || pathname?.startsWith('/order-confirmation') ? (
+            <div className="flex items-center space-x-1.5 bg-neutral-100 px-2.5 py-0.5 rounded-full text-[11px] border border-neutral-200/60" title="Checkout prices are strictly billed and settled in INR (₹)">
+              <Globe className="w-3 h-3 text-neutral-400" />
+              <span className="font-bold text-neutral-800">INR (₹)</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1 bg-neutral-100 px-2.5 py-0.5 rounded-full text-[11px]">
+              <Globe className="w-3 h-3 text-neutral-500" />
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                className="bg-transparent text-neutral-800 font-bold cursor-pointer focus:outline-none text-[11px]"
+              >
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+          )}
         </div>
       </div>
 

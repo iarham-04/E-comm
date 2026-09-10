@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Param, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { OrdersService, CreateOrderDto } from './orders.service';
 import { PaymentService } from './payment.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -78,6 +78,13 @@ export class OrdersController {
   }
 
   // ─── Authenticated: My Orders ──────────────────────────────────────────────
+  
+  // ─── Public Order Receipt / Confirmation ───────────────────────────────────
+  @Get(':id')
+  getOrderById(@Param('id') id: string) {
+    return this.ordersService.findOne(id);
+  }
+
   @Get('my-orders')
   @UseGuards(AuthGuard)
   findMyOrders(@Req() req: any) {

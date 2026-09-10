@@ -49,6 +49,10 @@ export default function CheckoutPage() {
     ...extras,
   });
 
+  // NOTE: Full multi-currency payment settlement (USD/EUR/GBP) is a planned future enhancement
+  // requiring live FX gateway configurations and multi-currency merchant settlement accounts.
+  // Currently, all orders are strictly billed, captured, and settled in Indian Rupees (INR ₹) to prevent customer price mismatch.
+
   // ─── COD Flow ──────────────────────────────────────────────────────────────
   const handleCOD = async () => {
     const res = await fetch(`${API_URL}/orders`, {

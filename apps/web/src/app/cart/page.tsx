@@ -31,7 +31,20 @@ export default function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-extrabold text-slate-900 mb-8">Shopping Cart ({items.length} items)</h1>
+      <h1 className="text-3xl font-extrabold text-slate-900 mb-4">Shopping Cart ({items.length} items)</h1>
+
+      {/* Currency & Settlement Integrity Notice */}
+      <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-8 shadow-xs">
+        <div className="flex items-center space-x-2.5">
+          <span className="text-base">ℹ️</span>
+          <span>
+            <strong>Billing Currency:</strong> All cart items and orders are billed and settled strictly in <strong>Indian Rupees (INR ₹)</strong> at checkout.
+          </span>
+        </div>
+        <span className="text-[11px] font-bold text-amber-900 bg-amber-100/90 border border-amber-200 px-2.5 py-1 rounded-md shrink-0 w-fit">
+          Billed in INR (₹)
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items List */}
