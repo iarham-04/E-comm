@@ -15,6 +15,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     if (redisUrl) {
       try {
         this.client = new Redis(redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1 });
+        this.client.on('error', (err) => { this.logger.warn(`Redis connection error (${err.message}). Using fallback.`); this.client = null; });
         this.client.connect().then(() => {
           this.logger.log('Connected to Redis server.');
         }).catch((err) => {
