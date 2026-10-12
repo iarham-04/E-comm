@@ -7,7 +7,7 @@ import { Lock, CreditCard, Banknote, ShieldCheck, AlertCircle, Loader2 } from 'l
 import { API_URL } from '@/lib/api';
 import { loadRazorpayScript, openRazorpayCheckout } from '@/lib/razorpay';
 
-const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TY2qvYiQLtCh6a';
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TmdTMss5YqJvBl';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -95,7 +95,7 @@ export default function CheckoutPage() {
 
     // Step 3: Open Razorpay popup
     const payment = await openRazorpayCheckout({
-      key: rzpOrder.keyId || RAZORPAY_KEY_ID || 'rzp_test_TY2qvYiQLtCh6a',
+      key: rzpOrder.keyId || RAZORPAY_KEY_ID || 'rzp_live_TmdTMss5YqJvBl',
       amount: rzpOrder.amount,        // in paise from backend
       currency: rzpOrder.currency,
       name: 'Corazonetouch',
@@ -174,11 +174,15 @@ export default function CheckoutPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
-      <div className="flex items-center space-x-2 text-xs font-bold text-neutral-500 uppercase tracking-widest mb-6">
+      <div className="flex items-center space-x-2 text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3">
         <Lock className="w-4 h-4 text-emerald-600" />
         <span>256-Bit Encrypted Secure Checkout</span>
         <span className="text-neutral-300">·</span>
         <span className="text-neutral-400 font-normal normal-case">Takes under 2 minutes</span>
+      </div>
+
+      <div className="mb-8">
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Secure Checkout</h1>
       </div>
 
       {/* Error Banner */}

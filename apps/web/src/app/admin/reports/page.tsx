@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, TrendingUp, DollarSign, ShoppingBag, Percent, Filter, RefreshCw } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 export default function AnalyticsReportsPage() {
   const [fromDate, setFromDate] = useState('');
@@ -25,11 +26,11 @@ export default function AnalyticsReportsPage() {
 
     try {
       const [resRev, resProd, resCat, resAov, resCpn] = await Promise.all([
-        fetch(`${API_URL}/admin/reports/revenue${qs}`),
-        fetch(`${API_URL}/admin/reports/sales-by-product${qs}`),
-        fetch(`${API_URL}/admin/reports/top-categories${qs}`),
-        fetch(`${API_URL}/admin/reports/average-order-value${qs}`),
-        fetch(`${API_URL}/admin/reports/coupon-performance${qs}`),
+        adminFetch(`${API_URL}/admin/reports/revenue${qs}`),
+        adminFetch(`${API_URL}/admin/reports/sales-by-product${qs}`),
+        adminFetch(`${API_URL}/admin/reports/top-categories${qs}`),
+        adminFetch(`${API_URL}/admin/reports/average-order-value${qs}`),
+        adminFetch(`${API_URL}/admin/reports/coupon-performance${qs}`),
       ]);
 
       if (resRev.ok) setRevenueReport(await resRev.json());
@@ -55,7 +56,7 @@ export default function AnalyticsReportsPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Analytics &amp; Financial Reports
           </h1>
           <p className="text-xs text-neutral-400">Deep-dive financial telemetry, sales velocity by product, top category distribution, and coupon ROI.</p>
@@ -94,7 +95,7 @@ export default function AnalyticsReportsPage() {
             <span className="font-bold uppercase tracking-wider text-[10px]">Total Revenue</span>
             <DollarSign className="w-4 h-4 text-emerald-700" />
           </div>
-          <p className="font-display text-2xl font-bold text-neutral-900">
+          <p className="text-2xl font-bold text-neutral-900">
             ₹{revenueReport?.totalRevenue ? Number(revenueReport.totalRevenue).toLocaleString('en-IN') : '0'}
           </p>
           <p className="text-[10px] text-neutral-500">{revenueReport?.orderCount || 0} paid orders</p>
@@ -105,7 +106,7 @@ export default function AnalyticsReportsPage() {
             <span className="font-bold uppercase tracking-wider text-[10px]">Average Order Value (AOV)</span>
             <TrendingUp className="w-4 h-4 text-neutral-600" />
           </div>
-          <p className="font-display text-2xl font-bold text-neutral-600">
+          <p className="text-2xl font-bold text-neutral-600">
             ₹{aovReport?.aov ? Number(aovReport.aov).toLocaleString('en-IN') : '0'}
           </p>
           <p className="text-[10px] text-neutral-500">Per completed customer transaction</p>
@@ -116,7 +117,7 @@ export default function AnalyticsReportsPage() {
             <span className="font-bold uppercase tracking-wider text-[10px]">Coupon Performance</span>
             <Percent className="w-4 h-4 text-indigo-400" />
           </div>
-          <p className="font-display text-2xl font-bold text-neutral-900">
+          <p className="text-2xl font-bold text-neutral-900">
             {couponReport.length} Active Sales
           </p>
           <p className="text-[10px] text-neutral-500">Tracking code &amp; automatic collection sales</p>

@@ -173,7 +173,7 @@ export default function BlogPage() {
         <div className="relative space-y-4 max-w-xl mx-auto">
           <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">For Collectors & Connoisseurs</span>
           <h2 className="font-display text-3xl font-black text-white">
-            Receive the Curator's Letter
+            Receive the Curator&apos;s Letter
           </h2>
           <p className="text-slate-400 text-sm leading-relaxed">
             Monthly editorial essays, new arrivals, historical deep-dives, and exclusive previews delivered to your inbox. No noise. Only craft.

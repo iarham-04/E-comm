@@ -2,11 +2,11 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/admin(.*)',
   '/products(.*)',
   '/collections(.*)',
   '/cart(.*)',
   '/checkout(.*)',
+  '/order-confirmation(.*)',
   '/search(.*)',
   '/blog(.*)',
   '/pages(.*)',
@@ -36,18 +36,14 @@ export default clerkMiddleware(
     }
   },
   {
-    publishableKey:
-      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
-      'pk_test_bW9kZXN0LXRhaHItNjguY2xlcmsuYWNjb3VudHMuZGV2JA',
-    secretKey:
-      process.env.CLERK_SECRET_KEY ||
-      'sk_test_HUqsjmyXmx1IYjR4ZMV3eGr3BFtNuin6AYUxkPi0Jh',
+    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
+    secretKey: process.env.CLERK_SECRET_KEY!,
   },
 );
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|json|png|jpg|jpeg|webp|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
 };

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Save, UserCheck, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface CustomerData {
   id: string;
@@ -24,7 +25,7 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/users`);
+      const res = await adminFetch(`${API_URL}/admin/users`);
       if (res.ok) {
         const data: CustomerData[] = await res.json();
         setCustomers(data);
@@ -46,7 +47,7 @@ export default function CustomersPage() {
   const handleSaveNotes = async (customerId: string) => {
     setMessage(null);
     try {
-      const res = await fetch(`${API_URL}/admin/customers/${customerId}/notes`, {
+      const res = await adminFetch(`${API_URL}/admin/customers/${customerId}/notes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: notesMap[customerId] }),
@@ -68,7 +69,7 @@ export default function CustomersPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1 flex items-center gap-2">
             <span>Customer Management &amp; Staff Notes</span>
             <span className="text-[10px] bg-neutral-900/20 text-neutral-600 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1">
               <Lock className="w-3 h-3" /> OWNER ONLY

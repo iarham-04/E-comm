@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2, Tag, Percent, Calendar, CheckCircle2, AlertCircle, Layers } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface CollectionOption {
   id: string;
@@ -46,7 +47,7 @@ export default function DiscountsPage() {
     setLoading(true);
     try {
       const [resCoupons, resCats] = await Promise.all([
-        fetch(`${API_URL}/admin/coupons`),
+        adminFetch(`${API_URL}/admin/coupons`),
         fetch(`${API_URL}/categories`),
       ]);
       if (resCoupons.ok) setCoupons(await resCoupons.json());
@@ -90,7 +91,7 @@ export default function DiscountsPage() {
       if (form.startsAt) payload.startsAt = new Date(form.startsAt).toISOString();
       if (form.expiresAt) payload.expiresAt = new Date(form.expiresAt).toISOString();
 
-      const res = await fetch(`${API_URL}/admin/coupons`, {
+      const res = await adminFetch(`${API_URL}/admin/coupons`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -116,7 +117,7 @@ export default function DiscountsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this promotion?')) return;
     try {
-      const res = await fetch(`${API_URL}/admin/coupons/${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`${API_URL}/admin/coupons/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Promotion deleted.' });
         fetchData();
@@ -133,7 +134,7 @@ export default function DiscountsPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Discounts &amp; Collection Sales Manager
           </h1>
           <p className="text-xs text-neutral-400">Configure code-based coupons or automatic collection-wide sale events.</p>

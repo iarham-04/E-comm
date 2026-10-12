@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Save, Loader2, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface ProductInventory {
   id: string;
@@ -26,7 +27,7 @@ export default function BulkInventoryPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/products`);
+      const res = await adminFetch(`${API_URL}/admin/products`);
       if (res.ok) {
         const data = await res.json();
         setProducts(data);
@@ -78,7 +79,7 @@ export default function BulkInventoryPage() {
         return;
       }
 
-      const res = await fetch(`${API_URL}/admin/products/bulk-stock`, {
+      const res = await adminFetch(`${API_URL}/admin/products/bulk-stock`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items }),
@@ -104,7 +105,7 @@ export default function BulkInventoryPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Bulk Inventory Management
           </h1>
           <p className="text-xs text-neutral-400">Edit stock counts across all catalog products simultaneously.</p>

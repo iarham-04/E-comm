@@ -1,7 +1,19 @@
-import { Controller, Post, Get, Body, Query, Param, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { OrdersService, CreateOrderDto } from './orders.service';
 import { PaymentService } from './payment.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { PrismaService } from '../prisma/prisma.service';
+import { getAuth } from '@clerk/express';
 
 export interface RazorpayCreateOrderDto {
   amountInRupees: number;
@@ -12,7 +24,6 @@ export interface RazorpayVerifyDto {
   razorpayOrderId: string;
   razorpayPaymentId: string;
   razorpaySignature: string;
-  // Full order DTO to create the order in DB after verification
   order: CreateOrderDto;
 }
 
@@ -21,12 +32,35 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly paymentService: PaymentService,
+    private readonly prisma: PrismaService,
   ) {}
 
   // ─── Standard Order Creation (COD) ─────────────────────────────────────────
+  // Supports both logged-in users (tied to user account) and guest checkout (with email)
   @Post()
-  create(@Body() dto: CreateOrderDto) {
-    return this.ordersService.create(dto);
+  async create(@Body() dto: CreateOrderDto, @Req() req: any) {
+    let userId: string | undefined;
+
+    try {
+      const auth = getAuth(req);
+      if (auth && auth.userId) {
+        const user = await this.prisma.user.findUnique({
+          where: { clerkId: auth.userId },
+        });
+        if (user) userId = user.id;
+      }
+    } catch {
+      // Unauthenticated / guest session
+    }
+
+    if (!userId && !dto.guestEmail) {
+      throw new BadRequestException('Please provide a contact email to complete your order.');
+    }
+
+    return this.ordersService.create({
+      ...dto,
+      ...(userId ? { userId } : {}),
+    });
   }
 
   // ─── Razorpay: Step 1 — Create a Razorpay Order (before showing popup) ────
@@ -42,7 +76,7 @@ export class OrdersController {
 
   // ─── Razorpay: Step 2 — Verify Payment & Create Order in DB ───────────────
   @Post('razorpay/verify')
-  async verifyAndCreateOrder(@Body() body: RazorpayVerifyDto) {
+  async verifyAndCreateOrder(@Body() body: RazorpayVerifyDto, @Req() req: any) {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, order } = body;
 
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
@@ -60,9 +94,22 @@ export class OrdersController {
       throw new BadRequestException('Payment signature verification failed. Order rejected.');
     }
 
-    // Signature verified — create order in DB with PAID status
+    let userId: string | undefined;
+    try {
+      const auth = getAuth(req);
+      if (auth && auth.userId) {
+        const user = await this.prisma.user.findUnique({
+          where: { clerkId: auth.userId },
+        });
+        if (user) userId = user.id;
+      }
+    } catch {
+      // Unauthenticated / guest session
+    }
+
     const dbOrder = await this.ordersService.create({
       ...order,
+      ...(userId ? { userId } : {}),
       paymentMethod: 'RAZORPAY',
       razorpayPaymentId,
       razorpayOrderId,
@@ -71,23 +118,25 @@ export class OrdersController {
     return dbOrder;
   }
 
-  // ─── Order Tracking ────────────────────────────────────────────────────────
-  @Get('track')
-  trackOrder(@Query('id') id: string, @Query('email') email: string) {
-    return this.ordersService.trackOrder(id, email);
-  }
-
-  // ─── Authenticated: My Orders ──────────────────────────────────────────────
-  
-  // ─── Public Order Receipt / Confirmation ───────────────────────────────────
-  @Get(':id')
-  getOrderById(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
-  }
-
+  // ─── Authenticated: My Orders (MUST be before :id to avoid route shadowing) ─
   @Get('my-orders')
   @UseGuards(AuthGuard)
   findMyOrders(@Req() req: any) {
     return this.ordersService.findMyOrders(req.dbUser.id);
+  }
+
+  // ─── Order Tracking (requires both order ID + email for verification) ──────
+  @Get('track')
+  trackOrder(@Query('id') id: string, @Query('email') email: string) {
+    if (!id || !email) {
+      throw new BadRequestException('Both order ID and email are required for tracking.');
+    }
+    return this.ordersService.trackOrder(id, email);
+  }
+
+  // ─── Order Receipt / Confirmation (rendered on order-confirmation/[id]) ───
+  @Get(':id')
+  async getOrderById(@Param('id') id: string) {
+    return this.ordersService.findOne(id);
   }
 }

@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useUser, useClerk } from '@clerk/nextjs';
 import {
   LayoutDashboard, Package, Tag, ShoppingBag, Percent,
   Image as ImageIcon, Settings, BarChart3, Users, ChevronRight,
-  UserCheck, LogOut, Menu, X, Shield, ExternalLink
+  UserCheck, LogOut, Menu, X, Shield, ExternalLink, ShieldAlert
 } from 'lucide-react';
-
-export type UserRole = 'CUSTOMER' | 'SUPPORT' | 'MANAGER' | 'OWNER';
+import { getAdminProfile, UserRole } from '@/lib/adminApi';
 
 interface NavItem {
   label: string;
@@ -42,63 +42,100 @@ const NAV_ITEMS: NavItem[] = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [userRole, setUserRole] = useState<UserRole>('OWNER');
-  const [adminName, setAdminName] = useState<string>('AZRA');
-  const [userEmail, setUserEmail] = useState<string>('azra@corazontouch.com');
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
+
+  const [userRole, setUserRole] = useState<UserRole>('SUPPORT');
+  const [adminName, setAdminName] = useState<string>('Staff');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [checkedAuth, setCheckedAuth] = useState(false);
+  const [denied, setDenied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (pathname === '/admin/login') {
-      setCheckedAuth(true);
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      router.push('/sign-in?redirect_url=/admin');
       return;
     }
 
-    try {
-      const sessionStr = localStorage.getItem('corazon_admin_session');
-      if (!sessionStr) {
-        router.push('/admin/login');
-        return;
-      }
+    // Verify user role directly with the database-backed admin API
+    let isCancelled = false;
 
-      const session = JSON.parse(sessionStr);
-      if (session?.role) {
-        setUserRole(session.role as UserRole);
-        if (session.name) setAdminName(session.name);
-        if (session.email) setUserEmail(session.email);
+    async function checkRole() {
+      try {
+        const profile = await getAdminProfile();
+        if (isCancelled) return;
+
+        if (!profile || profile.role === 'CUSTOMER') {
+          // Deny access and redirect customer away from admin
+          setDenied(true);
+          setTimeout(() => {
+            router.replace('/');
+          }, 1500);
+          return;
+        }
+
+        setUserRole(profile.role);
+        setAdminName(profile.name || user?.fullName || profile.email.split('@')[0]);
+        setUserEmail(profile.email || user?.primaryEmailAddress?.emailAddress || '');
+        setCheckedAuth(true);
+      } catch {
+        if (!isCancelled) {
+          setDenied(true);
+          router.replace('/');
+        }
       }
-      setCheckedAuth(true);
-    } catch {
-      router.push('/admin/login');
     }
-  }, [pathname, router]);
+
+    checkRole();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isLoaded, isSignedIn, router, user]);
 
   // Close mobile drawer on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem('corazon_admin_session');
-    } catch {}
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/');
   };
 
-  // If on login page, render login page directly without sidebar
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
-
-  if (!checkedAuth) {
+  if (!isLoaded || (!checkedAuth && !denied)) {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center text-neutral-500 text-xs">
-        Verifying admin authorization...
+      <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 rounded-2xl bg-white border border-neutral-200 shadow-sm flex items-center justify-center text-lg animate-pulse">
+          🛡️
+        </div>
+        <p className="text-xs font-semibold text-neutral-500 tracking-wide uppercase">
+          Verifying administrative permissions...
+        </p>
       </div>
     );
   }
 
-  const userLevel = ROLE_LEVEL[userRole] || 4;
+  if (denied) {
+    return (
+      <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-2xl shadow-xs">
+          <ShieldAlert className="w-7 h-7 text-rose-600" />
+        </div>
+        <div className="space-y-1 max-w-sm">
+          <h2 className="text-base font-bold text-neutral-900">Access Restricted</h2>
+          <p className="text-xs text-neutral-500">
+            Administrative portal access is restricted to verified store staff and owners. Redirecting you to the storefront...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const userLevel = ROLE_LEVEL[userRole] || 1;
 
   const NavContent = () => (
     <div className="flex flex-col justify-between h-full bg-white text-slate-800">
@@ -178,10 +215,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Lock / Exit Portal</span>
+          <span>Sign Out / Lock Portal</span>
         </button>
       </div>
     </div>

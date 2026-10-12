@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Pencil, Trash2, Star, Tag, Loader2, RefreshCw } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface CategoryItem {
   id: string;
@@ -23,7 +24,7 @@ export default function AdminCategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/categories`);
+      const res = await adminFetch(`${API_URL}/admin/categories`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -101,7 +102,7 @@ export default function AdminCategoriesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
     try {
-      await fetch(`${API_URL}/admin/categories/${id}`, { method: 'DELETE' });
+      await adminFetch(`${API_URL}/admin/categories/${id}`, { method: 'DELETE' });
       setCategories((prev) => prev.filter((c) => c.id !== id));
     } catch {
       setCategories((prev) => prev.filter((c) => c.id !== id));
@@ -110,7 +111,7 @@ export default function AdminCategoriesPage() {
 
   const toggleFeatured = async (id: string, current: boolean) => {
     try {
-      await fetch(`${API_URL}/admin/categories/${id}`, {
+      await adminFetch(`${API_URL}/admin/categories/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isFeaturedCollection: !current }),
@@ -139,7 +140,7 @@ export default function AdminCategoriesPage() {
           >
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mt-1">
             Category Management
           </h1>
           <p className="text-xs text-neutral-400 mt-1">

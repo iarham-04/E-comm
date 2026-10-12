@@ -1,7 +1,22 @@
 import { ClerkProvider } from '@clerk/nextjs';
+import { Cormorant_Garamond, Inter } from 'next/font/google';
 import AppShell from '@/components/AppShell';
 import Script from 'next/script';
 import './globals.css';
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cormorant',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'Corazonetouch — Hand-Forged Medieval Armor, Viking Artifacts & Historical Collectibles',
@@ -35,7 +50,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_bW9kZXN0LXRhaHItNjguY2xlcmsuYWNjb3VudHMuZGV2JA';
+  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
   const jsonLdSchema = {
     '@context': 'https://schema.org',
@@ -51,17 +66,14 @@ export default function RootLayout({
 
   return (
     <ClerkProvider publishableKey={clerkKey}>
-      <html lang="en">
+      <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
         <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
           />
         </head>
-        <body className="min-h-screen flex flex-col antialiased bg-parchment text-slate-900 font-body">
+        <body className="min-h-screen flex flex-col antialiased bg-parchment text-slate-900 font-sans">
           <AppShell>
             {children}
           </AppShell>

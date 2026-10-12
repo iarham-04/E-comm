@@ -44,7 +44,7 @@ export const colors = {
 // ── Typography Scale ─────────────────────────────────────────────────────────
 export const typography = {
   fontFamily: {
-    display: "'Playfair Display', Georgia, 'Times New Roman', serif",
+    display: "'Cormorant Garamond', Georgia, serif",
     body:    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
   fontSize: {

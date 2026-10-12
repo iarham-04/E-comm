@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface BannerItem {
   id: string;
@@ -35,7 +36,7 @@ export default function BannersPage() {
   const fetchBanners = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/banners`);
+      const res = await adminFetch(`${API_URL}/admin/banners`);
       if (res.ok) setBanners(await res.json());
     } catch {
       setMessage({ type: 'error', text: 'Failed to load banners.' });
@@ -52,7 +53,7 @@ export default function BannersPage() {
     e.preventDefault();
     setMessage(null);
     try {
-      const res = await fetch(`${API_URL}/admin/banners`, {
+      const res = await adminFetch(`${API_URL}/admin/banners`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -72,7 +73,7 @@ export default function BannersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this banner?')) return;
     try {
-      const res = await fetch(`${API_URL}/admin/banners/${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`${API_URL}/admin/banners/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Banner deleted.' });
         fetchBanners();
@@ -89,7 +90,7 @@ export default function BannersPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Homepage Banners Management
           </h1>
           <p className="text-xs text-neutral-400">Curate promotional hero banners, campaign graphics, and feature announcements.</p>

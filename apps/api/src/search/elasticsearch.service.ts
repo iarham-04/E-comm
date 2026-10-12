@@ -87,7 +87,7 @@ export class ElasticsearchService implements OnModuleInit {
     if (!this.client) return;
     try {
       await this.client.delete({ index: INDEX, id });
-    } catch (err) {
+    } catch {
       // Ignore 404
     }
   }

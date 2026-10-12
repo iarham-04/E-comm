@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Query,
+  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Query, Req,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from '../auth/roles.guard';
@@ -12,10 +12,18 @@ import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDt
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  // ─── Master PIN Authentication ────────────────────────────────────────────
-  @Post('verify-pin')
-  verifyPin(@Body('pin') pin: string, @Body('identifier') identifier?: string) {
-    return this.adminService.verifyPin(pin, identifier);
+  // ─── Current Admin Profile ────────────────────────────────────────────────
+  @Get('me')
+  getAdminProfile(@Req() req: any) {
+    return {
+      user: {
+        id: req.dbUser.id,
+        clerkId: req.dbUser.clerkId,
+        email: req.dbUser.email,
+        name: req.dbUser.name,
+        role: req.dbUser.role,
+      },
+    };
   }
 
   // ─── Telemetry ────────────────────────────────────────────────────────────

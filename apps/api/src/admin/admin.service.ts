@@ -1,5 +1,5 @@
 import {
-  Injectable, NotFoundException, BadRequestException, UnauthorizedException, Logger,
+  Injectable, NotFoundException, BadRequestException, Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -19,29 +19,6 @@ export class AdminService {
     private mailService: MailService,
     private configService: ConfigService,
   ) {}
-
-  // ─── Master PIN Verification ──────────────────────────────────────────────
-
-  async verifyPin(pin: string, identifier?: string) {
-    const masterPin = this.configService.get<string>('ADMIN_MASTER_PIN') || '9557984200@';
-    if (!pin || pin.trim() !== masterPin.trim()) {
-      throw new UnauthorizedException('Invalid master security passcode.');
-    }
-
-    const adminName = identifier?.trim() || 'AZRA';
-    const token = `adm_${Buffer.from(`${adminName}:${Date.now()}`).toString('base64')}`;
-
-    return {
-      success: true,
-      role: 'OWNER',
-      token,
-      user: {
-        name: adminName,
-        email: 'azra@corazontouch.com',
-        role: 'OWNER',
-      },
-    };
-  }
 
   // ─── Telemetry ────────────────────────────────────────────────────────────
 
@@ -406,9 +383,11 @@ export class AdminService {
     if (order.paymentMethod === 'RAZORPAY' && order.razorpayPaymentId) {
       this.logger.log(`Executing Razorpay refund API call for paymentId: ${order.razorpayPaymentId}, amount: ${refundAmount}`);
       providerRefundId = `rfnd_${Date.now()}`;
+      this.logger.log(`Created provider refund id: ${providerRefundId}`);
     } else if (order.paymentMethod === 'STRIPE' && order.stripePaymentIntentId) {
       this.logger.log(`Executing Stripe refund API call for intent: ${order.stripePaymentIntentId}, amount: ${refundAmount}`);
       providerRefundId = `re_${Date.now()}`;
+      this.logger.log(`Created provider refund id: ${providerRefundId}`);
     }
 
     return this.prisma.order.update({

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Save, Loader2, Settings, Mail, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface StoreSettingsData {
   flatShippingFee: number;
@@ -37,8 +38,8 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const [resSet, resTpl] = await Promise.all([
-        fetch(`${API_URL}/admin/settings`),
-        fetch(`${API_URL}/admin/email-templates`),
+        adminFetch(`${API_URL}/admin/settings`),
+        adminFetch(`${API_URL}/admin/email-templates`),
       ]);
       if (resSet.ok) setSettings(await resSet.json());
       if (resTpl.ok) setTemplates(await resTpl.json());
@@ -56,7 +57,7 @@ export default function SettingsPage() {
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch(`${API_URL}/admin/settings`, {
+      const res = await adminFetch(`${API_URL}/admin/settings`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
@@ -76,7 +77,7 @@ export default function SettingsPage() {
   const handleUpdateTemplate = async (id: string, subject: string, bodyHtml: string) => {
     setMessage(null);
     try {
-      const res = await fetch(`${API_URL}/admin/email-templates/${id}`, {
+      const res = await adminFetch(`${API_URL}/admin/email-templates/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, bodyHtml }),
@@ -97,7 +98,7 @@ export default function SettingsPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Store Settings &amp; Resend Email Templates
           </h1>
           <p className="text-xs text-neutral-400">Configure global shipping fees, tax rates, payment gateways, and transactional email copy.</p>

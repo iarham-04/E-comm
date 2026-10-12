@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, CheckCircle2, Circle, MapPin, Package, Truck, Star, Phone } from 'lucide-react';
+import { Search, CheckCircle2, MapPin, Package, Truck, Star, Phone, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { API_URL } from '@/lib/api';
 
 const ORDER_STEPS = [
   { id: 'placed', label: 'Order Placed', icon: Package, description: 'We received your order and it entered our verification queue.' },
@@ -14,11 +15,13 @@ const ORDER_STEPS = [
 function getStepIndex(status: string) {
   const map: Record<string, number> = {
     PLACED: 0,
+    PENDING: 0,
     CONFIRMED: 1,
+    PROCESSING: 1,
     SHIPPED: 2,
     DELIVERED: 3,
   };
-  return map[status] ?? 0;
+  return map[status?.toUpperCase()] ?? 0;
 }
 
 export default function TrackOrderPage() {
@@ -27,23 +30,53 @@ export default function TrackOrderPage() {
   const [trackedOrder, setTrackedOrder] = useState<any>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!orderId.trim() || !email.trim()) return;
+
     setLoading(true);
-    setTimeout(() => {
-      setSearched(true);
-      setLoading(false);
+    setErrorMsg(null);
+
+    try {
+      const cleanId = orderId.trim().replace(/^#/, '');
+      const cleanEmail = email.trim().toLowerCase();
+
+      const res = await fetch(
+        `${API_URL}/orders/track?id=${encodeURIComponent(cleanId)}&email=${encodeURIComponent(cleanEmail)}`
+      );
+
+      if (!res.ok) {
+        setTrackedOrder(null);
+        setSearched(true);
+        return;
+      }
+
+      const data = await res.json();
+      const addr = data.addressSnapshot
+        ? `${data.addressSnapshot.city || ''}, ${data.addressSnapshot.state || ''} ${data.addressSnapshot.postalCode || ''}`.trim()
+        : 'Confirmed Shipping Destination';
+
+      const itemNames = data.items?.map((i: any) => `${i.product?.name || 'Artifact'} (x${i.quantity})`).join(', ') || 'Ordered Items';
+
       setTrackedOrder({
-        id: orderId || 'CT-12345',
-        status: 'SHIPPED',
-        estimatedDelivery: 'July 28, 2026',
-        item: 'Full Suit of Templar Knight Armor',
-        courier: 'Delhivery Express',
-        trackingNumber: 'DL-789023456IN',
-        shippedTo: 'Mumbai, Maharashtra 400001',
+        id: data.id,
+        status: data.status,
+        estimatedDelivery: data.estimatedDelivery || 'In transit — 3 to 5 business days',
+        item: itemNames,
+        courier: data.carrier || data.courierName || 'Delhivery Express',
+        trackingNumber: data.trackingNumber || 'Tracking ID will be issued upon dispatch',
+        shippedTo: addr,
       });
-    }, 900);
+      setSearched(true);
+    } catch (err: any) {
+      setErrorMsg('Failed to connect to tracking server. Please check your network and try again.');
+      setTrackedOrder(null);
+      setSearched(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const activeStep = trackedOrder ? getStepIndex(trackedOrder.status) : -1;
@@ -71,7 +104,7 @@ export default function TrackOrderPage() {
             <input
               type="text"
               required
-              placeholder="e.g. CT-12345"
+              placeholder="e.g. cmrp..."
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               className="w-full px-4 py-3 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
@@ -124,7 +157,7 @@ export default function TrackOrderPage() {
 
             <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div className="space-y-0.5">
-                <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Item</span>
+                <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Item(s)</span>
                 <p className="font-bold text-slate-900 leading-snug">{trackedOrder.item}</p>
               </div>
               <div className="space-y-0.5">
@@ -158,7 +191,7 @@ export default function TrackOrderPage() {
               <div className="absolute top-5 left-5 right-5 h-0.5 bg-slate-100" />
               <div
                 className="absolute top-5 left-5 h-0.5 bg-emerald-500 transition-all duration-700"
-                style={{ width: `${(activeStep / (ORDER_STEPS.length - 1)) * (100 - (10 / ORDER_STEPS.length))}%` }}
+                style={{ width: `${(Math.max(0, activeStep) / (ORDER_STEPS.length - 1)) * (100 - (10 / ORDER_STEPS.length))}%` }}
               />
 
               <div className="relative grid grid-cols-4 gap-2">
@@ -193,8 +226,8 @@ export default function TrackOrderPage() {
 
             {/* Active Step Description */}
             <div className="mt-8 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 text-xs text-amber-900">
-              <span className="font-bold block mb-0.5">{ORDER_STEPS[activeStep]?.label}</span>
-              <span className="text-amber-800">{ORDER_STEPS[activeStep]?.description}</span>
+              <span className="font-bold block mb-0.5">{ORDER_STEPS[activeStep]?.label || 'Order Verification'}</span>
+              <span className="text-amber-800">{ORDER_STEPS[activeStep]?.description || 'Your order is being reviewed by our fulfillment team.'}</span>
             </div>
           </div>
 
@@ -220,7 +253,9 @@ export default function TrackOrderPage() {
         <div className="bg-white rounded-3xl border border-rose-200 p-10 text-center space-y-3">
           <p className="text-2xl">🔍</p>
           <h2 className="font-bold text-slate-900">Order Not Found</h2>
-          <p className="text-xs text-slate-500">Please double-check your Order ID and email address, or contact our concierge team for assistance.</p>
+          <p className="text-xs text-slate-500">
+            {errorMsg || 'Please double-check your Order Reference ID and Email address, or contact our concierge team for assistance.'}
+          </p>
           <Link href="/contact-us" className="inline-block mt-2 text-xs font-bold text-amber-700 hover:underline">
             Contact Support →
           </Link>

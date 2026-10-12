@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { getAuth } from '@clerk/express';
+import { getAuth, clerkClient } from '@clerk/express';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -31,17 +31,44 @@ export class AuthGuard implements CanActivate {
       });
 
       if (!user) {
-        // Attempt to fetch email/name from request headers or default
-        const email = request.headers['x-user-email'] || `${clerkId}@clerk.user`;
-        const name = request.headers['x-user-name'] || null;
+        // SECURITY FIX: Fetch user info from Clerk API server-side,
+        // NOT from client-supplied headers (prevents account takeover via header spoofing)
+        let email = `${clerkId}@clerk.user`;
+        let name: string | null = null;
 
-        user = await this.prisma.user.create({
-          data: {
-            clerkId,
-            email,
-            name,
-          },
+        try {
+          const clerkUser = await clerkClient.users.getUser(clerkId);
+          const primaryEmail = clerkUser.emailAddresses.find(
+            (e) => e.id === clerkUser.primaryEmailAddressId,
+          );
+          if (primaryEmail) {
+            email = primaryEmail.emailAddress;
+          }
+          name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || null;
+        } catch (clerkErr) {
+          // If Clerk API fails, fallback to minimal user creation
+          console.warn(`Could not fetch Clerk user details for ${clerkId}:`, clerkErr);
+        }
+
+        // Check if pre-provisioned by email
+        const existingByEmail = await this.prisma.user.findFirst({
+          where: { email: { equals: email, mode: 'insensitive' } },
         });
+
+        if (existingByEmail) {
+          user = await this.prisma.user.update({
+            where: { id: existingByEmail.id },
+            data: { clerkId, ...(name ? { name } : {}) },
+          });
+        } else {
+          user = await this.prisma.user.create({
+            data: {
+              clerkId,
+              email,
+              name,
+            },
+          });
+        }
       }
 
       request.dbUser = user;

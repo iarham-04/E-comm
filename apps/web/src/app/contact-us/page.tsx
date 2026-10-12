@@ -36,7 +36,7 @@ export default function ContactUsPage() {
         <div className="space-y-6">
           <div>
             <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">Customer Support</span>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight mt-1">Get in Touch with Our Team</h1>
+            <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">Get in Touch with Our Team</h1>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               Have a question regarding custom armor orders, shipping status, or item specifications? Our specialists are available 7 days a week.
             </p>

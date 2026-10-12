@@ -25,7 +25,7 @@ export default function TermsPage() {
             <ShieldCheck className="w-4 h-4" />
             <span>Legal Documentation</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-neutral-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 tracking-tight">
             Terms and Conditions
           </h1>
           <div className="flex items-center space-x-4 mt-3 text-xs text-neutral-500">
@@ -48,7 +48,7 @@ export default function TermsPage() {
           
           {/* Section 1 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               1. Introduction
             </h2>
             <p>
@@ -62,7 +62,7 @@ export default function TermsPage() {
 
           {/* Section 2 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               2. Eligibility
             </h2>
             <p>
@@ -72,7 +72,7 @@ export default function TermsPage() {
 
           {/* Section 3 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               3. Account Registration &amp; Security
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -84,7 +84,7 @@ export default function TermsPage() {
 
           {/* Section 4 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               4. Products, Descriptions &amp; Pricing
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -97,7 +97,7 @@ export default function TermsPage() {
 
           {/* Section 5 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               5. Order Acceptance &amp; Confirmation
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -108,7 +108,7 @@ export default function TermsPage() {
 
           {/* Section 6 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               6. Payments &amp; Security
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -120,7 +120,7 @@ export default function TermsPage() {
 
           {/* Section 7 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               7. Shipping &amp; Delivery
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -132,7 +132,7 @@ export default function TermsPage() {
 
           {/* Section 8 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               8. Cancellations, Returns &amp; Refunds
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -145,7 +145,7 @@ export default function TermsPage() {
 
           {/* Section 9 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               9. Coupons &amp; Promotional Codes
             </h2>
             <p>
@@ -155,7 +155,7 @@ export default function TermsPage() {
 
           {/* Section 10 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               10. User-Generated Content &amp; Collector Reviews
             </h2>
             <p>
@@ -165,7 +165,7 @@ export default function TermsPage() {
 
           {/* Section 11 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               11. Intellectual Property
             </h2>
             <p>
@@ -175,7 +175,7 @@ export default function TermsPage() {
 
           {/* Section 12 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               12. Prohibited Activities
             </h2>
             <ul className="list-disc pl-5 space-y-2">
@@ -187,7 +187,7 @@ export default function TermsPage() {
 
           {/* Section 13 & 14 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               13. Limitation of Liability &amp; Indemnity
             </h2>
             <p>
@@ -200,7 +200,7 @@ export default function TermsPage() {
 
           {/* Section 15 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               14. Privacy &amp; Data Protection
             </h2>
             <p>
@@ -214,7 +214,7 @@ export default function TermsPage() {
 
           {/* Section 16 & 17 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               15. Governing Law &amp; Dispute Resolution
             </h2>
             <p>
@@ -224,7 +224,7 @@ export default function TermsPage() {
 
           {/* Section 18 */}
           <section className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-neutral-900 border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
               16. Amendments &amp; Policy Revisions
             </h2>
             <p>
@@ -234,7 +234,7 @@ export default function TermsPage() {
 
           {/* Section 19 */}
           <section className="space-y-3 border-t border-neutral-100 pt-6">
-            <h2 className="text-lg font-serif font-bold text-neutral-900">
+            <h2 className="text-lg font-display font-bold text-neutral-900">
               17. Contact Information &amp; Grievance Redressal
             </h2>
             <p className="text-xs text-neutral-600">

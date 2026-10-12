@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Download, Package, CheckCircle2, Truck, Star, XCircle, RefreshCw, Printer, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface OrderItemData {
   id: string;
@@ -58,7 +59,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/orders`);
+      const res = await adminFetch(`${API_URL}/admin/orders`);
       if (res.ok) {
         setOrders(await res.json());
       }
@@ -75,7 +76,7 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      const res = await fetch(`${API_URL}/admin/orders/${id}/status`, {
+      const res = await adminFetch(`${API_URL}/admin/orders/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -96,7 +97,7 @@ export default function AdminOrdersPage() {
     setMessage(null);
 
     try {
-      const res = await fetch(`${API_URL}/admin/orders/${refundModalOrder.id}/refund`, {
+      const res = await adminFetch(`${API_URL}/admin/orders/${refundModalOrder.id}/refund`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +130,7 @@ export default function AdminOrdersPage() {
     setMessage(null);
 
     try {
-      const res = await fetch(`${API_URL}/admin/orders/${trackingModalOrder.id}/tracking`, {
+      const res = await adminFetch(`${API_URL}/admin/orders/${trackingModalOrder.id}/tracking`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackingNumber, carrier }),
@@ -150,7 +151,7 @@ export default function AdminOrdersPage() {
 
   const handlePrintInvoice = async (orderId: string) => {
     try {
-      const res = await fetch(`${API_URL}/admin/orders/${orderId}/invoice`);
+      const res = await adminFetch(`${API_URL}/admin/orders/${orderId}/invoice`);
       if (res.ok) {
         const inv = await res.json();
         const win = window.open('', '_blank');
@@ -216,7 +217,7 @@ export default function AdminOrdersPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             Order Lifecycle &amp; Fulfillment
           </h1>
           <p className="text-xs text-neutral-400 mt-1">

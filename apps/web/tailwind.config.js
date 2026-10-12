@@ -16,8 +16,9 @@ module.exports = {
         ivory: '#ffffff',
       },
       fontFamily: {
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
-        body: ['Inter', '-apple-system', 'sans-serif'],
+        display: ['var(--font-cormorant)', 'Cormorant Garamond', 'Georgia', 'serif'],
+        body: ['var(--font-inter)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
     },
   },

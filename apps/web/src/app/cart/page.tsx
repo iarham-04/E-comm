@@ -16,7 +16,7 @@ export default function CartPage() {
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <div className="bg-white rounded-3xl border border-slate-200 p-12 max-w-md mx-auto shadow-sm">
           <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h1 className="text-2xl font-black text-slate-900">Your Cart is Empty</h1>
+          <h1 className="font-display text-2xl font-black text-slate-900">Your Cart is Empty</h1>
           <p className="text-xs text-slate-500 mt-2 mb-6">Explore our curated collections of authentic medieval armor and collectibles.</p>
           <Link
             href="/products"
@@ -31,7 +31,7 @@ export default function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-extrabold text-slate-900 mb-4">Shopping Cart ({items.length} items)</h1>
+      <h1 className="font-display text-3xl font-black text-slate-900 mb-4">Shopping Cart ({items.length} items)</h1>
 
       {/* Currency & Settlement Integrity Notice */}
       <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-8 shadow-xs">
@@ -123,7 +123,7 @@ export default function CartPage() {
 
           <div className="flex justify-between items-baseline pt-2">
             <span className="text-sm font-bold text-slate-900">Total</span>
-            <span className="text-2xl font-black text-slate-900">₹{total.toLocaleString('en-IN')}</span>
+            <span className="font-display text-2xl font-black text-slate-900">₹{total.toLocaleString('en-IN')}</span>
           </div>
 
           <Link

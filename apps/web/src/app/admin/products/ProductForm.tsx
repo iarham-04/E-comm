@@ -8,6 +8,7 @@ import {
   Upload, X, Image as ImageIcon, CheckCircle2, Sparkles
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 const COMMON_MATERIALS = [
   'Brass', 'Bronze', 'Iron', 'Steel', 'Teak Wood', 'Oak', 'Ceramic',
@@ -158,7 +159,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
     setDuplicating(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/admin/products/${productId}/duplicate`, {
+      const res = await adminFetch(`${API_URL}/admin/products/${productId}/duplicate`, {
         method: 'POST',
       });
       if (!res.ok) throw new Error('Failed to duplicate product');
@@ -247,7 +248,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           <Link href="/admin/products" className="text-xs font-bold text-neutral-500 hover:text-neutral-600 transition-colors">
             ← Back to Products
           </Link>
-          <h1 className="font-display text-3xl font-black text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-3xl font-black text-neutral-900 tracking-tight mt-1">
             {mode === 'create' ? 'Add New Product' : 'Edit Product'}
           </h1>
         </div>
@@ -551,7 +552,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
             <div>
               <span className="text-xs font-bold text-neutral-700">Limited Edition Batch</span>
               <p className="text-[11px] text-neutral-500">
-                Displays a "127 of 500" numbered badge on the storefront.
+                Displays a &ldquo;127 of 500&rdquo; numbered badge on the storefront.
               </p>
             </div>
           </label>

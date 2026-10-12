@@ -7,6 +7,7 @@ import {
   TrendingUp, Trash2, Edit3, ExternalLink, Loader2, Sparkles, RefreshCw
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface ProductItem {
   id: string;
@@ -32,7 +33,7 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/products`);
+      const res = await adminFetch(`${API_URL}/admin/products`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -90,7 +91,7 @@ export default function AdminProductsPage() {
 
     setActionLoading(id);
     try {
-      await fetch(`${API_URL}/admin/products/${id}`, {
+      await adminFetch(`${API_URL}/admin/products/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stock: newStock }),
@@ -111,7 +112,7 @@ export default function AdminProductsPage() {
   const toggleActive = async (id: string, currentActive: boolean) => {
     setActionLoading(id);
     try {
-      await fetch(`${API_URL}/admin/products/${id}`, {
+      await adminFetch(`${API_URL}/admin/products/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentActive }),
@@ -134,7 +135,7 @@ export default function AdminProductsPage() {
 
     setActionLoading(id);
     try {
-      await fetch(`${API_URL}/admin/products/${id}`, { method: 'DELETE' });
+      await adminFetch(`${API_URL}/admin/products/${id}`, { method: 'DELETE' });
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch {
       // fallback
@@ -154,7 +155,7 @@ export default function AdminProductsPage() {
           >
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mt-1">
             Product &amp; Inventory Management
           </h1>
           <p className="text-xs text-neutral-500 mt-1">

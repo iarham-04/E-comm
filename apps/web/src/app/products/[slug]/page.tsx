@@ -253,7 +253,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   const hasDimensions = product.heightCm || product.widthCm || product.depthCm || product.weightKg;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 sm:pb-8 space-y-12">
 
       {/* ── Breadcrumbs ────────────────────────────────────────────────────── */}
       <Breadcrumb
@@ -845,6 +845,43 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           </div>
         </div>
       )}
+
+          {/* ── STICKY MOBILE ACTION BAR (FIXED TO SCREEN) ────────────────────── */}
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 px-4 lg:hidden flex items-center gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <button
+          onClick={handleAddToCart}
+          disabled={product.stock === 0}
+          className={`flex-1 py-3.5 px-5 rounded-2xl font-bold text-xs flex items-center justify-center space-x-2 shadow-md transition-all duration-150 active:scale-[0.98] ${
+            product.stock === 0
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+              : addedToCart
+              ? 'bg-emerald-600 text-white'
+              : 'bg-slate-900 text-white active:bg-slate-800'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>
+            {product.stock === 0
+              ? 'Currently Out of Stock'
+              : addedToCart
+              ? 'Added to Cart ✓'
+              : `Add to Cart · ${formatPrice(finalUnitPrice)}`}
+          </span>
+        </button>
+
+        <button
+          onClick={handleToggleWishlist}
+          title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all flex-shrink-0 ${
+            isWishlisted
+              ? 'bg-rose-50 border-rose-200 text-rose-500 shadow-sm'
+              : 'bg-white border-slate-200 text-slate-500 active:bg-slate-50'
+          }`}
+          aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+        >
+          <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
+        </button>
+      </div>
 
     </div>
   );

@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Prisma } from "@prisma/client";
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 
@@ -54,14 +55,24 @@ export class OrdersService {
       throw new BadRequestException('Order items cannot be empty.');
     }
 
+    // Validate item quantities
+    for (const item of dto.items) {
+      if (!item.quantity || item.quantity <= 0 || !Number.isInteger(item.quantity)) {
+        throw new BadRequestException('Item quantities must be positive integers.');
+      }
+      if (item.quantity > 100) {
+        throw new BadRequestException('Maximum quantity per item is 100.');
+      }
+    }
+
     // 1. Fetch Store Settings singleton
     let settings = await this.prisma.storeSettings.findUnique({ where: { id: 'singleton' } });
     if (!settings) {
       settings = {
         id: 'singleton',
-        flatShippingFee: new (require('@prisma/client').Prisma.Decimal)(0),
-        freeShippingThreshold: new (require('@prisma/client').Prisma.Decimal)(1999),
-        taxPercent: new (require('@prisma/client').Prisma.Decimal)(18),
+        flatShippingFee: new Prisma.Decimal(0),
+        freeShippingThreshold: new Prisma.Decimal(1999),
+        taxPercent: new Prisma.Decimal(18),
         razorpayEnabled: true,
         codEnabled: true,
         updatedAt: new Date(),
@@ -80,7 +91,7 @@ export class OrdersService {
     const productIds = dto.items.map((i) => i.productId);
     const dbProducts = await this.prisma.product.findMany({
       where: { id: { in: productIds } },
-      include: { collections: true },
+      include: { collections: true, variants: true },
     });
 
     for (const item of dto.items) {
@@ -93,8 +104,24 @@ export class OrdersService {
       }
     }
 
-    // 3. Subtotal computation
-    const subtotal = dto.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    // 3. SECURITY FIX: Compute subtotal using SERVER-SIDE prices from the database,
+    //    never trust client-supplied prices.
+    const subtotal = dto.items.reduce((acc, item) => {
+      const product = dbProducts.find((p) => p.id === item.productId);
+      if (!product) return acc;
+
+      let unitPrice = Number(product.price);
+
+      // If a variant is specified, add its priceDelta to the base price
+      if (item.variantId && product.variants) {
+        const variant = product.variants.find((v: any) => v.id === item.variantId);
+        if (variant && variant.priceDelta) {
+          unitPrice += Number(variant.priceDelta);
+        }
+      }
+
+      return acc + unitPrice * item.quantity;
+    }, 0);
 
     // 4. Shipping computation using StoreSettings
     const freeThreshold = settings.freeShippingThreshold ? Number(settings.freeShippingThreshold) : 1999;
@@ -149,7 +176,11 @@ export class OrdersService {
       const collectionItemSubtotal = dto.items.reduce((acc, item) => {
         const product = dbProducts.find((p) => p.id === item.productId);
         const belongsToCollection = product?.collections.some((c) => c.id === autoCoupon.appliesToCollectionId);
-        return belongsToCollection ? acc + item.price * item.quantity : acc;
+        if (!belongsToCollection) return acc;
+
+        // Use server-side price for discount calculation too
+        const unitPrice = Number(product!.price);
+        return acc + unitPrice * item.quantity;
       }, 0);
 
       if (collectionItemSubtotal > 0) {
@@ -183,6 +214,9 @@ export class OrdersService {
     // Transactional Order Creation & Stock Deduction
     const order = await this.prisma.$transaction(async (tx) => {
       for (const item of dto.items) {
+        const product = dbProducts.find((p) => p.id === item.productId);
+        if (!product) continue;
+
         await tx.product.update({
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },
@@ -212,12 +246,21 @@ export class OrdersService {
           couponCode: appliedCouponCode,
           total,
           items: {
-            create: dto.items.map((item) => ({
-              productId: item.productId,
-              variantId: item.variantId || null,
-              quantity: item.quantity,
-              priceAtPurchase: item.price,
-            })),
+            create: dto.items.map((item) => {
+              // Use server-side price for priceAtPurchase
+              const product = dbProducts.find((p) => p.id === item.productId);
+              let unitPrice = product ? Number(product.price) : 0;
+              if (item.variantId && product?.variants) {
+                const variant = (product.variants as any[]).find((v) => v.id === item.variantId);
+                if (variant?.priceDelta) unitPrice += Number(variant.priceDelta);
+              }
+              return {
+                productId: item.productId,
+                variantId: item.variantId || null,
+                quantity: item.quantity,
+                priceAtPurchase: unitPrice,
+              };
+            }),
           },
         },
         include: {
@@ -237,6 +280,10 @@ export class OrdersService {
   }
 
   async trackOrder(id: string, email: string) {
+    if (!id || !email) {
+      throw new BadRequestException('Order ID and email are required for tracking.');
+    }
+
     const order = await this.prisma.order.findFirst({
       where: {
         id,
@@ -254,7 +301,45 @@ export class OrdersService {
     return order;
   }
 
-  
+  /**
+   * Find order by ID — only accessible to the order's owner.
+   * Prevents unauthorized access to other users' order data (PII protection).
+   */
+  async findOneForUser(id: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                images: true,
+                price: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order #${id} not found.`);
+    }
+
+    // Verify the requesting user owns this order
+    if (order.userId !== userId) {
+      throw new ForbiddenException('You do not have permission to view this order.');
+    }
+
+    return order;
+  }
+
+  /**
+   * Find order by ID — admin use only (no ownership check).
+   */
   async findOne(id: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },

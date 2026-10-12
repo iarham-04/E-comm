@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Users, ShieldCheck, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 interface UserData {
   id: string;
@@ -24,7 +25,7 @@ export default function UserRolesPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/users`);
+      const res = await adminFetch(`${API_URL}/admin/users`);
       if (res.ok) setUsers(await res.json());
     } catch {
       setMessage({ type: 'error', text: 'Failed to load users.' });
@@ -40,7 +41,7 @@ export default function UserRolesPage() {
   const handleRoleChange = async (userId: string, newRole: string) => {
     setMessage(null);
     try {
-      const res = await fetch(`${API_URL}/admin/users/${userId}/role`, {
+      const res = await adminFetch(`${API_URL}/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),
@@ -65,7 +66,7 @@ export default function UserRolesPage() {
           <Link href="/admin" className="text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">
             ← Admin Dashboard
           </Link>
-          <h1 className="font-display text-2xl font-bold text-neutral-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight mt-1">
             User Roles &amp; Staff Access Governance
           </h1>
           <p className="text-xs text-neutral-400">Assign role-based permissions (Support, Manager, Owner). System enforces last Owner safeguard.</p>

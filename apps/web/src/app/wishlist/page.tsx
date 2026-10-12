@@ -14,7 +14,7 @@ export default function WishlistPage() {
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <div className="bg-white rounded-3xl border border-slate-200 p-12 max-w-md mx-auto shadow-sm">
           <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h1 className="text-2xl font-black text-slate-900">Your Wishlist is Empty</h1>
+          <h1 className="font-display text-2xl font-black text-slate-900">Your Wishlist is Empty</h1>
           <p className="text-xs text-slate-500 mt-2 mb-6">Save your favorite historical armor and collectibles to view them later.</p>
           <Link
             href="/products"
@@ -29,7 +29,7 @@ export default function WishlistPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-extrabold text-slate-900 mb-8">My Saved Wishlist ({items.length} items)</h1>
+      <h1 className="font-display text-3xl font-black text-slate-900 mb-8">My Saved Wishlist ({items.length} items)</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {items.map((item) => (

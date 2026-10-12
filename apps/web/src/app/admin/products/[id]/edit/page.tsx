@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ProductForm from '../../ProductForm';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 import { Loader2 } from 'lucide-react';
 
 export default function EditProductPage() {
@@ -13,7 +14,7 @@ export default function EditProductPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetch(`${API_URL}/admin/products/${id}`)
+    adminFetch(`${API_URL}/admin/products/${id}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) {

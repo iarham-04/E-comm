@@ -1,7 +1,7 @@
 export default function HelpCenterPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-extrabold text-slate-900 mb-4">Help Center & FAQ</h1>
+      <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 mb-4">Help Center & FAQ</h1>
       <p className="text-slate-600 mb-8">Find quick answers to common questions about orders, payments, and shipping.</p>
 
       <div className="space-y-4">

@@ -2,35 +2,41 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import ProductGridCard from '@/components/ProductGridCard';
-import { Search, Package, X, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Search, Package, X, Loader2, SlidersHorizontal, LayoutGrid, List, Check } from 'lucide-react';
+import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { API_URL } from '@/lib/api';
 
 const DEMO_PRODUCTS = [
-  { id: 'p-1', name: 'Full Suit of Templar Knight Armor', slug: 'templar-knight-armor', category: 'Medieval', price: 34999.00, rating: 4.9, reviewsCount: 84, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=800', stock: 5, material: 'Steel', isLimitedEdition: true },
+  { id: 'p-1', name: 'Full Suit of Templar Knight Armor', slug: 'templar-knight-armor', category: 'Medieval', price: 34999.00, rating: 4.9, reviewsCount: 84, image: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=800', stock: 5, material: 'Steel', isLimitedEdition: true },
   { id: 'p-2', name: 'Hand-Carved Nordic Viking Battle Axe', slug: 'viking-battle-axe', category: 'Viking', price: 8499.00, rating: 4.8, reviewsCount: 112, image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800', stock: 12, material: 'Steel', isLimitedEdition: false },
   { id: 'p-3', name: 'Roman Centurion Brass Officer Helmet', slug: 'roman-officer-helmet', category: 'Roman', price: 6299.00, rating: 4.7, reviewsCount: 46, image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=800', stock: 8, material: 'Brass', isLimitedEdition: false },
   { id: 'p-4', name: 'Artisan Solid Oak Gothic Armchair', slug: 'gothic-oak-armchair', category: 'Furniture', price: 18999.00, rating: 5.0, reviewsCount: 29, image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800', stock: 3, material: 'Oak', isLimitedEdition: false },
   { id: 'p-5', name: 'Gothic Iron Candelabra Set', slug: 'gothic-iron-candelabra', category: 'Home Décor', price: 3499.00, rating: 4.9, reviewsCount: 63, image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800', stock: 15, material: 'Iron', isLimitedEdition: false },
   { id: 'p-6', name: 'Hand-Forged Damascene Steel Dagger', slug: 'damascene-steel-dagger', category: 'Collectibles', price: 7299.00, rating: 4.9, reviewsCount: 31, image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800', stock: 6, material: 'Damascene Steel', isLimitedEdition: true },
+  { id: 'p-7', name: 'Twin Stick Alabaster Sconce', slug: 'twin-stick-wall-sconce', category: 'Home Décor', price: 14500.00, rating: 4.8, reviewsCount: 15, image: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=800', stock: 8, material: 'Brass', isLimitedEdition: false },
+  { id: 'p-8', name: 'Capsula Modern Alabaster Wall Sconce', slug: 'capsula-modern-alabaster-sconce', category: 'Home Décor', price: 16800.00, rating: 5.0, reviewsCount: 19, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=800', stock: 4, material: 'Stone', isLimitedEdition: false },
 ];
 
 const SORT_OPTIONS = [
-  { value: 'newest',     label: 'Newest' },
+  { value: 'relevance',  label: 'Relevance' },
+  { value: 'newest',     label: 'Newest Arrivals' },
   { value: 'price_asc',  label: 'Price: Low → High' },
   { value: 'price_desc', label: 'Price: High → Low' },
-  { value: 'relevance',  label: 'Most Relevant' },
+  { value: 'rating_desc',label: 'Highest Rated' },
 ];
 
 export default function ProductsPage({ searchParams }: { searchParams?: { search?: string } }) {
-  const [products,    setProducts]    = useState<any[]>(DEMO_PRODUCTS);
-  const [loading,     setLoading]     = useState(true);
-  const [search,      setSearch]      = useState(searchParams?.search ?? '');
-  const [category,    setCategory]    = useState('All');
-  const [material,    setMaterial]    = useState('All');
+  const [products, setProducts] = useState<any[]>(DEMO_PRODUCTS);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState(searchParams?.search ?? '');
+  const [category, setCategory] = useState('All');
+  const [material, setMaterial] = useState('All');
   const [limitedOnly, setLimitedOnly] = useState(false);
-  const [sort,        setSort]        = useState('newest');
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sort, setSort] = useState('relevance');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/products`)
@@ -47,7 +53,8 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
               price: Number(p.price) || 0,
               rating: p.rating || 4.9,
               reviewsCount: p.reviewsCount || 0,
-              image: p.images?.[0] || 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=800',
+              image: p.images?.[0] || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=800',
+              images: p.images || [],
               stock: p.stock ?? 10,
               material: p.material || 'Artisanal Forged',
               isLimitedEdition: !!p.isLimitedEdition,
@@ -81,10 +88,17 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
     setCategory('All');
     setMaterial('All');
     setLimitedOnly(false);
-    setSort('newest');
+    setInStockOnly(false);
+    setSort('relevance');
   };
 
-  const hasFilters = search || category !== 'All' || material !== 'All' || limitedOnly;
+  const activeFiltersCount = [
+    category !== 'All',
+    material !== 'All',
+    limitedOnly,
+    inStockOnly,
+    Boolean(search),
+  ].filter(Boolean).length;
 
   const filtered = products
     .filter((p) => {
@@ -98,187 +112,348 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
       if (category !== 'All' && catName !== category) return false;
       if (material !== 'All' && p.material !== material) return false;
       if (limitedOnly && !p.isLimitedEdition) return false;
+      if (inStockOnly && p.stock === 0) return false;
       return true;
     })
     .sort((a, b) => {
       if (sort === 'price_asc') return a.price - b.price;
       if (sort === 'price_desc') return b.price - a.price;
+      if (sort === 'rating_desc') return (b.rating || 0) - (a.rating || 0);
       return 0;
     });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
 
-      {/* Page Header */}
-      <div className="border-b border-slate-100 pb-8 space-y-2">
-        <Badge variant="gold" size="sm">
-          Curated Collection · {products.length} Museum-Grade Pieces
-        </Badge>
-        <h1 className="font-display text-4xl font-black text-slate-900 tracking-tight">
-          {search ? `Results for "${search}"` : 'The Collection'}
-        </h1>
-        <p className="text-xs text-slate-500">
-          Every piece earns its place. Showing {filtered.length} items.
-        </p>
-      </div>
-
-      {/* Search Bar */}
-      <div className="relative max-w-lg">
-        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-        <input
-          type="search"
-          placeholder="Search by name, category, or material..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 text-xs bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-        />
+        {/* Search & Quick Bar (Optional clean search) */}
         {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-700"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <h1 className="font-display text-2xl sm:text-3xl text-slate-900">
+              Results for &ldquo;{search}&rdquo;
+            </h1>
+            <button
+              onClick={() => setSearch('')}
+              className="text-xs text-slate-500 hover:text-slate-900 flex items-center space-x-1"
+            >
+              <span>Clear search</span>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
-      </div>
 
-      {/* Filters Row */}
-      <div className="flex flex-wrap gap-y-4 gap-x-6 items-start">
-        {/* Category pills */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Category
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+        {/* ─── YIOSI REFERENCE TOOLBAR ─── */}
+        <div className="flex items-center justify-between border-b border-slate-200/80 pb-4 select-none">
+          {/* Left: Show filter toggle */}
+          <button
+            onClick={() => setFilterDrawerOpen(true)}
+            className="flex items-center space-x-2 text-xs sm:text-sm font-medium text-slate-900 hover:text-amber-800 transition-colors group py-1"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-slate-700 group-hover:text-amber-800 transition-colors" />
+            <span>Show filter</span>
+            {activeFiltersCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center ml-1">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+
+          {/* Right: Results Count + View Switcher + Sort by dropdown */}
+          <div className="flex items-center space-x-2.5 sm:space-x-8 text-xs sm:text-sm text-slate-600">
+            {/* Results count */}
+            <span className="text-slate-500 font-normal text-[11px] sm:text-sm">
+              {filtered.length} results
+            </span>
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center space-x-0.5 border-l border-r border-slate-200 px-1.5 sm:px-3">
               <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${
-                  category === cat
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                onClick={() => setViewMode('list')}
+                className={`p-1 sm:p-1.5 rounded transition-colors ${
+                  viewMode === 'list'
+                    ? 'text-slate-900 bg-slate-100'
+                    : 'text-slate-400 hover:text-slate-700'
                 }`}
+                title="List view"
+                aria-label="List view"
               >
-                {cat}
+                <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
-            ))}
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1 sm:p-1.5 rounded transition-colors ${
+                  viewMode === 'grid'
+                    ? 'text-slate-900 bg-slate-100'
+                    : 'text-slate-400 hover:text-slate-700'
+                }`}
+                title="Grid view"
+                aria-label="Grid view"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            </div>
+
+            {/* Sort by dropdown */}
+            <div className="flex items-center space-x-1">
+              <span className="text-slate-500 hidden md:inline">Sort by:</span>
+              <div className="relative inline-block">
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="bg-transparent text-slate-900 font-medium text-[11px] sm:text-sm pr-3 sm:pr-6 py-1 focus:outline-none cursor-pointer border-none"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Material pills */}
-        {materials.length > 1 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Material
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {materials.map((mat) => (
+        {/* ─── ACTIVE FILTER CHIPS (IF ANY) ─── */}
+        {activeFiltersCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-slate-400 font-medium mr-1">Active:</span>
+            {category !== 'All' && (
+              <span className="inline-flex items-center space-x-1 text-xs bg-slate-100 text-slate-800 px-2.5 py-1 rounded-full">
+                <span>{category}</span>
+                <button onClick={() => setCategory('All')} className="hover:text-rose-600">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {material !== 'All' && (
+              <span className="inline-flex items-center space-x-1 text-xs bg-slate-100 text-slate-800 px-2.5 py-1 rounded-full">
+                <span>{material}</span>
+                <button onClick={() => setMaterial('All')} className="hover:text-rose-600">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {limitedOnly && (
+              <span className="inline-flex items-center space-x-1 text-xs bg-slate-100 text-slate-800 px-2.5 py-1 rounded-full">
+                <span>Limited Editions</span>
+                <button onClick={() => setLimitedOnly(false)} className="hover:text-rose-600">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {inStockOnly && (
+              <span className="inline-flex items-center space-x-1 text-xs bg-slate-100 text-slate-800 px-2.5 py-1 rounded-full">
+                <span>In Stock Only</span>
+                <button onClick={() => setInStockOnly(false)} className="hover:text-rose-600">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={clearFilters}
+              className="text-xs text-slate-500 hover:text-slate-900 underline ml-2"
+            >
+              Reset all
+            </button>
+          </div>
+        )}
+
+        {/* ─── PRODUCT LISTING (GRID OR LIST) ─── */}
+        {loading ? (
+          <div className="py-24 text-center text-slate-400 text-xs">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-amber-500" />
+            <span className="tracking-wide">Loading catalog...</span>
+          </div>
+        ) : filtered.length > 0 ? (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3.5 gap-y-8 sm:gap-x-6 sm:gap-y-12">
+              {filtered.map((product) => (
+                <ProductGridCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  slug={product.slug}
+                  category={
+                    typeof product.category === 'object'
+                      ? product.category?.name || 'General'
+                      : product.category || 'General'
+                  }
+                  price={product.price}
+                  rating={product.rating}
+                  reviewsCount={product.reviewsCount}
+                  image={product.image}
+                  images={product.images}
+                  stock={product.stock}
+                  material={product.material}
+                  isLimitedEdition={product.isLimitedEdition}
+                  viewMode="grid"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filtered.map((product) => (
+                <ProductGridCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  slug={product.slug}
+                  category={
+                    typeof product.category === 'object'
+                      ? product.category?.name || 'General'
+                      : product.category || 'General'
+                  }
+                  price={product.price}
+                  rating={product.rating}
+                  reviewsCount={product.reviewsCount}
+                  image={product.image}
+                  images={product.images}
+                  stock={product.stock}
+                  material={product.material}
+                  isLimitedEdition={product.isLimitedEdition}
+                  viewMode="list"
+                />
+              ))}
+            </div>
+          )
+        ) : (
+          <EmptyState
+            icon={<Package className="w-8 h-8" />}
+            title="No pieces found"
+            description="Try changing your filters or searching for another term."
+            actionLabel="View All Pieces"
+            onAction={clearFilters}
+          />
+        )}
+      </div>
+
+      {/* ─── LEFT SLIDE-IN FILTER DRAWER ─── */}
+      <Drawer
+        isOpen={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        title="Filter"
+        side="left"
+        size="md"
+      >
+        <div className="space-y-8 pb-12">
+          {/* Search within filter */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Search
+            </label>
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <input
+                type="text"
+                placeholder="Search collection..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+              />
+              {search && (
                 <button
-                  key={mat}
-                  onClick={() => setMaterial(mat)}
-                  className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${
-                    material === mat
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Collections / Categories */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Collections
+            </h4>
+            <div className="space-y-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors ${
+                    category === cat
+                      ? 'bg-slate-900 text-white font-medium'
+                      : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  {mat}
+                  <span>{cat === 'All' ? 'All Collections' : cat}</span>
+                  {category === cat && <Check className="w-3.5 h-3.5 text-white" />}
                 </button>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Limited Edition Toggle */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Rarity
-          </p>
-          <button
-            onClick={() => setLimitedOnly(!limitedOnly)}
-            className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all ${
-              limitedOnly
-                ? 'bg-amber-500 border-amber-500 text-slate-950 font-black'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            Numbered Limited Editions
-          </button>
-        </div>
+          {/* Materials */}
+          {materials.length > 1 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Material
+              </h4>
+              <div className="space-y-1">
+                {materials.map((mat) => (
+                  <button
+                    key={mat}
+                    onClick={() => setMaterial(mat)}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors ${
+                      material === mat
+                        ? 'bg-slate-900 text-white font-medium'
+                        : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>{mat === 'All' ? 'All Materials' : mat}</span>
+                    {material === mat && <Check className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {/* Sort */}
-        <div className="space-y-1.5 ml-auto">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Sort
-          </p>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="text-xs font-bold px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          {/* Rarity & Availability */}
+          <div className="space-y-3 pt-2 border-t border-slate-100">
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Availability &amp; Editions
+            </h4>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
+                <span className="text-xs text-slate-800">In Stock Only</span>
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="w-4 h-4 text-slate-900 rounded focus:ring-slate-900"
+                />
+              </label>
 
-      {/* Clear Filters bar */}
-      {hasFilters && (
-        <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 text-xs">
-          <span className="text-amber-900 font-semibold">
-            Filtered view: Showing {filtered.length} of {products.length} pieces
-          </span>
-          <button
-            onClick={clearFilters}
-            className="text-amber-800 font-black hover:underline"
-          >
-            Reset all filters
-          </button>
-        </div>
-      )}
+              <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
+                <span className="text-xs text-slate-800">Numbered Limited Editions</span>
+                <input
+                  type="checkbox"
+                  checked={limitedOnly}
+                  onChange={(e) => setLimitedOnly(e.target.checked)}
+                  className="w-4 h-4 text-slate-900 rounded focus:ring-slate-900"
+                />
+              </label>
+            </div>
+          </div>
 
-      {/* Product Grid */}
-      {loading ? (
-        <div className="py-20 text-center text-slate-400 text-xs">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-amber-500" />
-          <span>Loading collection catalog...</span>
+          {/* Bottom Drawer Actions */}
+          <div className="pt-6 border-t border-slate-200 flex items-center gap-3">
+            <button
+              onClick={clearFilters}
+              className="w-1/3 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Reset
+            </button>
+            <button
+              onClick={() => setFilterDrawerOpen(false)}
+              className="flex-1 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm transition-colors"
+            >
+              Show {filtered.length} Results
+            </button>
+          </div>
         </div>
-      ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filtered.map((product) => (
-            <ProductGridCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              slug={product.slug}
-              category={
-                typeof product.category === 'object'
-                  ? product.category?.name || 'General'
-                  : product.category || 'General'
-              }
-              price={product.price}
-              rating={product.rating}
-              reviewsCount={product.reviewsCount}
-              image={product.image}
-              stock={product.stock}
-              material={product.material}
-              isLimitedEdition={product.isLimitedEdition}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={<Package className="w-8 h-8" />}
-          title="No pieces found"
-          description="Try broadening your search or resetting active filters."
-          actionLabel="View All Pieces"
-          onAction={clearFilters}
-        />
-      )}
+      </Drawer>
     </div>
   );
 }

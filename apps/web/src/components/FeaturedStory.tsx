@@ -13,7 +13,7 @@ export default function FeaturedStory() {
               <span>Our Heritage & Artisan Story</span>
             </div>
 
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+            <h2 className="font-display text-3xl sm:text-5xl font-black tracking-tight leading-tight">
               Forged by Hand, Built for <span className="text-amber-400">Eternity</span>
             </h2>
 

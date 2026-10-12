@@ -8,6 +8,7 @@ import {
   CheckCircle2, Truck, MessageSquare, Star, RefreshCw, Loader2
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { adminFetch } from '@/lib/adminApi';
 
 const FUNNEL_EVENTS = [
   { label: 'Homepage Views',     icon: Eye,           value: 8240, color: '#4f46e5' },
@@ -50,7 +51,7 @@ export default function AdminDashboardPage() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/dashboard`);
+      const res = await adminFetch(`${API_URL}/admin/dashboard`);
       if (res.ok) {
         const data = await res.json();
         if (data) {
@@ -86,7 +87,7 @@ export default function AdminDashboardPage() {
           <span className="text-[10px] font-bold text-neutral-700 uppercase tracking-widest bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-300 inline-block mb-1">
             Store Control Center
           </span>
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
             Executive Command Centre
           </h1>
           <p className="text-xs text-neutral-500 mt-0.5">

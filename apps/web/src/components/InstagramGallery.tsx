@@ -37,7 +37,7 @@ export default function InstagramGallery() {
             <Instagram className="w-4 h-4" />
             <span>Community Gallery</span>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight mt-1">
+          <h2 className="font-display text-3xl font-black text-slate-900 tracking-tight mt-1">
             Follow Us On Instagram
           </h2>
           <p className="text-xs text-slate-500 mt-2">
