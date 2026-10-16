@@ -79,7 +79,19 @@ export async function adminFetch(
     headers.set('x-user-name', localSession.name);
   }
 
-  return fetch(input, {
+  let finalInput = input;
+  if (typeof input === 'string') {
+    if (input.includes('/admin/') || input.includes('/uploads')) {
+      const pathWithParams = input.replace(/^https?:\/\/[^\/]+/, '');
+      if (pathWithParams.startsWith('/admin/')) {
+        finalInput = `/api${pathWithParams}`;
+      } else if (pathWithParams.startsWith('/uploads')) {
+        finalInput = '/api/uploads';
+      }
+    }
+  }
+
+  return fetch(finalInput, {
     ...init,
     headers,
   });
