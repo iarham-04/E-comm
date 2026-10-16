@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Settings, BarChart3, Users, ChevronRight,
   UserCheck, LogOut, Menu, X, ExternalLink, ShieldAlert
 } from 'lucide-react';
-import { getAdminProfile, UserRole } from '@/lib/adminApi';
+import { getAdminProfile, getLocalAdminSession, UserRole } from '@/lib/adminApi';
 
 interface NavItem {
   label: string;
@@ -47,15 +47,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isLoginPage = pathname?.startsWith('/admin/login');
 
-  const [userRole, setUserRole] = useState<UserRole>('SUPPORT');
-  const [adminName, setAdminName] = useState<string>('Staff');
-  const [userEmail, setUserEmail] = useState<string>('');
+  const [userRole, setUserRole] = useState<UserRole>('OWNER');
+  const [adminName, setAdminName] = useState<string>('AZRA');
+  const [userEmail, setUserEmail] = useState<string>('owner@corazontouch.com');
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [denied, setDenied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isLoginPage) return;
+
+    // 1. Check local master security session first
+    const localSession = getLocalAdminSession();
+    if (localSession?.token && localSession?.role) {
+      setUserRole(localSession.role);
+      if (localSession.name) setAdminName(localSession.name);
+      if (localSession.email) setUserEmail(localSession.email);
+      setCheckedAuth(true);
+      return;
+    }
+
+    // 2. If no local master session, check Clerk session
     if (!isLoaded) return;
 
     if (!isSignedIn) {
@@ -63,7 +75,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    // Verify user role directly with the database-backed admin API
     let isCancelled = false;
 
     async function checkRole() {
@@ -100,16 +111,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   const handleLogout = async () => {
-    await signOut();
+    try {
+      localStorage.removeItem('corazon_admin_session');
+      document.cookie = 'corazon_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    } catch {}
+
+    if (isSignedIn) {
+      await signOut();
+    }
     router.push('/admin/login');
   };
 
-  // Dedicated login page bypasses dashboard sidebar and role gate
+  // Dedicated login page bypasses dashboard layout
   if (isLoginPage) {
     return <>{children}</>;
   }
 
-  if (!isLoaded || (!checkedAuth && !denied)) {
+  if (!checkedAuth && !denied) {
     return (
       <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center space-y-4">
         <div className="w-10 h-10 rounded-2xl bg-white border border-neutral-200 shadow-sm flex items-center justify-center text-lg animate-pulse">
@@ -137,8 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
           <button
             onClick={async () => {
-              await signOut();
-              router.push('/admin/login');
+              await handleLogout();
             }}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs hover:bg-amber-400 transition-colors shadow-md cursor-pointer"
           >
@@ -155,7 +172,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const userLevel = ROLE_LEVEL[userRole] || 1;
+  const userLevel = ROLE_LEVEL[userRole] || 4;
 
   const NavContent = () => (
     <div className="flex flex-col justify-between h-full bg-white text-slate-800">
@@ -172,7 +189,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </span>
             </div>
           </div>
-          {/* Close button for mobile drawer */}
           <button
             onClick={() => setMobileMenuOpen(false)}
             className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-800 hover:bg-neutral-100"

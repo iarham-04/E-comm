@@ -33,6 +33,28 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
+    // 0. Support Master Admin PIN session tokens (adm_...)
+    const authHeader = request.headers['authorization'] || request.headers['x-admin-token'];
+    if (authHeader) {
+      const token = typeof authHeader === 'string' ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
+      if (token.startsWith('adm_')) {
+        try {
+          const raw = Buffer.from(token.replace('adm_', ''), 'base64').toString('utf8');
+          const [name] = raw.split(':');
+          request.dbUser = {
+            id: 'admin-master',
+            clerkId: 'admin-master',
+            role: UserRole.OWNER,
+            email: 'azra@corazontouch.com',
+            name: name || 'AZRA',
+          };
+          return true;
+        } catch {
+          // Fall through to Clerk verification
+        }
+      }
+    }
+
     // 1. Authenticate caller via Clerk session token verification
     let clerkId: string | null = null;
     try {

@@ -25,9 +25,15 @@ export default clerkMiddleware(
     const { pathname } = req.nextUrl;
 
     // Dedicated separation for admin portal:
-    // If accessing any /admin route (except /admin/login) unauthenticated,
-    // redirect to dedicated /admin/login portal rather than the customer sign-in.
+    // If accessing any /admin route (except /admin/login):
     if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+      // 1. Allow if master admin cookie is present
+      const adminCookie = req.cookies.get('corazon_admin_token');
+      if (adminCookie?.value?.startsWith('adm_')) {
+        return NextResponse.next();
+      }
+
+      // 2. Otherwise check Clerk authentication
       try {
         const authObj = typeof auth === 'function' ? await (auth as any)() : auth;
         if (!authObj?.userId) {
@@ -40,7 +46,7 @@ export default clerkMiddleware(
         loginUrl.searchParams.set('redirect_url', pathname);
         return NextResponse.redirect(loginUrl);
       }
-      return;
+      return NextResponse.next();
     }
 
     try {
