@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { query, generateId } from '@/lib/db';
 import { verifyAdminRequest } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: { name: 'asc' },
-      include: {
-        _count: {
-          select: { products: true },
-        },
-      },
-    });
+    const categories = await query(`
+      SELECT c.*,
+             (SELECT count(*)::int FROM "Product" p WHERE p."categoryId" = c.id) as "productCount"
+      FROM "Category" c
+      ORDER BY c.name ASC
+    `);
 
     return NextResponse.json(categories);
   } catch (err: any) {
@@ -35,16 +33,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Name and slug are required' }, { status: 400 });
     }
 
-    const created = await prisma.category.create({
-      data: {
-        name,
-        slug,
-        parentId: parentId || null,
-        isFeaturedCollection: Boolean(isFeaturedCollection),
-      },
-    });
+    const id = generateId();
+    const rows = await query(`
+      INSERT INTO "Category" (id, name, slug, "parentId", "isFeaturedCollection")
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [id, name, slug, parentId || null, Boolean(isFeaturedCollection)]);
 
-    return NextResponse.json(created, { status: 201 });
+    return NextResponse.json(rows[0], { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ message: err.message || 'Failed to create category' }, { status: 500 });
   }

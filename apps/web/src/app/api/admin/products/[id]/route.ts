@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { query } from '@/lib/db';
 import { verifyAdminRequest } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
@@ -14,16 +14,23 @@ export async function GET(
   }
 
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: params.id },
-      include: { category: true, variants: true },
-    });
+    const rows = await query(`
+      SELECT p.*,
+             json_build_object('id', c.id, 'name', c.name, 'slug', c.slug) as category,
+             COALESCE(
+               (SELECT json_agg(v.*) FROM "ProductVariant" v WHERE v."productId" = p.id),
+               '[]'::json
+             ) as variants
+      FROM "Product" p
+      LEFT JOIN "Category" c ON p."categoryId" = c.id
+      WHERE p.id = $1
+    `, [params.id]);
 
-    if (!product) {
+    if (rows.length === 0) {
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
-    return NextResponse.json(product);
+    return NextResponse.json(rows[0]);
   } catch (err: any) {
     return NextResponse.json({ message: err.message || 'Failed to fetch product' }, { status: 500 });
   }
@@ -40,40 +47,40 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const existing = await prisma.product.findUnique({ where: { id: params.id } });
-    if (!existing) {
+    const existing = await query(`SELECT * FROM "Product" WHERE id = $1`, [params.id]);
+    if (existing.length === 0) {
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
-    const updated = await prisma.product.update({
-      where: { id: params.id },
-      data: {
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.slug !== undefined && { slug: body.slug }),
-        ...(body.description !== undefined && { description: body.description }),
-        ...(body.price !== undefined && { price: Number(body.price) }),
-        ...(body.categoryId !== undefined && { categoryId: body.categoryId }),
-        ...(body.images !== undefined && { images: body.images }),
-        ...(body.stock !== undefined && { stock: Number(body.stock) }),
-        ...(body.isActive !== undefined && { isActive: Boolean(body.isActive) }),
-        ...(body.status !== undefined && { status: body.status }),
-        ...(body.material !== undefined && { material: body.material }),
-        ...(body.craftsmanshipStory !== undefined && { craftsmanshipStory: body.craftsmanshipStory }),
-        ...(body.heightCm !== undefined && { heightCm: body.heightCm ? Number(body.heightCm) : null }),
-        ...(body.widthCm !== undefined && { widthCm: body.widthCm ? Number(body.widthCm) : null }),
-        ...(body.depthCm !== undefined && { depthCm: body.depthCm ? Number(body.depthCm) : null }),
-        ...(body.weightKg !== undefined && { weightKg: body.weightKg ? Number(body.weightKg) : null }),
-        ...(body.isLimitedEdition !== undefined && { isLimitedEdition: Boolean(body.isLimitedEdition) }),
-        ...(body.editionNumber !== undefined && { editionNumber: body.editionNumber ? Number(body.editionNumber) : null }),
-        ...(body.editionTotal !== undefined && { editionTotal: body.editionTotal ? Number(body.editionTotal) : null }),
-        ...(body.isGiftEligible !== undefined && { isGiftEligible: Boolean(body.isGiftEligible) }),
-        ...(body.metaTitle !== undefined && { metaTitle: body.metaTitle }),
-        ...(body.metaDescription !== undefined && { metaDescription: body.metaDescription }),
-      },
-      include: { category: true },
-    });
+    const current = existing[0];
+    const updated = await query(`
+      UPDATE "Product" SET
+        name = COALESCE($2, name),
+        slug = COALESCE($3, slug),
+        description = COALESCE($4, description),
+        price = COALESCE($5, price),
+        "categoryId" = COALESCE($6, "categoryId"),
+        images = COALESCE($7, images),
+        stock = COALESCE($8, stock),
+        "isActive" = COALESCE($9, "isActive"),
+        status = COALESCE($10, status),
+        "updatedAt" = NOW()
+      WHERE id = $1
+      RETURNING *
+    `, [
+      params.id,
+      body.name !== undefined ? body.name : null,
+      body.slug !== undefined ? body.slug : null,
+      body.description !== undefined ? body.description : null,
+      body.price !== undefined ? Number(body.price) : null,
+      body.categoryId !== undefined ? body.categoryId : null,
+      body.images !== undefined ? body.images : null,
+      body.stock !== undefined ? Number(body.stock) : null,
+      body.isActive !== undefined ? Boolean(body.isActive) : null,
+      body.status !== undefined ? body.status : null,
+    ]);
 
-    return NextResponse.json(updated);
+    return NextResponse.json(updated[0]);
   } catch (err: any) {
     return NextResponse.json({ message: err.message || 'Failed to update product' }, { status: 500 });
   }
@@ -89,7 +96,7 @@ export async function DELETE(
   }
 
   try {
-    await prisma.product.delete({ where: { id: params.id } });
+    await query(`DELETE FROM "Product" WHERE id = $1`, [params.id]);
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ message: err.message || 'Failed to delete product' }, { status: 500 });
