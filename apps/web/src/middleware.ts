@@ -1,5 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -14,27 +13,37 @@ const isPublicRoute = createRouteMatcher([
   '/contact-us(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/admin(.*)',
   '/track-order(.*)',
   '/wishlist(.*)',
   '/api/(.*)',
 ]);
 
+const isAdminRoute = createRouteMatcher(['/admin(.*)']);
+const isAdminPublicRoute = createRouteMatcher(['/admin/login(.*)', '/sign-in(.*)', '/sign-up(.*)']);
+
 export default clerkMiddleware(
   async (auth, req) => {
-    try {
-      if (!isPublicRoute(req)) {
-        if (typeof auth === 'function') {
-          const authObj = await (auth as any)();
-          if (authObj && typeof authObj.protect === 'function') {
-            await authObj.protect();
-          }
-        } else if (auth && typeof (auth as any).protect === 'function') {
-          await (auth as any).protect();
+    if (isAdminRoute(req) && !isAdminPublicRoute(req)) {
+      if (typeof auth === 'function') {
+        const authObj = await (auth as any)();
+        if (authObj && typeof authObj.protect === 'function') {
+          await authObj.protect();
         }
+      } else if (auth && typeof (auth as any).protect === 'function') {
+        await (auth as any).protect();
       }
-    } catch {
-      // Gracefully continue on public or fallback routes
+      return;
+    }
+
+    if (!isPublicRoute(req)) {
+      if (typeof auth === 'function') {
+        const authObj = await (auth as any)();
+        if (authObj && typeof authObj.protect === 'function') {
+          await authObj.protect();
+        }
+      } else if (auth && typeof (auth as any).protect === 'function') {
+        await (auth as any).protect();
+      }
     }
   },
   {
