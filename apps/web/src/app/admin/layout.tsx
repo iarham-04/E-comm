@@ -7,7 +7,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import {
   LayoutDashboard, Package, Tag, ShoppingBag, Percent,
   Image as ImageIcon, Settings, BarChart3, Users, ChevronRight,
-  UserCheck, LogOut, Menu, X, Shield, ExternalLink, ShieldAlert
+  UserCheck, LogOut, Menu, X, ExternalLink, ShieldAlert
 } from 'lucide-react';
 import { getAdminProfile, UserRole } from '@/lib/adminApi';
 
@@ -45,6 +45,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
 
+  const isLoginPage = pathname?.startsWith('/admin/login');
+
   const [userRole, setUserRole] = useState<UserRole>('SUPPORT');
   const [adminName, setAdminName] = useState<string>('Staff');
   const [userEmail, setUserEmail] = useState<string>('');
@@ -53,10 +55,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (isLoginPage) return;
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      router.push('/sign-in?redirect_url=/admin');
+      router.push('/admin/login');
       return;
     }
 
@@ -69,11 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (isCancelled) return;
 
         if (!profile || profile.role === 'CUSTOMER') {
-          // Deny access and redirect customer away from admin
           setDenied(true);
-          setTimeout(() => {
-            router.replace('/');
-          }, 1500);
           return;
         }
 
@@ -84,7 +83,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } catch {
         if (!isCancelled) {
           setDenied(true);
-          router.replace('/');
         }
       }
     }
@@ -94,7 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => {
       isCancelled = true;
     };
-  }, [isLoaded, isSignedIn, router, user]);
+  }, [isLoaded, isSignedIn, router, user, isLoginPage]);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -103,8 +101,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await signOut();
-    router.push('/');
+    router.push('/admin/login');
   };
+
+  // Dedicated login page bypasses dashboard sidebar and role gate
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   if (!isLoaded || (!checkedAuth && !denied)) {
     return (
@@ -121,15 +124,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (denied) {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-2xl shadow-xs">
-          <ShieldAlert className="w-7 h-7 text-rose-600" />
+      <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center p-6 text-center space-y-5">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center text-2xl shadow-lg">
+          <ShieldAlert className="w-8 h-8 text-amber-500" />
         </div>
-        <div className="space-y-1 max-w-sm">
-          <h2 className="text-base font-bold text-neutral-900">Access Restricted</h2>
-          <p className="text-xs text-neutral-500">
-            Administrative portal access is restricted to verified store staff and owners. Redirecting you to the storefront...
+        <div className="space-y-2 max-w-md">
+          <h2 className="text-lg font-bold text-white tracking-tight">Administrative Access Restricted</h2>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            You are signed in as <span className="font-semibold text-neutral-200">{userEmail || user?.primaryEmailAddress?.emailAddress}</span>. This account does not possess staff or owner privileges.
           </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          <button
+            onClick={async () => {
+              await signOut();
+              router.push('/admin/login');
+            }}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs hover:bg-amber-400 transition-colors shadow-md cursor-pointer"
+          >
+            Switch to Staff Account
+          </button>
+          <Link
+            href="/"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-300 font-semibold text-xs hover:bg-neutral-800 hover:text-white transition-colors"
+          >
+            Return to Storefront
+          </Link>
         </div>
       </div>
     );
