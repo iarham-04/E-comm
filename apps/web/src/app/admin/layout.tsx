@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
 
-  const isLoginPage = pathname?.startsWith('/admin/login');
+  const isLoginPage = pathname === '/admin/login' || pathname?.startsWith('/admin/login');
 
   const [userRole, setUserRole] = useState<UserRole>('OWNER');
   const [adminName, setAdminName] = useState<string>('AZRA');
@@ -55,15 +55,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (isLoginPage) return;
+    if (isLoginPage) {
+      setCheckedAuth(true);
+      return;
+    }
 
-    // 1. Check local master security session first
+    // 1. Check local master security session first (instant synchronous check)
     const localSession = getLocalAdminSession();
     if (localSession?.token && localSession?.role) {
       setUserRole(localSession.role);
       if (localSession.name) setAdminName(localSession.name);
       if (localSession.email) setUserEmail(localSession.email);
       setCheckedAuth(true);
+      setDenied(false);
       return;
     }
 
@@ -71,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      router.push('/admin/login');
+      window.location.href = '/admin/login';
       return;
     }
 
@@ -91,6 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         setAdminName(profile.name || user?.fullName || profile.email.split('@')[0]);
         setUserEmail(profile.email || user?.primaryEmailAddress?.emailAddress || '');
         setCheckedAuth(true);
+        setDenied(false);
       } catch {
         if (!isCancelled) {
           setDenied(true);
@@ -103,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => {
       isCancelled = true;
     };
-  }, [isLoaded, isSignedIn, router, user, isLoginPage]);
+  }, [pathname, isLoaded, isSignedIn, user, isLoginPage]);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -117,9 +122,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch {}
 
     if (isSignedIn) {
-      await signOut();
+      try {
+        await signOut();
+      } catch {}
     }
-    router.push('/admin/login');
+    window.location.href = '/admin/login';
   };
 
   // Dedicated login page bypasses dashboard layout

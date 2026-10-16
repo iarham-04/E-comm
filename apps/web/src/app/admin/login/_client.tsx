@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useUser, SignIn } from '@clerk/nextjs';
 import {
   Shield, Lock, KeyRound, User, ArrowRight, ArrowLeft,
@@ -11,7 +10,6 @@ import {
 import { getLocalAdminSession } from '@/lib/adminApi';
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
 
   const [activeTab, setActiveTab] = useState<'key' | 'clerk'>('key');
@@ -23,18 +21,18 @@ export default function AdminLoginPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // If already logged in via local master session, redirect to /admin
+    // If already logged in via local master session, directly forward to /admin
     const local = getLocalAdminSession();
     if (local?.token && local?.role) {
-      router.replace('/admin');
+      window.location.href = '/admin';
       return;
     }
 
-    // If signed in via Clerk, redirect to /admin
+    // If signed in via Clerk, forward to /admin
     if (isLoaded && isSignedIn) {
-      router.replace('/admin');
+      window.location.href = '/admin';
     }
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn]);
 
   const handleKeyLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +55,7 @@ export default function AdminLoginPage() {
         throw new Error(data.message || 'Invalid security key / passcode. Access denied.');
       }
 
-      // Save admin session in localStorage
+      // Save admin session in localStorage and cookie
       const sessionData = {
         token: data.token,
         role: data.role || 'OWNER',
@@ -71,12 +69,12 @@ export default function AdminLoginPage() {
 
       setSuccess(true);
 
+      // Perform a full location navigation to ensure complete fresh load of admin layout
       setTimeout(() => {
-        router.push('/admin');
-      }, 400);
+        window.location.href = '/admin';
+      }, 200);
     } catch (err: any) {
       setError(err.message || 'Authentication failed. Please verify your admin key.');
-    } finally {
       setLoading(false);
     }
   };
@@ -129,7 +127,7 @@ export default function AdminLoginPage() {
           <button
             type="button"
             onClick={() => setActiveTab('key')}
-            className={`flex-1 py-2 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+            className={`flex-1 py-2 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
               activeTab === 'key'
                 ? 'bg-amber-500 text-neutral-950 font-bold shadow-md'
                 : 'text-neutral-400 hover:text-white'
@@ -141,7 +139,7 @@ export default function AdminLoginPage() {
           <button
             type="button"
             onClick={() => setActiveTab('clerk')}
-            className={`flex-1 py-2 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+            className={`flex-1 py-2 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
               activeTab === 'clerk'
                 ? 'bg-amber-500 text-neutral-950 font-bold shadow-md'
                 : 'text-neutral-400 hover:text-white'

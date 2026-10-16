@@ -14,7 +14,7 @@ const isPublicRoute = createRouteMatcher([
   '/contact-us(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/admin/login(.*)',
+  '/admin(.*)',
   '/track-order(.*)',
   '/wishlist(.*)',
   '/api/(.*)',
@@ -22,33 +22,6 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(
   async (auth, req) => {
-    const { pathname } = req.nextUrl;
-
-    // Dedicated separation for admin portal:
-    // If accessing any /admin route (except /admin/login):
-    if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-      // 1. Allow if master admin cookie is present
-      const adminCookie = req.cookies.get('corazon_admin_token');
-      if (adminCookie?.value?.startsWith('adm_')) {
-        return NextResponse.next();
-      }
-
-      // 2. Otherwise check Clerk authentication
-      try {
-        const authObj = typeof auth === 'function' ? await (auth as any)() : auth;
-        if (!authObj?.userId) {
-          const loginUrl = new URL('/admin/login', req.url);
-          loginUrl.searchParams.set('redirect_url', pathname);
-          return NextResponse.redirect(loginUrl);
-        }
-      } catch {
-        const loginUrl = new URL('/admin/login', req.url);
-        loginUrl.searchParams.set('redirect_url', pathname);
-        return NextResponse.redirect(loginUrl);
-      }
-      return NextResponse.next();
-    }
-
     try {
       if (!isPublicRoute(req)) {
         if (typeof auth === 'function') {
