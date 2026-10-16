@@ -118,7 +118,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         const formData = new FormData();
         formData.append('file', file);
 
-        const res = await fetch(`${API_URL}/uploads`, {
+        const res = await adminFetch(`${API_URL}/uploads`, {
           method: 'POST',
           body: formData,
         });
@@ -219,7 +219,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
       const url = mode === 'create' ? '/admin/products' : `/admin/products/${productId}`;
       const method = mode === 'create' ? 'POST' : 'PATCH';
 
-      const res = await fetch(`${API_URL}${url}`, {
+      const res = await adminFetch(`${API_URL}${url}`, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

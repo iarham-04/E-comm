@@ -70,7 +70,7 @@ export default function AdminCategoriesPage() {
     try {
       const url = editingId ? `/admin/categories/${editingId}` : '/admin/categories';
       const method = editingId ? 'PATCH' : 'POST';
-      const res = await fetch(`${API_URL}${url}`, {
+      const res = await adminFetch(`${API_URL}${url}`, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
