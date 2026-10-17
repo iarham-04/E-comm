@@ -9,7 +9,8 @@ const MAX_FAILURES = 5;
 const failures = new Map<string, { count: number; resetAt: number }>();
 
 export async function POST(req: NextRequest) {
-  const masterPin = process.env.ADMIN_MASTER_PIN;
+  // Tolerate whitespace/quotes picked up when the value was pasted into the hosting dashboard
+  const masterPin = process.env.ADMIN_MASTER_PIN?.trim().replace(/^(['"])(.*)\1$/, '$2');
   if (!masterPin || masterPin.length < 8 || !process.env.ADMIN_SESSION_SECRET) {
     return NextResponse.json({ message: 'Master PIN login is not configured.' }, { status: 503 });
   }
