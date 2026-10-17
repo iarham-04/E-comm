@@ -14,16 +14,16 @@ export default function ContactUsPage() {
     setSubmitting(true);
 
     try {
-      await fetch(`${API_URL}/contact`, {
+      const res = await fetch(`${API_URL}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      if (!res.ok) throw new Error();
       setSubmitted(true);
       setFormData({ name: '', email: '', message: '' });
     } catch {
-      // Mock fallback for demo
-      setSubmitted(true);
+      alert('Sorry, your message could not be sent. Please try again or email us directly.');
     } finally {
       setSubmitting(false);
     }

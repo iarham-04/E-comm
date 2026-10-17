@@ -25,9 +25,12 @@ export class MailService {
   /**
    * Helper: Replace template placeholders like {{customerName}}
    */
-  private interpolate(template: string, vars: Record<string, any>): string {
+  private interpolate(template: string, vars: Record<string, any>, escape = true): string {
+    const esc = (v: string) =>
+      v.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
     return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => {
-      return vars[key] !== undefined && vars[key] !== null ? String(vars[key]) : '';
+      const value = vars[key] == null ? '' : String(vars[key]);
+      return escape ? esc(value) : value;
     });
   }
 
@@ -90,7 +93,7 @@ export class MailService {
         paymentMethod: order.paymentMethod,
       };
 
-      const subject = this.interpolate(template.subject, vars);
+      const subject = this.interpolate(template.subject, vars, false);
       const html = this.interpolate(template.bodyHtml, vars);
 
       if (!this.resend) {
@@ -169,7 +172,7 @@ export class MailService {
         total: Number(order.total).toLocaleString('en-IN'),
       };
 
-      const subject = this.interpolate(template.subject, vars);
+      const subject = this.interpolate(template.subject, vars, false);
       const html = this.interpolate(template.bodyHtml, vars);
 
       if (!this.resend) {

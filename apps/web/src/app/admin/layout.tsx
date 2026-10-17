@@ -47,9 +47,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isLoginPage = pathname === '/admin/login' || pathname?.startsWith('/admin/login');
 
-  const [userRole, setUserRole] = useState<UserRole>('OWNER');
-  const [adminName, setAdminName] = useState<string>('AZRA');
-  const [userEmail, setUserEmail] = useState<string>('owner@corazontouch.com');
+  const [userRole, setUserRole] = useState<UserRole>('CUSTOMER');
+  const [adminName, setAdminName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [denied, setDenied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -168,7 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const userLevel = ROLE_LEVEL[userRole] || 4;
+  const userLevel = ROLE_LEVEL[userRole] || 1;
 
   const NavContent = () => (
     <div className="flex flex-col justify-between h-full bg-white text-slate-800">

@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ElasticsearchService } from '../search/elasticsearch.service';
-import { ProductStatus } from '@prisma/client';
+import { Prisma, ProductStatus } from '@prisma/client';
+import { CreateReviewApiDto } from '../common/dto/api-contract.dto';
 
 @Injectable()
 export class ProductsService {
@@ -23,8 +24,8 @@ export class ProductsService {
     page?: number;
     limit?: number;
   }) {
-    const page  = Number(query.page)  || 1;
-    const limit = Number(query.limit) || 24;
+    const page  = Math.max(1, Math.floor(Number(query.page)) || 1);
+    const limit = Math.min(100, Math.max(1, Math.floor(Number(query.limit)) || 24));
     const isLimitedEditionFilter = query.isLimitedEdition === 'true' ? true : undefined;
 
     // ── Try Elasticsearch first ──────────────────────────────────────────────
@@ -181,10 +182,22 @@ export class ProductsService {
     return this.prisma.category.findMany({ orderBy: { name: 'asc' } });
   }
 
-  async addReview(productId: string, data: { rating: number; comment?: string; userId: string }) {
-    if (data.rating < 1 || data.rating > 5) {
-      throw new BadRequestException('Rating must be between 1 and 5 stars.');
+  async addReview(productId: string, userId: string, { rating, comment }: CreateReviewApiDto) {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, isActive: true, status: ProductStatus.PUBLISHED },
+      select: { id: true },
+    });
+    if (!product) throw new NotFoundException('Product not found.');
+    try {
+      return await this.prisma.review.create({
+        data: { productId, userId, rating, comment: comment?.trim() || null },
+        include: { user: { select: { name: true } } },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictException('You have already reviewed this product.');
+      }
+      throw err;
     }
-    return this.prisma.review.create({ data: { productId, rating: data.rating, comment: data.comment, userId: data.userId } });
   }
 }

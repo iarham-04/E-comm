@@ -10,65 +10,40 @@ export interface AdminUser {
   role: UserRole;
 }
 
-/**
- * Safely retrieve the current Clerk session JWT token from the client SDK.
- */
+/** Current Clerk session JWT, or null when signed out / on the server. */
 export async function getClerkSessionToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
-
   try {
-    const clerk = (window as any).Clerk;
-    if (clerk?.session) {
-      const token = await clerk.session.getToken();
-      return token;
-    }
-  } catch (err) {
-    console.warn('Failed to retrieve Clerk session token:', err);
+    return (await (window as any).Clerk?.session?.getToken()) ?? null;
+  } catch {
+    return null;
   }
-
-  return null;
 }
 
 /**
- * Authenticated fetch helper for administrative API requests.
- * Automatically extracts the active Clerk session JWT and includes it as Authorization.
+ * fetch() that attaches the Clerk session as a Bearer token when signed in.
+ * Identity is derived server-side from the token only — never send user claims as headers.
  */
-export async function adminFetch(
-  input: RequestInfo | URL,
-  init?: RequestInit,
-): Promise<Response> {
+export async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers);
   const token = await getClerkSessionToken();
-  const clerkUser = typeof window !== 'undefined' ? (window as any).Clerk?.user : null;
-
-  const headers = new Headers(init?.headers || {});
-
-  if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
-
-  if (clerkUser?.primaryEmailAddress?.emailAddress && !headers.has('x-user-email')) {
-    headers.set('x-user-email', clerkUser.primaryEmailAddress.emailAddress);
-  }
-
-  if (clerkUser?.fullName && !headers.has('x-user-name')) {
-    headers.set('x-user-name', clerkUser.fullName);
-  }
-
-  return fetch(input, {
-    ...init,
-    headers,
-  });
+  if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+  return fetch(input, { ...init, headers });
 }
 
-/**
- * Validates current admin session against backend and returns verified role & profile.
- */
+export const adminFetch = authFetch;
+
+/** Reads the API's error text from a failed response. */
+export async function errorMessage(res: Response, fallback: string): Promise<string> {
+  const body = await res.json().catch(() => null);
+  return body?.message || body?.error || fallback;
+}
+
+/** Validates current admin session against backend and returns verified role & profile. */
 export async function getAdminProfile(): Promise<AdminUser | null> {
   try {
     const res = await adminFetch(`${API_URL}/admin/me`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.user || null;
+    return res.ok ? (await res.json())?.user ?? null : null;
   } catch {
     return null;
   }

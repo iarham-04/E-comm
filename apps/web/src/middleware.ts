@@ -9,48 +9,20 @@ const isPublicRoute = createRouteMatcher([
   '/order-confirmation(.*)',
   '/search(.*)',
   '/blog(.*)',
+  '/journal(.*)',
   '/pages(.*)',
   '/contact-us(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/track-order(.*)',
   '/wishlist(.*)',
+  '/admin/login(.*)', // admin role is verified by the API, the login page itself is public
   '/api/(.*)',
 ]);
 
-const isAdminRoute = createRouteMatcher(['/admin(.*)']);
-const isAdminPublicRoute = createRouteMatcher(['/admin/login(.*)', '/sign-in(.*)', '/sign-up(.*)']);
-
-export default clerkMiddleware(
-  async (auth, req) => {
-    if (isAdminRoute(req) && !isAdminPublicRoute(req)) {
-      if (typeof auth === 'function') {
-        const authObj = await (auth as any)();
-        if (authObj && typeof authObj.protect === 'function') {
-          await authObj.protect();
-        }
-      } else if (auth && typeof (auth as any).protect === 'function') {
-        await (auth as any).protect();
-      }
-      return;
-    }
-
-    if (!isPublicRoute(req)) {
-      if (typeof auth === 'function') {
-        const authObj = await (auth as any)();
-        if (authObj && typeof authObj.protect === 'function') {
-          await authObj.protect();
-        }
-      } else if (auth && typeof (auth as any).protect === 'function') {
-        await (auth as any).protect();
-      }
-    }
-  },
-  {
-    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
-    secretKey: process.env.CLERK_SECRET_KEY!,
-  },
-);
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) await auth.protect();
+});
 
 export const config = {
   matcher: [

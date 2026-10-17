@@ -161,3 +161,49 @@ describe('RolesGuard', () => {
     });
   });
 });
+
+describe('resolveDbUser account linking', () => {
+  const { resolveDbUser } = jest.requireActual('./clerk-user');
+  const clerkUser = (status: string) => ({
+    primaryEmailAddressId: 'e1',
+    emailAddresses: [{ id: 'e1', emailAddress: 'owner@shop.com', verification: { status } }],
+    firstName: 'Shop',
+    lastName: 'Owner',
+  });
+  let prisma: any;
+
+  beforeEach(() => {
+    prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        findFirst: jest.fn(),
+        update: jest.fn(async ({ data }: any) => ({ id: 'owner_row', role: UserRole.OWNER, ...data })),
+        create: jest.fn(async ({ data }: any) => ({ id: 'new_row', ...data })),
+      },
+    };
+  });
+
+  it('claims a pre-provisioned row when the Clerk email is verified', async () => {
+    (clerkExpress.clerkClient.users.getUser as jest.Mock).mockResolvedValue(clerkUser('verified'));
+    prisma.user.findFirst.mockResolvedValue({ id: 'owner_row', clerkId: 'pre_provisioned_1', name: null });
+    const user = await resolveDbUser(prisma, 'user_new');
+    expect(user.role).toBe(UserRole.OWNER);
+    expect(prisma.user.update).toHaveBeenCalled();
+  });
+
+  it('never links on an unverified email', async () => {
+    (clerkExpress.clerkClient.users.getUser as jest.Mock).mockResolvedValue(clerkUser('unverified'));
+    const user = await resolveDbUser(prisma, 'user_attacker');
+    expect(user).toBeNull();
+    expect(prisma.user.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('never takes over a row already linked to another Clerk account', async () => {
+    (clerkExpress.clerkClient.users.getUser as jest.Mock).mockResolvedValue(clerkUser('verified'));
+    prisma.user.findFirst.mockResolvedValue({ id: 'owner_row', clerkId: 'user_real_owner', role: UserRole.OWNER });
+    const user = await resolveDbUser(prisma, 'user_attacker', { create: true });
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(user.role).toBe(UserRole.CUSTOMER);
+    expect(user.email).toBe('user_attacker@clerk.user');
+  });
+});

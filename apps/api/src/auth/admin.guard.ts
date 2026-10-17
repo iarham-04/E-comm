@@ -5,22 +5,15 @@ import {
   ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { isStaff } from './roles.guard';
 
+/** Must run after AuthGuard, which populates request.dbUser. */
 @Injectable()
 export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const user = request.dbUser;
-
-    if (!user) {
-      throw new UnauthorizedException('Authentication required.');
-    }
-
-    if (!user.role || user.role === UserRole.CUSTOMER) {
-      throw new ForbiddenException('Forbidden — Admin access required.');
-    }
-
+    const user = context.switchToHttp().getRequest().dbUser;
+    if (!user) throw new UnauthorizedException('Authentication required.');
+    if (!isStaff(user.role)) throw new ForbiddenException('Forbidden — Admin access required.');
     return true;
   }
 }

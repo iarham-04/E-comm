@@ -17,7 +17,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error.';
+    let message: string | string[] = 'Internal server error.';
     let details: any = null;
 
     if (exception instanceof HttpException) {
@@ -35,9 +35,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = 'An unexpected error occurred.';
     }
 
+    const text = Array.isArray(message) ? message.join('; ') : message;
     response.status(status).json({
       statusCode: status,
-      error: message,
+      error: text,
+      message: text,
       ...(details ? { details } : {}),
       timestamp: new Date().toISOString(),
     });

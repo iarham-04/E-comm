@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { HomepageService } from './homepage.service';
+import { SubscribeNewsletterApiDto } from '../common/dto/api-contract.dto';
 
 @Controller()
 export class HomepageController {
@@ -11,7 +13,8 @@ export class HomepageController {
   }
 
   @Post('newsletter/subscribe')
-  subscribeNewsletter(@Body('email') email: string) {
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  subscribeNewsletter(@Body() { email }: SubscribeNewsletterApiDto) {
     return this.homepageService.subscribeNewsletter(email);
   }
 }

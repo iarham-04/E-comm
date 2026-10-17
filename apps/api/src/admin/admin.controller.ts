@@ -1,11 +1,13 @@
 import {
   Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Query, Req,
+  ParseEnumPipe, ParseFloatPipe, ParseIntPipe, ParseArrayPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { RequireRole } from '../auth/roles.decorator';
 import { UserRole, OrderStatus } from '@prisma/client';
 import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto, BulkStockItemDto } from '../common/dto/product.dto';
+import { CouponDto, BannerDto, UpdateEmailTemplateDto } from '../common/dto/admin.dto';
 
 @Controller('admin')
 @UseGuards(RolesGuard)
@@ -50,8 +52,8 @@ export class AdminController {
 
   @Patch('users/:id/role')
   @RequireRole(UserRole.OWNER)
-  updateUserRole(@Param('id') id: string, @Body('role') role: UserRole) {
-    return this.adminService.updateUserRole(id, role);
+  updateUserRole(@Param('id') id: string, @Body('role', new ParseEnumPipe(UserRole)) role: UserRole, @Req() req: any) {
+    return this.adminService.updateUserRole(id, role, req.dbUser.id);
   }
 
   @Patch('customers/:id/notes')
@@ -100,7 +102,7 @@ export class AdminController {
 
   @Patch('products/bulk-stock')
   @RequireRole(UserRole.MANAGER)
-  bulkUpdateStock(@Body('items') items: BulkStockItemDto[]) {
+  bulkUpdateStock(@Body('items', new ParseArrayPipe({ items: BulkStockItemDto })) items: BulkStockItemDto[]) {
     return this.adminService.bulkUpdateStock(items);
   }
 
@@ -124,7 +126,7 @@ export class AdminController {
 
   @Patch('products/:id/stock')
   @RequireRole(UserRole.MANAGER)
-  updateStock(@Param('id') id: string, @Body('stock') stock: number) {
+  updateStock(@Param('id') id: string, @Body('stock', ParseIntPipe) stock: number) {
     return this.adminService.updateStock(id, stock);
   }
 
@@ -139,7 +141,7 @@ export class AdminController {
 
   @Patch('orders/:id/status')
   @RequireRole(UserRole.SUPPORT)
-  updateOrderStatus(@Param('id') id: string, @Body('status') status: OrderStatus) {
+  updateOrderStatus(@Param('id') id: string, @Body('status', new ParseEnumPipe(OrderStatus)) status: OrderStatus) {
     return this.adminService.updateOrderStatus(id, status);
   }
 
@@ -157,7 +159,7 @@ export class AdminController {
 
   @Patch('orders/:id/refund')
   @RequireRole(UserRole.MANAGER)
-  refundOrder(@Param('id') id: string, @Body('refundAmount') refundAmount: number, @Body('refundReason') refundReason: string) {
+  refundOrder(@Param('id') id: string, @Body('refundAmount', ParseFloatPipe) refundAmount: number, @Body('refundReason') refundReason: string) {
     return this.adminService.refundOrder(id, refundAmount, refundReason);
   }
 
@@ -168,11 +170,11 @@ export class AdminController {
 
   @Post('coupons')
   @RequireRole(UserRole.MANAGER)
-  createCoupon(@Body() dto: any) { return this.adminService.createCoupon(dto); }
+  createCoupon(@Body() dto: CouponDto) { return this.adminService.createCoupon(dto); }
 
   @Patch('coupons/:id')
   @RequireRole(UserRole.MANAGER)
-  updateCoupon(@Param('id') id: string, @Body() dto: any) { return this.adminService.updateCoupon(id, dto); }
+  updateCoupon(@Param('id') id: string, @Body() dto: CouponDto) { return this.adminService.updateCoupon(id, dto); }
 
   @Delete('coupons/:id')
   @RequireRole(UserRole.MANAGER)
@@ -185,11 +187,11 @@ export class AdminController {
 
   @Post('banners')
   @RequireRole(UserRole.MANAGER)
-  createBanner(@Body() dto: any) { return this.adminService.createBanner(dto); }
+  createBanner(@Body() dto: BannerDto) { return this.adminService.createBanner(dto); }
 
   @Patch('banners/:id')
   @RequireRole(UserRole.MANAGER)
-  updateBanner(@Param('id') id: string, @Body() dto: any) { return this.adminService.updateBanner(id, dto); }
+  updateBanner(@Param('id') id: string, @Body() dto: BannerDto) { return this.adminService.updateBanner(id, dto); }
 
   @Delete('banners/:id')
   @RequireRole(UserRole.MANAGER)
@@ -210,7 +212,7 @@ export class AdminController {
 
   @Patch('email-templates/:id')
   @RequireRole(UserRole.OWNER)
-  updateEmailTemplate(@Param('id') id: string, @Body() dto: any) { return this.adminService.updateEmailTemplate(id, dto); }
+  updateEmailTemplate(@Param('id') id: string, @Body() dto: UpdateEmailTemplateDto) { return this.adminService.updateEmailTemplate(id, dto); }
 
   // ─── Analytics Reports (Owner-only) ───────────────────────────────────────
   @Get('reports/revenue')
