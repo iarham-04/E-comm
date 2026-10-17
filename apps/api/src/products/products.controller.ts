@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards, Req } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { CreateReviewApiDto } from '../common/dto/api-contract.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -37,14 +38,10 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   addReview(
     @Param('id') productId: string,
-    @Body() body: { rating: number; comment?: string },
+    @Body() body: CreateReviewApiDto,
     @Req() req: any,
   ) {
-    return this.productsService.addReview(productId, {
-      rating: body.rating,
-      comment: body.comment,
-      userId: req.dbUser.id,
-    });
+    return this.productsService.addReview(productId, req.dbUser.id, body);
   }
 }
 

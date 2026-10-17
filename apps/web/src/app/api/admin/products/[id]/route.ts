@@ -1,104 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { verifyAdminRequest } from '@/lib/adminAuth';
+import { requireAdmin, dbError } from '@/lib/adminAuth';
+import { parseProductBody, col, PRODUCT_SELECT } from '@/lib/adminFields';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const auth = verifyAdminRequest(req);
-  if (!auth.authorized) {
-    return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
-  }
+type Ctx = { params: { id: string } };
+const notFound = () => NextResponse.json({ message: 'Product not found.' }, { status: 404 });
 
+export async function GET(req: NextRequest, { params }: Ctx) {
+  const who = await requireAdmin(req, 'MANAGER');
+  if (who instanceof NextResponse) return who;
   try {
-    const rows = await query(`
-      SELECT p.*,
-             json_build_object('id', c.id, 'name', c.name, 'slug', c.slug) as category,
-             COALESCE(
-               (SELECT json_agg(v.*) FROM "ProductVariant" v WHERE v."productId" = p.id),
-               '[]'::json
-             ) as variants
-      FROM "Product" p
-      LEFT JOIN "Category" c ON p."categoryId" = c.id
-      WHERE p.id = $1
-    `, [params.id]);
-
-    if (rows.length === 0) {
-      return NextResponse.json({ message: 'Product not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(rows[0]);
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Failed to fetch product' }, { status: 500 });
+    const [row] = await query(`${PRODUCT_SELECT} WHERE p.id = $1`, [params.id]);
+    return row ? NextResponse.json(row) : notFound();
+  } catch (err) {
+    return dbError(err, 'Failed to fetch product.');
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const auth = verifyAdminRequest(req);
-  if (!auth.authorized) {
-    return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
+export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const who = await requireAdmin(req, 'MANAGER');
+  if (who instanceof NextResponse) return who;
+
+  let fields: Record<string, any>;
+  try {
+    fields = parseProductBody(await req.json());
+  } catch (err) {
+    return NextResponse.json({ message: (err as Error).message }, { status: 400 });
   }
+  const keys = Object.keys(fields);
+  if (!keys.length) return NextResponse.json({ message: 'Nothing to update.' }, { status: 400 });
 
   try {
-    const body = await req.json();
-    const existing = await query(`SELECT * FROM "Product" WHERE id = $1`, [params.id]);
-    if (existing.length === 0) {
-      return NextResponse.json({ message: 'Product not found' }, { status: 404 });
-    }
-
-    const current = existing[0];
-    const updated = await query(`
-      UPDATE "Product" SET
-        name = COALESCE($2, name),
-        slug = COALESCE($3, slug),
-        description = COALESCE($4, description),
-        price = COALESCE($5, price),
-        "categoryId" = COALESCE($6, "categoryId"),
-        images = COALESCE($7, images),
-        stock = COALESCE($8, stock),
-        "isActive" = COALESCE($9, "isActive"),
-        status = COALESCE($10, status),
-        "updatedAt" = NOW()
-      WHERE id = $1
-      RETURNING *
-    `, [
-      params.id,
-      body.name !== undefined ? body.name : null,
-      body.slug !== undefined ? body.slug : null,
-      body.description !== undefined ? body.description : null,
-      body.price !== undefined ? Number(body.price) : null,
-      body.categoryId !== undefined ? body.categoryId : null,
-      body.images !== undefined ? body.images : null,
-      body.stock !== undefined ? Number(body.stock) : null,
-      body.isActive !== undefined ? Boolean(body.isActive) : null,
-      body.status !== undefined ? body.status : null,
-    ]);
-
-    return NextResponse.json(updated[0]);
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Failed to update product' }, { status: 500 });
+    const [row] = await query(
+      `UPDATE "Product" SET ${keys.map((k, i) => `${col(k)} = $${i + 2}`).join(', ')}, "updatedAt" = NOW()
+       WHERE id = $1 RETURNING *`,
+      [params.id, ...keys.map((k) => fields[k])],
+    );
+    return row ? NextResponse.json(row) : notFound();
+  } catch (err) {
+    return dbError(err, 'Failed to update product.');
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const auth = verifyAdminRequest(req);
-  if (!auth.authorized) {
-    return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
-  }
-
+/** Soft delete: past orders reference products, so the row is hidden rather than removed. */
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const who = await requireAdmin(req, 'MANAGER');
+  if (who instanceof NextResponse) return who;
   try {
-    await query(`DELETE FROM "Product" WHERE id = $1`, [params.id]);
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Failed to delete product' }, { status: 500 });
+    const [row] = await query(
+      `UPDATE "Product" SET "isActive" = false, "updatedAt" = NOW() WHERE id = $1 RETURNING id`,
+      [params.id],
+    );
+    return row ? NextResponse.json({ success: true, id: row.id }) : notFound();
+  } catch (err) {
+    return dbError(err, 'Failed to delete product.');
   }
 }

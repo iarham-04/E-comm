@@ -1,10 +1,11 @@
 import {
   Injectable, NotFoundException, BadRequestException, Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { ElasticsearchService, EsProductDoc } from '../search/elasticsearch.service';
 import { MailService } from '../mail/mail.service';
+import { PaymentService } from '../orders/payment.service';
+import { CouponDto, BannerDto, UpdateEmailTemplateDto } from '../common/dto/admin.dto';
 import { OrderStatus, PaymentStatus, ProductStatus, UserRole } from '@prisma/client';
 import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto } from '../common/dto/product.dto';
 
@@ -17,7 +18,7 @@ export class AdminService {
     private prisma: PrismaService,
     private es: ElasticsearchService,
     private mailService: MailService,
-    private configService: ConfigService,
+    private paymentService: PaymentService,
   ) {}
 
   // ─── Telemetry ────────────────────────────────────────────────────────────
@@ -37,8 +38,8 @@ export class AdminService {
         this.prisma.order.count(),
         this.prisma.product.count(),
         this.prisma.user.count(),
-        this.prisma.order.findMany({ where: { paymentStatus: 'PAID' }, select: { total: true } }),
-        this.prisma.product.findMany({ where: { stock: { lte: 5 } }, select: { id: true, name: true, stock: true, price: true } }),
+        this.prisma.order.aggregate({ where: { paymentStatus: 'PAID' }, _sum: { total: true } }),
+        this.prisma.product.findMany({ where: { stock: { lte: 5 }, isActive: true }, select: { id: true, name: true, stock: true, price: true } }),
         this.prisma.order.findMany({
           take: 5,
           orderBy: { createdAt: 'desc' },
@@ -46,7 +47,7 @@ export class AdminService {
         }),
       ]);
 
-    const totalRevenue = paidOrders.reduce((acc, o) => acc + Number(o.total), 0);
+    const totalRevenue = Number(paidOrders._sum.total ?? 0);
     return { totalRevenue, totalOrders, totalProducts, totalUsers, lowStockCount: lowStockProducts.length, lowStockProducts, recentOrders };
   }
 
@@ -86,7 +87,10 @@ export class AdminService {
     });
   }
 
-  async updateUserRole(targetUserId: string, newRole: UserRole) {
+  async updateUserRole(targetUserId: string, newRole: UserRole, actorId: string) {
+    if (targetUserId === actorId && newRole !== UserRole.OWNER) {
+      throw new BadRequestException('You cannot change your own role.');
+    }
     const targetUser = await this.prisma.user.findUnique({ where: { id: targetUserId } });
     if (!targetUser) throw new NotFoundException(`User #${targetUserId} not found.`);
 
@@ -353,9 +357,26 @@ export class AdminService {
   }
 
   async updateOrderStatus(id: string, status: OrderStatus) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
+    const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true } });
     if (!order) throw new NotFoundException(`Order #${id} not found.`);
-    const updated = await this.prisma.order.update({ where: { id }, data: { status } });
+    if (order.status === status) return order;
+    if (order.status === OrderStatus.CANCELLED) {
+      throw new BadRequestException('Cancelled orders cannot be reopened. Ask the customer to order again.');
+    }
+
+    // Stock was taken when a COD order was placed or an online payment was captured — give it back on cancel.
+    const stockWasDeducted = order.paymentMethod === 'COD' || order.paymentStatus === PaymentStatus.PAID;
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (status === OrderStatus.CANCELLED && stockWasDeducted) {
+        for (const item of order.items) {
+          await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
+          if (item.variantId) {
+            await tx.productVariant.update({ where: { id: item.variantId }, data: { stock: { increment: item.quantity } } });
+          }
+        }
+      }
+      return tx.order.update({ where: { id }, data: { status } });
+    });
 
     if (status === OrderStatus.SHIPPED) {
       this.mailService.sendOrderShipped(id).catch((err) => {
@@ -374,27 +395,28 @@ export class AdminService {
       throw new BadRequestException('Order has already been refunded. Multiple refunds are prohibited.');
     }
 
-    if (refundAmount <= 0 || refundAmount > Number(order.total)) {
+    if (order.paymentStatus !== PaymentStatus.PAID) {
+      throw new BadRequestException('Only paid orders can be refunded.');
+    }
+    const amount = Math.round(refundAmount * 100) / 100;
+    if (!(amount > 0) || amount > Number(order.total)) {
       throw new BadRequestException(`Refund amount must be between 0.01 and total order value (${order.total}).`);
     }
 
-    // Call payment provider API boundary if online payment
-    let providerRefundId: string | null = null;
-    if (order.paymentMethod === 'RAZORPAY' && order.razorpayPaymentId) {
-      this.logger.log(`Executing Razorpay refund API call for paymentId: ${order.razorpayPaymentId}, amount: ${refundAmount}`);
-      providerRefundId = `rfnd_${Date.now()}`;
-      this.logger.log(`Created provider refund id: ${providerRefundId}`);
-    } else if (order.paymentMethod === 'STRIPE' && order.stripePaymentIntentId) {
-      this.logger.log(`Executing Stripe refund API call for intent: ${order.stripePaymentIntentId}, amount: ${refundAmount}`);
-      providerRefundId = `re_${Date.now()}`;
-      this.logger.log(`Created provider refund id: ${providerRefundId}`);
+    // Online payments are refunded at the gateway first; the DB is updated only if that succeeds.
+    if (order.paymentMethod === 'RAZORPAY') {
+      if (!order.razorpayPaymentId) throw new BadRequestException('Order has no Razorpay payment to refund.');
+      const refundId = await this.paymentService.refundRazorpayPayment(order.razorpayPaymentId, amount);
+      this.logger.log(`Razorpay refund ${refundId} issued for order #${id} (₹${amount})`);
+    } else if (order.paymentMethod === 'STRIPE') {
+      throw new BadRequestException('Stripe refunds are not supported. Refund from the Stripe dashboard.');
     }
 
     return this.prisma.order.update({
       where: { id },
       data: {
         paymentStatus: PaymentStatus.REFUNDED,
-        refundAmount,
+        refundAmount: amount,
         refundReason,
         refundedAt: new Date(),
       },
@@ -447,12 +469,25 @@ export class AdminService {
     });
   }
 
-  async createCoupon(data: any) {
-    return this.prisma.coupon.create({ data });
+  async createCoupon(dto: CouponDto) {
+    if (!dto.discountType || dto.discountValue == null) {
+      throw new BadRequestException('discountType and discountValue are required.');
+    }
+    if (!dto.code && !dto.appliesToCollectionId) {
+      throw new BadRequestException('A coupon needs a code or a collection.');
+    }
+    return this.prisma.coupon.create({ data: this.couponData(dto) as any });
   }
 
-  async updateCoupon(id: string, data: any) {
-    return this.prisma.coupon.update({ where: { id }, data });
+  async updateCoupon(id: string, dto: CouponDto) {
+    return this.prisma.coupon.update({ where: { id }, data: this.couponData(dto) });
+  }
+
+  private couponData(dto: CouponDto) {
+    if (dto.discountType === 'PERCENTAGE' && dto.discountValue != null && dto.discountValue > 100) {
+      throw new BadRequestException('Percentage discounts cannot exceed 100%.');
+    }
+    return { ...dto, ...(dto.code !== undefined && { code: dto.code.trim().toUpperCase() || null }) };
   }
 
   async deleteCoupon(id: string) {
@@ -465,26 +500,12 @@ export class AdminService {
     return this.prisma.homepageBanner.findMany({ orderBy: { sortOrder: 'asc' } });
   }
 
-  async getPublicBanners() {
-    const now = new Date();
-    return this.prisma.homepageBanner.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { startsAt: null, endsAt: null },
-          { startsAt: { lte: now }, endsAt: { gte: now } },
-          { startsAt: { lte: now }, endsAt: null },
-        ],
-      },
-      orderBy: { sortOrder: 'asc' },
-    });
+  async createBanner(data: BannerDto) {
+    if (!data.imageUrl) throw new BadRequestException('imageUrl is required.');
+    return this.prisma.homepageBanner.create({ data: data as BannerDto & { imageUrl: string } });
   }
 
-  async createBanner(data: any) {
-    return this.prisma.homepageBanner.create({ data });
-  }
-
-  async updateBanner(id: string, data: any) {
+  async updateBanner(id: string, data: BannerDto) {
     return this.prisma.homepageBanner.update({ where: { id }, data });
   }
 
@@ -511,7 +532,18 @@ export class AdminService {
     return settings;
   }
 
-  async updateSettings(data: any) {
+  async updateSettings(input: any) {
+    const num = (v: any) => (v === '' || v == null ? undefined : Number(v));
+    const data = {
+      flatShippingFee: num(input?.flatShippingFee),
+      freeShippingThreshold: input?.freeShippingThreshold === '' ? null : num(input?.freeShippingThreshold),
+      taxPercent: num(input?.taxPercent),
+      razorpayEnabled: typeof input?.razorpayEnabled === 'boolean' ? input.razorpayEnabled : undefined,
+      codEnabled: typeof input?.codEnabled === 'boolean' ? input.codEnabled : undefined,
+    };
+    if (Object.values(data).some((v) => typeof v === 'number' && (!Number.isFinite(v) || v < 0))) {
+      throw new BadRequestException('Settings values must be non-negative numbers.');
+    }
     return this.prisma.storeSettings.upsert({
       where: { id: 'singleton' },
       update: data,
@@ -542,19 +574,14 @@ export class AdminService {
     return templates;
   }
 
-  async updateEmailTemplate(id: string, data: { subject?: string; bodyHtml?: string }) {
+  async updateEmailTemplate(id: string, data: UpdateEmailTemplateDto) {
     return this.prisma.emailTemplate.update({ where: { id }, data });
   }
 
   // ─── Analytics Reports (Selectable Date Range) ────────────────────────────
 
   async getRevenueReport(from?: string, to?: string) {
-    const where: any = { paymentStatus: 'PAID' };
-    if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
-      if (to)   where.createdAt.lte = new Date(to);
-    }
+    const where = { paymentStatus: PaymentStatus.PAID, createdAt: this.dateRange(from, to) };
 
     const orders = await this.prisma.order.findMany({ where, select: { total: true, createdAt: true } });
     const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
@@ -563,12 +590,7 @@ export class AdminService {
   }
 
   async getSalesByProductReport(from?: string, to?: string) {
-    const where: any = { order: { paymentStatus: 'PAID' } };
-    if (from || to) {
-      where.order.createdAt = {};
-      if (from) where.order.createdAt.gte = new Date(from);
-      if (to)   where.order.createdAt.lte = new Date(to);
-    }
+    const where = { order: { paymentStatus: PaymentStatus.PAID, createdAt: this.dateRange(from, to) } };
 
     const items = await this.prisma.orderItem.findMany({
       where,
@@ -589,12 +611,7 @@ export class AdminService {
   }
 
   async getTopCategoriesReport(from?: string, to?: string) {
-    const where: any = { order: { paymentStatus: 'PAID' } };
-    if (from || to) {
-      where.order.createdAt = {};
-      if (from) where.order.createdAt.gte = new Date(from);
-      if (to)   where.order.createdAt.lte = new Date(to);
-    }
+    const where = { order: { paymentStatus: PaymentStatus.PAID, createdAt: this.dateRange(from, to) } };
 
     const items = await this.prisma.orderItem.findMany({
       where,
@@ -615,12 +632,7 @@ export class AdminService {
   }
 
   async getAovReport(from?: string, to?: string) {
-    const where: any = { paymentStatus: 'PAID' };
-    if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
-      if (to)   where.createdAt.lte = new Date(to);
-    }
+    const where = { paymentStatus: PaymentStatus.PAID, createdAt: this.dateRange(from, to) };
 
     const orders = await this.prisma.order.findMany({ where, select: { total: true } });
     const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
@@ -634,12 +646,7 @@ export class AdminService {
       include: { appliesToCollection: true },
     });
 
-    const where: any = { paymentStatus: 'PAID', discountAmount: { gt: 0 } };
-    if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
-      if (to)   where.createdAt.lte = new Date(to);
-    }
+    const where = { paymentStatus: PaymentStatus.PAID, discountAmount: { gt: 0 }, createdAt: this.dateRange(from, to) };
 
     const orders = await this.prisma.order.findMany({ where, select: { couponCode: true, discountAmount: true, total: true } });
 
@@ -660,6 +667,16 @@ export class AdminService {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  /** Parses report bounds; a bare `to` date includes that whole day. */
+  private dateRange(from?: string, to?: string) {
+    const parse = (v: string, endOfDay = false) => {
+      const d = new Date(endOfDay && /^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T23:59:59.999Z` : v);
+      if (isNaN(d.getTime())) throw new BadRequestException(`Invalid date: ${v}`);
+      return d;
+    };
+    return { ...(from && { gte: parse(from) }), ...(to && { lte: parse(to, true) }) };
+  }
 
   private validateLimitedEdition(dto: { isLimitedEdition?: boolean; editionNumber?: any; editionTotal?: any }) {
     if (!dto.isLimitedEdition) return;

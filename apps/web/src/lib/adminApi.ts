@@ -10,113 +10,90 @@ export interface AdminUser {
   role: UserRole;
 }
 
-export function getLocalAdminSession(): {
-  token: string;
-  role: UserRole;
-  name: string;
-  email: string;
-} | null {
+export const ADMIN_SESSION_KEY = 'corazon_admin_session';
+
+/**
+ * Master-PIN session saved by /admin/login. The token is server-signed; the other fields are display-only
+ * and never trusted — every request is re-verified server-side.
+ */
+export function getLocalAdminSession(): { token: string; name: string; expiresAt: number } | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem('corazon_admin_session');
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const session = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY) || 'null');
+    if (session?.token && session.expiresAt > Date.now()) return session;
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+  } catch {
+    // corrupted or blocked storage
+  }
+  return null;
+}
+
+export function clearLocalAdminSession() {
+  try {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+  } catch {}
+}
+
+/** Current Clerk session JWT, or null when signed out / on the server. */
+export async function getClerkSessionToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    return (await (window as any).Clerk?.session?.getToken()) ?? null;
   } catch {
     return null;
   }
 }
 
 /**
- * Safely retrieve the current Clerk session JWT token from the client SDK.
+ * fetch() that attaches the Clerk session as a Bearer token when signed in.
+ * Identity is derived server-side from the token only — never send user claims as headers.
  */
-export async function getClerkSessionToken(): Promise<string | null> {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const clerk = (window as any).Clerk;
-    if (clerk?.session) {
-      const token = await clerk.session.getToken();
-      return token;
-    }
-  } catch (err) {
-    console.warn('Failed to retrieve Clerk session token:', err);
-  }
-
-  return null;
+export async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers);
+  const token = await getClerkSessionToken();
+  if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+  return fetch(input, { ...init, headers });
 }
 
+/** Admin endpoints served by this Next.js app's /api routes (direct DB); everything else goes to the NestJS API. */
+const LOCAL_ADMIN_ROUTES = [
+  /^\/admin\/(me|dashboard)$/,
+  /^\/admin\/products(\/(?!bulk-stock$|reindex$)[^/]+)?$/,
+  /^\/admin\/categories(\/[^/]+)?$/,
+  /^\/uploads$/,
+];
+
 /**
- * Authenticated fetch helper for administrative API requests.
- * Automatically extracts the active Clerk session JWT or Master PIN session and includes it as a Bearer token.
+ * Authenticated admin fetch: master-PIN token (in X-Admin-Token, so Clerk never parses it) if present,
+ * else the Clerk session as a Bearer token.
  */
-export async function adminFetch(
-  input: RequestInfo | URL,
-  init?: RequestInit,
-): Promise<Response> {
-  const localSession = getLocalAdminSession();
-  const token = (await getClerkSessionToken()) || localSession?.token || null;
-  const clerkUser = typeof window !== 'undefined' ? (window as any).Clerk?.user : null;
+export async function adminFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers);
+  const pinToken = getLocalAdminSession()?.token;
+  const clerkToken = pinToken ? null : await getClerkSessionToken();
+  if (pinToken) headers.set('X-Admin-Token', pinToken);
+  else if (clerkToken && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${clerkToken}`);
 
-  const headers = new Headers(init?.headers || {});
-
-  if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`);
+  let target = input;
+  if (typeof input === 'string' && input.startsWith(API_URL)) {
+    const path = input.slice(API_URL.length);
+    if (LOCAL_ADMIN_ROUTES.some((re) => re.test(path.split('?')[0]))) target = `/api${path}`;
   }
-
-  if (localSession?.token) {
-    headers.set('x-admin-token', localSession.token);
-  }
-
-  if (clerkUser?.primaryEmailAddress?.emailAddress && !headers.has('x-user-email')) {
-    headers.set('x-user-email', clerkUser.primaryEmailAddress.emailAddress);
-  } else if (localSession?.email && !headers.has('x-user-email')) {
-    headers.set('x-user-email', localSession.email);
-  }
-
-  if (clerkUser?.fullName && !headers.has('x-user-name')) {
-    headers.set('x-user-name', clerkUser.fullName);
-  } else if (localSession?.name && !headers.has('x-user-name')) {
-    headers.set('x-user-name', localSession.name);
-  }
-
-  let finalInput = input;
-  if (typeof input === 'string') {
-    if (input.includes('/admin/') || input.includes('/uploads')) {
-      const pathWithParams = input.replace(/^https?:\/\/[^\/]+/, '');
-      if (pathWithParams.startsWith('/admin/')) {
-        finalInput = `/api${pathWithParams}`;
-      } else if (pathWithParams.startsWith('/uploads')) {
-        finalInput = '/api/uploads';
-      }
-    }
-  }
-
-  return fetch(finalInput, {
-    ...init,
-    headers,
-  });
+  return fetch(target, { ...init, headers });
 }
 
-/**
- * Validates current admin session against local state or backend and returns verified role & profile.
- */
+/** Reads the API's error text from a failed response. */
+export async function errorMessage(res: Response, fallback: string): Promise<string> {
+  const body = await res.json().catch(() => null);
+  return body?.message || body?.error || fallback;
+}
+
+/** Validates the current admin session server-side and returns the verified role & profile. */
 export async function getAdminProfile(): Promise<AdminUser | null> {
-  const localSession = getLocalAdminSession();
-  if (localSession?.token && localSession?.role) {
-    return {
-      id: 'admin-master',
-      clerkId: 'admin-master',
-      email: localSession.email || 'owner@corazontouch.com',
-      name: localSession.name || 'Store Administrator',
-      role: localSession.role as UserRole,
-    };
-  }
-
   try {
     const res = await adminFetch(`${API_URL}/admin/me`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.user || null;
+    if (res.status === 401) clearLocalAdminSession();
+    return res.ok ? (await res.json())?.user ?? null : null;
   } catch {
     return null;
   }

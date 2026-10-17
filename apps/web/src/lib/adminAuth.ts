@@ -1,64 +1,58 @@
-import { NextRequest } from 'next/server';
+import 'server-only';
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { query } from './db';
+import { verifyPinSession } from './adminSession';
 
-export interface AdminAuthResult {
-  authorized: boolean;
-  role: string;
-  name: string;
+export type StaffRole = 'SUPPORT' | 'MANAGER' | 'OWNER';
+const LEVEL: Record<string, number> = { CUSTOMER: 1, SUPPORT: 2, MANAGER: 3, OWNER: 4 };
+
+export interface AdminIdentity {
+  id: string;
+  clerkId: string;
   email: string;
+  name: string | null;
+  role: StaffRole;
 }
 
-export function verifyAdminRequest(req: NextRequest): AdminAuthResult {
-  const authHeader = req.headers.get('authorization') || req.headers.get('x-admin-token') || '';
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-
-  // 1. Direct Master Admin Key session (adm_...)
-  if (token.startsWith('adm_')) {
-    try {
-      const raw = Buffer.from(token.replace('adm_', ''), 'base64').toString('utf8');
-      const [name] = raw.split(':');
-      return {
-        authorized: true,
-        role: 'OWNER',
-        name: name || 'AZRA',
-        email: `${(name || 'owner').toLowerCase().replace(/[^a-z0-9]/g, '')}@corazontouch.com`,
-      };
-    } catch {
-      // Fall through
-    }
+/**
+ * Identifies the caller from a signed master-PIN token or a Clerk session whose DB role is staff.
+ * Nothing the client asserts (names, emails, roles) is trusted.
+ */
+export async function getAdminIdentity(req: NextRequest): Promise<AdminIdentity | null> {
+  const pin = verifyPinSession(req.headers.get('x-admin-token'));
+  if (pin) {
+    return { id: 'admin-master', clerkId: 'admin-master', email: '', name: pin.name, role: 'OWNER' };
   }
 
-  // 2. Cookie fallback
-  const cookieToken = req.cookies.get('corazon_admin_token')?.value || '';
-  if (cookieToken.startsWith('adm_')) {
-    try {
-      const raw = Buffer.from(cookieToken.replace('adm_', ''), 'base64').toString('utf8');
-      const [name] = raw.split(':');
-      return {
-        authorized: true,
-        role: 'OWNER',
-        name: name || 'AZRA',
-        email: `${(name || 'owner').toLowerCase().replace(/[^a-z0-9]/g, '')}@corazontouch.com`,
-      };
-    } catch {
-      // Fall through
-    }
-  }
+  const { userId } = await auth();
+  if (!userId) return null;
+  const [user] = await query<AdminIdentity>(
+    `SELECT id, "clerkId", email, name, role FROM "User" WHERE "clerkId" = $1`,
+    [userId],
+  );
+  return user && LEVEL[user.role] >= LEVEL.SUPPORT ? user : null;
+}
 
-  // 3. Fallback header checks for active admin panel session
-  const userNameHeader = req.headers.get('x-user-name');
-  if (userNameHeader && userNameHeader.toUpperCase().includes('AZRA')) {
-    return {
-      authorized: true,
-      role: 'OWNER',
-      name: 'AZRA',
-      email: 'azra@corazontouch.com',
-    };
+/**
+ * Route guard: returns the identity, or a 401/403 response to send back.
+ * Usage: `const who = await requireAdmin(req, 'MANAGER'); if (who instanceof NextResponse) return who;`
+ */
+export async function requireAdmin(req: NextRequest, minRole: StaffRole = 'SUPPORT'): Promise<AdminIdentity | NextResponse> {
+  const identity = await getAdminIdentity(req).catch(() => null);
+  if (!identity) return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
+  if (LEVEL[identity.role] < LEVEL[minRole]) {
+    return NextResponse.json({ message: `Requires ${minRole} role or higher.` }, { status: 403 });
   }
+  return identity;
+}
 
-  return {
-    authorized: false,
-    role: '',
-    name: '',
-    email: '',
-  };
+/** Turns DB errors into safe client messages without leaking SQL details. */
+export function dbError(err: any, fallback: string): NextResponse {
+  if (err?.code === '23505') return NextResponse.json({ message: 'That slug or name is already in use.' }, { status: 409 });
+  if (err?.code === '23503') {
+    return NextResponse.json({ message: 'This record is referenced by other data and cannot be removed.' }, { status: 409 });
+  }
+  console.error(fallback, err);
+  return NextResponse.json({ message: fallback }, { status: 500 });
 }

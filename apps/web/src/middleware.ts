@@ -1,5 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -10,38 +9,22 @@ const isPublicRoute = createRouteMatcher([
   '/order-confirmation(.*)',
   '/search(.*)',
   '/blog(.*)',
+  '/journal(.*)',
   '/pages(.*)',
   '/contact-us(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/admin(.*)',
   '/track-order(.*)',
   '/wishlist(.*)',
+  // Admin pages may be opened with a master-PIN session (no Clerk login). They render no data themselves:
+  // every admin API call is verified server-side (signed PIN token or Clerk + staff role).
+  '/admin(.*)',
   '/api/(.*)',
 ]);
 
-export default clerkMiddleware(
-  async (auth, req) => {
-    try {
-      if (!isPublicRoute(req)) {
-        if (typeof auth === 'function') {
-          const authObj = await (auth as any)();
-          if (authObj && typeof authObj.protect === 'function') {
-            await authObj.protect();
-          }
-        } else if (auth && typeof (auth as any).protect === 'function') {
-          await (auth as any).protect();
-        }
-      }
-    } catch {
-      // Gracefully continue on public or fallback routes
-    }
-  },
-  {
-    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
-    secretKey: process.env.CLERK_SECRET_KEY!,
-  },
-);
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) await auth.protect();
+});
 
 export const config = {
   matcher: [

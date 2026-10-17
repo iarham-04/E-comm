@@ -1,97 +1,72 @@
-import Razorpay from "razorpay";
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import Razorpay from 'razorpay';
+import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
-export type PaymentMethod = 'COD' | 'RAZORPAY' | 'STRIPE';
+/** Constant-time comparison of two hex HMAC digests. */
+export function hmacMatches(secret: string, payload: string, signature: string): boolean {
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  return (
+    typeof signature === 'string' &&
+    signature.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  );
+}
 
 @Injectable()
 export class PaymentService {
-  private razorpay: any;
+  private readonly logger = new Logger(PaymentService.name);
+  private readonly razorpay: any;
   private readonly keyId: string;
   private readonly keySecret: string;
 
-  constructor(private configService: ConfigService) {
-    this.keyId = this.configService.get<string>('RAZORPAY_KEY_ID') || '';
-    this.keySecret = this.configService.get<string>('RAZORPAY_KEY_SECRET') || '';
-
+  constructor(configService: ConfigService) {
+    this.keyId = configService.get<string>('RAZORPAY_KEY_ID') || '';
+    this.keySecret = configService.get<string>('RAZORPAY_KEY_SECRET') || '';
     if (!this.keyId || !this.keySecret) {
-      console.warn('⚠️  RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not configured. Razorpay payments will fail.');
+      this.logger.warn('RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not configured. Razorpay payments will fail.');
     }
-
-        this.razorpay = new Razorpay({
-      key_id: this.keyId,
-      key_secret: this.keySecret,
-    });
+    this.razorpay = new Razorpay({ key_id: this.keyId, key_secret: this.keySecret });
   }
 
-  /**
-   * Creates a Razorpay Order.
-   * Must be called before showing the Razorpay popup on the frontend.
-   * Returns the Razorpay order ID that the frontend uses to open the payment popup.
-   */
-  async createRazorpayOrder(amountInRupees: number, receiptId: string) {
+  private assertConfigured() {
     if (!this.keyId || !this.keySecret) {
       throw new InternalServerErrorException('Payment gateway not configured.');
     }
+  }
 
-    const amountInPaise = Math.round(amountInRupees * 100);
-
+  /** Creates the gateway order the checkout popup pays against. The amount is fixed server-side. */
+  async createRazorpayOrder(amountInRupees: number, receipt: string) {
+    this.assertConfigured();
     try {
       const order = await this.razorpay.orders.create({
-        amount: amountInPaise,
+        amount: Math.round(amountInRupees * 100),
         currency: 'INR',
-        receipt: receiptId,
-        payment_capture: 1, // auto-capture payment immediately
+        receipt: receipt.slice(0, 40), // Razorpay limit
+        payment_capture: 1,
       });
-
-      return {
-        id: order.id,          // rzp_order_id — sent to frontend
-        amount: order.amount,  // in paise
-        currency: order.currency,
-        keyId: this.keyId,
-      };
+      return { id: order.id as string, amount: order.amount as number, currency: order.currency as string, keyId: this.keyId };
     } catch (err: any) {
-      console.error('Razorpay createOrder failed:', err);
+      this.logger.error(`Razorpay createOrder failed: ${err?.error?.description || err?.message}`);
       throw new BadRequestException(err?.error?.description || 'Failed to create Razorpay order.');
     }
   }
 
-  /**
-   * Verifies the HMAC SHA256 signature sent by Razorpay after payment.
-   * Uses timing-safe comparison to prevent side-channel attacks.
-   * Must be verified server-side before marking any order as PAID.
-   */
-  verifyPaymentSignature(razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string): boolean {
-    if (!this.keySecret) {
-      throw new InternalServerErrorException('Payment gateway secret not configured.');
-    }
-
-    const body = `${razorpayOrderId}|${razorpayPaymentId}`;
-    const expectedSignature = crypto.createHmac('sha256', this.keySecret).update(body).digest('hex');
-
-    // Timing-safe comparison to prevent side-channel attacks
-    try {
-      return crypto.timingSafeEqual(
-        Buffer.from(expectedSignature, 'hex'),
-        Buffer.from(razorpaySignature, 'hex'),
-      );
-    } catch {
-      // If buffers are different lengths, signatures don't match
-      return false;
-    }
+  /** Verifies the checkout handler signature: HMAC_SHA256(order_id|payment_id, key_secret). */
+  verifyPaymentSignature(razorpayOrderId: string, razorpayPaymentId: string, signature: string): boolean {
+    this.assertConfigured();
+    return hmacMatches(this.keySecret, `${razorpayOrderId}|${razorpayPaymentId}`, signature);
   }
 
-  /**
-   * Legacy: simple payment processing for COD / future gateways.
-   */
-  async processPayment(method: PaymentMethod, amount: number, orderId: string) {
-    if (method === 'COD') {
-      return { status: 'PENDING', transactionId: `cod_${orderId}` };
+  /** Issues a real refund at the gateway. Amount is in rupees. */
+  async refundRazorpayPayment(paymentId: string, amountInRupees: number): Promise<string> {
+    this.assertConfigured();
+    try {
+      const refund = await this.razorpay.payments.refund(paymentId, { amount: Math.round(amountInRupees * 100) });
+      return refund.id;
+    } catch (err: any) {
+      this.logger.error(`Razorpay refund failed for ${paymentId}: ${err?.error?.description || err?.message}`);
+      throw new BadRequestException(err?.error?.description || 'Gateway refund failed.');
     }
-    if (method === 'RAZORPAY') {
-      return { status: 'PAID', transactionId: `rzp_${orderId}_${Date.now()}` };
-    }
-    throw new BadRequestException(`Unsupported payment method: ${method}`);
   }
 }

@@ -1,63 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { verifyAdminRequest } from '@/lib/adminAuth';
 import * as crypto from 'crypto';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
-const fallbackKey = ['AKIA', 'XXEC', 'VPZZ', 'F5G5', 'XDAX'].join('');
-const fallbackSec = ['19m3+O8A8iz', 'HUVeAJJtDf+OM', '9iGlIOB9SOJxLlnS'].join('');
+const MAX_BYTES = 10 * 1024 * 1024;
 
-const accessKey = process.env.S3_ACCESS_KEY_ID || process.env.APP_AWS_ACCESS_KEY_ID || fallbackKey;
-const secretKey = process.env.S3_SECRET_ACCESS_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY || fallbackSec;
-const region = 'ap-southeast-2';
-const endpoint = 'https://s3.ap-southeast-2.amazonaws.com';
-const bucket = process.env.AWS_S3_BUCKET || 'the-ecomers-uploads-530702';
-const cdnDomain = process.env.CLOUDFRONT_DOMAIN || 'https://the-ecomers-uploads-530702.s3.ap-southeast-2.amazonaws.com';
+/** Extension per allowed type, plus a magic-byte check so the declared type cannot be spoofed. */
+const IMAGE_TYPES: Record<string, { ext: string; matches: (b: Buffer) => boolean }> = {
+  'image/jpeg': { ext: 'jpg', matches: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  'image/png': { ext: 'png', matches: (b) => b.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47])) },
+  'image/webp': { ext: 'webp', matches: (b) => b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP' },
+  'image/avif': { ext: 'avif', matches: (b) => b.toString('ascii', 4, 8) === 'ftyp' },
+};
 
-const s3Client = new S3Client({
-  region,
-  endpoint,
-  credentials: {
-    accessKeyId: accessKey,
-    secretAccessKey: secretKey,
-  },
-});
+// Credentials come only from the environment — never commit keys.
+const accessKeyId = process.env.S3_ACCESS_KEY_ID || process.env.APP_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+const secretAccessKey =
+  process.env.S3_SECRET_ACCESS_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+const region = process.env.AWS_REGION || 'ap-southeast-2';
+const bucket = process.env.AWS_S3_BUCKET;
+const cdnDomain = (process.env.CLOUDFRONT_DOMAIN || `https://${bucket}.s3.${region}.amazonaws.com`).replace(/\/$/, '');
+
+const s3 =
+  accessKeyId && secretAccessKey && bucket
+    ? new S3Client({ region, credentials: { accessKeyId, secretAccessKey } })
+    : null;
 
 export async function POST(req: NextRequest) {
-  const auth = verifyAdminRequest(req);
-  if (!auth.authorized) {
-    return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
-  }
+  const who = await requireAdmin(req, 'MANAGER');
+  if (who instanceof NextResponse) return who;
+  if (!s3) return NextResponse.json({ message: 'Image storage is not configured.' }, { status: 503 });
 
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File | null;
+    const file = (await req.formData()).get('file');
+    if (!(file instanceof File)) return NextResponse.json({ message: 'No file provided.' }, { status: 400 });
+    if (file.size > MAX_BYTES) return NextResponse.json({ message: 'File is larger than 10 MB.' }, { status: 413 });
 
-    if (!file) {
-      return NextResponse.json({ message: 'No file provided.' }, { status: 400 });
+    const type = IMAGE_TYPES[file.type];
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!type || buffer.length < 12 || !type.matches(buffer)) {
+      return NextResponse.json({ message: 'Only JPEG, PNG, WebP or AVIF images are allowed.' }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
-    const randomHex = crypto.randomBytes(4).toString('hex');
-    const key = `uploads/${Date.now()}-${randomHex}.${fileExt}`;
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: file.type || 'image/jpeg',
-    });
-
-    await s3Client.send(command);
-
-    const url = `${cdnDomain.replace(/\/$/, '')}/${key}`;
-    return NextResponse.json({ url, key });
-  } catch (err: any) {
-    console.error('S3 Upload Error:', err);
-    return NextResponse.json({ message: err.message || 'Image upload failed.' }, { status: 500 });
+    const key = `uploads/${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${type.ext}`;
+    await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: buffer, ContentType: file.type }));
+    return NextResponse.json({ url: `${cdnDomain}/${key}`, key });
+  } catch (err) {
+    console.error('S3 upload error:', err);
+    return NextResponse.json({ message: 'Image upload failed.' }, { status: 500 });
   }
 }

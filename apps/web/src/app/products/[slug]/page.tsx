@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import { API_URL } from '@/lib/api';
+import { authFetch, errorMessage } from '@/lib/adminApi';
 
 // Fallback demo product if backend isn't populated or slug isn't found
 const FALLBACK_PRODUCT = {
@@ -84,6 +85,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   const [newComment, setNewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   const formatPrice = useCurrencyStore((s) => s.formatPrice);
   const addToCart = useCartStore((s) => s.addItem);
@@ -211,38 +213,25 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingReview(true);
+    setReviewError(null);
     try {
-      const res = await fetch(`${API_URL}/products/${product.id}/reviews`, {
+      const res = await authFetch(`${API_URL}/products/${product.id}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating: newRating, comment: newComment }),
       });
-      if (res.ok) {
-        const addedRev = await res.json();
-        setProduct((prev: any) => ({
-          ...prev,
-          reviews: [addedRev, ...(prev.reviews || [])],
-        }));
-        setNewComment('');
-        setReviewSubmitted(true);
-        setTimeout(() => setReviewSubmitted(false), 4000);
+      if (!res.ok) {
+        throw new Error(
+          res.status === 401 ? 'Please sign in to leave a review.' : await errorMessage(res, 'Could not submit your review.'),
+        );
       }
-    } catch {
-      // Local optimistic fallback
-      const newRev = {
-        id: `r-${Date.now()}`,
-        rating: newRating,
-        comment: newComment,
-        createdAt: 'Just now',
-        user: { name: 'You' },
-      };
-      setProduct((prev: any) => ({
-        ...prev,
-        reviews: [newRev, ...(prev.reviews || [])],
-      }));
+      const addedRev = await res.json();
+      setProduct((prev: any) => ({ ...prev, reviews: [addedRev, ...(prev.reviews || [])] }));
       setNewComment('');
       setReviewSubmitted(true);
       setTimeout(() => setReviewSubmitted(false), 4000);
+    } catch (err) {
+      setReviewError((err as Error).message || 'Could not submit your review.');
     } finally {
       setSubmittingReview(false);
     }
@@ -685,6 +674,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               </div>
             ) : (
               <form onSubmit={handleSubmitReview} className="space-y-4">
+                {reviewError && (
+                  <p className="p-3 bg-rose-50 text-rose-700 rounded-xl border border-rose-200 text-xs font-semibold">{reviewError}</p>
+                )}
                 <div>
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Your Rating</label>
                   <div className="flex items-center space-x-1">

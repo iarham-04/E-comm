@@ -1,18 +1,25 @@
+import 'server-only';
 import { Pool } from '@neondatabase/serverless';
+import * as crypto from 'crypto';
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://neondb_owner:npg_rjb9V7LxqTCt@ep-polished-breeze-atgbwr02.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&connect_timeout=30';
+let pool: Pool | null = null;
 
-export const pool = new Pool({ connectionString });
+/** Lazily connects so builds without DATABASE_URL still succeed. Credentials come only from the environment. */
+function getPool(): Pool {
+  if (!pool) {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) throw new Error('DATABASE_URL is not configured.');
+    pool = new Pool({ connectionString });
+  }
+  return pool;
+}
 
 export async function query<T = any>(text: string, params?: any[]): Promise<T[]> {
-  const res = await pool.query(text, params);
+  const res = await getPool().query(text, params);
   return res.rows as T[];
 }
 
+/** Collision-resistant id compatible with the cuid-style ids Prisma generates. */
 export function generateId(): string {
-  const timestamp = Date.now().toString(36);
-  const randomStr = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 6);
-  return `cm${timestamp}${randomStr}`.substring(0, 25);
+  return `c${Date.now().toString(36)}${crypto.randomBytes(9).toString('hex')}`.slice(0, 25);
 }

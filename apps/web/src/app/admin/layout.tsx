@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Settings, BarChart3, Users, ChevronRight,
   UserCheck, LogOut, Menu, X, ExternalLink, ShieldAlert
 } from 'lucide-react';
-import { getAdminProfile, getLocalAdminSession, UserRole } from '@/lib/adminApi';
+import { getAdminProfile, getLocalAdminSession, clearLocalAdminSession, UserRole } from '@/lib/adminApi';
 
 interface NavItem {
   label: string;
@@ -47,9 +47,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isLoginPage = pathname === '/admin/login' || pathname?.startsWith('/admin/login');
 
-  const [userRole, setUserRole] = useState<UserRole>('OWNER');
-  const [adminName, setAdminName] = useState<string>('AZRA');
-  const [userEmail, setUserEmail] = useState<string>('owner@corazontouch.com');
+  const [userRole, setUserRole] = useState<UserRole>('CUSTOMER');
+  const [adminName, setAdminName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [denied, setDenied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -60,23 +60,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    // 1. Check local master security session first (instant synchronous check)
-    const localSession = getLocalAdminSession();
-    if (localSession?.token && localSession?.role) {
-      setUserRole(localSession.role);
-      if (localSession.name) setAdminName(localSession.name);
-      if (localSession.email) setUserEmail(localSession.email);
-      setCheckedAuth(true);
-      setDenied(false);
-      return;
-    }
-
-    // 2. If no local master session, check Clerk session
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      window.location.href = '/admin/login';
-      return;
+    // A master-PIN session or a Clerk session is required; either way the server verifies it below.
+    if (!getLocalAdminSession()) {
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        window.location.href = '/admin/login';
+        return;
+      }
     }
 
     let isCancelled = false;
@@ -116,10 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   const handleLogout = async () => {
-    try {
-      localStorage.removeItem('corazon_admin_session');
-      document.cookie = 'corazon_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    } catch {}
+    clearLocalAdminSession();
 
     if (isSignedIn) {
       try {
@@ -179,7 +166,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const userLevel = ROLE_LEVEL[userRole] || 4;
+  const userLevel = ROLE_LEVEL[userRole] || 1;
 
   const NavContent = () => (
     <div className="flex flex-col justify-between h-full bg-white text-slate-800">

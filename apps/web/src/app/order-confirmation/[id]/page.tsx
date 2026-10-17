@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { API_URL } from '@/lib/api';
+import { authFetch } from '@/lib/adminApi';
 
 interface OrderItem {
   id: string;
@@ -60,7 +61,11 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
     async function fetchOrder() {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/orders/${params.id}`);
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const email = urlParams?.get('email') || '';
+
+        const url = `${API_URL}/orders/${encodeURIComponent(params.id)}${email ? `?email=${encodeURIComponent(email)}` : ''}`;
+        const res = await authFetch(url);
         if (!res.ok) throw new Error('Order not found');
         const data = await res.json();
         setOrder(data);

@@ -7,13 +7,13 @@ import {
   Shield, Lock, KeyRound, User, ArrowRight, ArrowLeft,
   AlertCircle, CheckCircle2, Loader2, Sparkles
 } from 'lucide-react';
-import { getLocalAdminSession } from '@/lib/adminApi';
+import { getLocalAdminSession, ADMIN_SESSION_KEY } from '@/lib/adminApi';
 
 export default function AdminLoginPage() {
   const { isLoaded, isSignedIn } = useUser();
 
   const [activeTab, setActiveTab] = useState<'key' | 'clerk'>('key');
-  const [identifier, setIdentifier] = useState('AZRA');
+  const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     // If already logged in via local master session, directly forward to /admin
     const local = getLocalAdminSession();
-    if (local?.token && local?.role) {
+    if (local) {
       window.location.href = '/admin';
       return;
     }
@@ -55,17 +55,11 @@ export default function AdminLoginPage() {
         throw new Error(data.message || 'Invalid security key / passcode. Access denied.');
       }
 
-      // Save admin session in localStorage and cookie
-      const sessionData = {
-        token: data.token,
-        role: data.role || 'OWNER',
-        name: data.user?.name || identifier.trim() || 'Store Administrator',
-        email: data.user?.email || 'owner@corazontouch.com',
-        timestamp: Date.now(),
-      };
-
-      localStorage.setItem('corazon_admin_session', JSON.stringify(sessionData));
-      document.cookie = `corazon_admin_token=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
+      // Server-signed token; expires after 12 hours
+      localStorage.setItem(
+        ADMIN_SESSION_KEY,
+        JSON.stringify({ token: data.token, name: data.user?.name, expiresAt: data.expiresAt }),
+      );
 
       setSuccess(true);
 

@@ -1,33 +1,14 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Query,
-  Param,
-  UseGuards,
-  Req,
-  BadRequestException,
-} from '@nestjs/common';
-import { OrdersService, CreateOrderDto } from './orders.service';
+import { Controller, Post, Get, Body, Query, Param, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { OrdersService, OrderInput } from './orders.service';
 import { PaymentService } from './payment.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
-import { getAuth } from '@clerk/express';
-
-export interface RazorpayCreateOrderDto {
-  amountInRupees: number;
-  receiptId?: string;
-}
-
-export interface RazorpayVerifyDto {
-  razorpayOrderId: string;
-  razorpayPaymentId: string;
-  razorpaySignature: string;
-  order: CreateOrderDto;
-}
+import { getClerkId } from '../auth/clerk-user';
+import { CreateOrderApiDto, RazorpayVerifyApiDto } from '../common/dto/api-contract.dto';
 
 @Controller('orders')
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
@@ -35,108 +16,66 @@ export class OrdersController {
     private readonly prisma: PrismaService,
   ) {}
 
-  // ─── Standard Order Creation (COD) ─────────────────────────────────────────
-  // Supports both logged-in users (tied to user account) and guest checkout (with email)
-  @Post()
-  async create(@Body() dto: CreateOrderDto, @Req() req: any) {
-    let userId: string | undefined;
+  /** The signed-in DB user, if any. Guests resolve to null. */
+  private async currentUser(req: any) {
+    const clerkId = getClerkId(req);
+    return clerkId ? this.prisma.user.findUnique({ where: { clerkId } }) : null;
+  }
 
-    try {
-      const auth = getAuth(req);
-      if (auth && auth.userId) {
-        const user = await this.prisma.user.findUnique({
-          where: { clerkId: auth.userId },
-        });
-        if (user) userId = user.id;
-      }
-    } catch {
-      // Unauthenticated / guest session
-    }
-
-    if (!userId && !dto.guestEmail) {
+  private async withBuyer(dto: CreateOrderApiDto, req: any): Promise<OrderInput> {
+    const user = await this.currentUser(req);
+    if (!user && !dto.guestEmail) {
       throw new BadRequestException('Please provide a contact email to complete your order.');
     }
-
-    return this.ordersService.create({
-      ...dto,
-      ...(userId ? { userId } : {}),
-    });
+    return { ...dto, userId: user?.id };
   }
 
-  // ─── Razorpay: Step 1 — Create a Razorpay Order (before showing popup) ────
+  // ─── Cash on Delivery ──────────────────────────────────────────────────────
+  @Post()
+  async create(@Body() dto: CreateOrderApiDto, @Req() req: any) {
+    return this.ordersService.createCodOrder(await this.withBuyer(dto, req));
+  }
+
+  // ─── Razorpay step 1: price the cart server-side and open a gateway order ──
   @Post('razorpay/create-order')
-  async createRazorpayOrder(@Body() body: RazorpayCreateOrderDto) {
-    const { amountInRupees, receiptId } = body;
-    if (!amountInRupees || amountInRupees <= 0) {
-      throw new BadRequestException('Invalid order amount.');
-    }
-    const receipt = receiptId || `rcpt_${Date.now()}`;
-    return this.paymentService.createRazorpayOrder(amountInRupees, receipt);
+  async createRazorpayOrder(@Body() dto: CreateOrderApiDto, @Req() req: any) {
+    const input = await this.withBuyer({ ...dto, paymentMethod: 'RAZORPAY' }, req);
+    const quote = await this.ordersService.quote(input);
+    const rzp = await this.paymentService.createRazorpayOrder(quote.total, `rcpt_${Date.now()}`);
+    const order = await this.ordersService.createPendingRazorpayOrder(input, quote, rzp.id);
+    return { ...rzp, orderId: order.id, total: quote.total };
   }
 
-  // ─── Razorpay: Step 2 — Verify Payment & Create Order in DB ───────────────
+  // ─── Razorpay step 2: verify the checkout signature and confirm ────────────
   @Post('razorpay/verify')
-  async verifyAndCreateOrder(@Body() body: RazorpayVerifyDto, @Req() req: any) {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, order } = body;
-
-    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-      throw new BadRequestException('Missing Razorpay payment verification parameters.');
-    }
-
-    // Verify HMAC signature — rejects tampered / fraudulent payments
-    const isValid = this.paymentService.verifyPaymentSignature(
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature,
-    );
-
-    if (!isValid) {
+  async verifyAndConfirmOrder(@Body() body: RazorpayVerifyApiDto) {
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
+    if (!this.paymentService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
       throw new BadRequestException('Payment signature verification failed. Order rejected.');
     }
-
-    let userId: string | undefined;
-    try {
-      const auth = getAuth(req);
-      if (auth && auth.userId) {
-        const user = await this.prisma.user.findUnique({
-          where: { clerkId: auth.userId },
-        });
-        if (user) userId = user.id;
-      }
-    } catch {
-      // Unauthenticated / guest session
-    }
-
-    const dbOrder = await this.ordersService.create({
-      ...order,
-      ...(userId ? { userId } : {}),
-      paymentMethod: 'RAZORPAY',
-      razorpayPaymentId,
-      razorpayOrderId,
-    });
-
-    return dbOrder;
+    const order = await this.ordersService.confirmRazorpayPayment(razorpayOrderId, razorpayPaymentId);
+    if (!order) throw new BadRequestException('No pending order matches this payment. Please contact support.');
+    return { id: order.id, status: order.status, paymentStatus: order.paymentStatus };
   }
 
-  // ─── Authenticated: My Orders (MUST be before :id to avoid route shadowing) ─
   @Get('my-orders')
   @UseGuards(AuthGuard)
   findMyOrders(@Req() req: any) {
     return this.ordersService.findMyOrders(req.dbUser.id);
   }
 
-  // ─── Order Tracking (requires both order ID + email for verification) ──────
+  /** Requires both order ID and the matching email. */
   @Get('track')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   trackOrder(@Query('id') id: string, @Query('email') email: string) {
-    if (!id || !email) {
-      throw new BadRequestException('Both order ID and email are required for tracking.');
-    }
+    if (!id || !email) throw new BadRequestException('Both order ID and email are required for tracking.');
     return this.ordersService.trackOrder(id, email);
   }
 
-  // ─── Order Receipt / Confirmation (rendered on order-confirmation/[id]) ───
+  /** Order receipt for the confirmation page: owner, staff, or matching email only. */
   @Get(':id')
-  async getOrderById(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
+  async getOrderById(@Param('id') id: string, @Query('email') email: string, @Req() req: any) {
+    const user = await this.currentUser(req);
+    return this.ordersService.findOneSecure(id, user, email || '');
   }
 }

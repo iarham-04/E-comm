@@ -6,15 +6,15 @@ import { useCartStore } from '@/store/useCartStore';
 import { Lock, CreditCard, Banknote, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import { loadRazorpayScript, openRazorpayCheckout } from '@/lib/razorpay';
-
-const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TmdTMss5YqJvBl';
+import { authFetch, errorMessage } from '@/lib/adminApi';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCartStore();
 
   const cartSubtotal = subtotal();
-  const shippingFee = cartSubtotal > 1999 ? 0 : 99;
+  // Display estimate only — the server recalculates prices, shipping and discounts.
+  const shippingFee = cartSubtotal >= 1999 ? 0 : 99;
   const total = cartSubtotal + shippingFee;
 
   const [guestEmail, setGuestEmail] = useState('');
@@ -34,20 +34,26 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Build the common order payload
-  const buildOrderPayload = (extras?: Record<string, any>) => ({
-    guestEmail,
-    guestPhone: shippingAddress.phone || guestPhone,
+  const orderPayload = () => ({
+    guestEmail: guestEmail.trim(),
+    guestPhone: guestPhone.trim() || shippingAddress.phone.trim(),
     shippingAddress,
     paymentMethod,
-    items: items.map((i) => ({
-      productId: i.productId,
-      variantId: i.variantId,
-      quantity: i.quantity,
-      price: i.price,
-    })),
-    ...extras,
+    items: items.map(({ productId, variantId, quantity }) => ({ productId, variantId, quantity })),
   });
+
+  const postJson = (path: string, body: unknown) =>
+    authFetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  const goToConfirmation = (orderId: string) => {
+    clearCart();
+    const email = guestEmail.trim();
+    router.push(`/order-confirmation/${orderId}${email ? `?email=${encodeURIComponent(email)}` : ''}`);
+  };
 
   // NOTE: Full multi-currency payment settlement (USD/EUR/GBP) is a planned future enhancement
   // requiring live FX gateway configurations and multi-currency merchant settlement accounts.
@@ -55,48 +61,28 @@ export default function CheckoutPage() {
 
   // ─── COD Flow ──────────────────────────────────────────────────────────────
   const handleCOD = async () => {
-    const res = await fetch(`${API_URL}/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildOrderPayload()),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.message || 'Failed to place order. Please try again.');
-    }
-
-    const data = await res.json();
-    clearCart();
-    router.push(`/order-confirmation/${data.id || 'order-success'}`);
+    const res = await postJson('/orders', orderPayload());
+    if (!res.ok) throw new Error(await errorMessage(res, 'Failed to place order. Please try again.'));
+    goToConfirmation((await res.json()).id);
   };
 
   // ─── Razorpay Flow ─────────────────────────────────────────────────────────
   const handleRazorpay = async () => {
-    // Step 1: Load Razorpay script
-    const loaded = await loadRazorpayScript();
-    if (!loaded) {
+    if (!(await loadRazorpayScript())) {
       throw new Error('Failed to load payment gateway. Please check your connection and try again.');
     }
 
-    // Step 2: Create Razorpay order on backend
-    const rzpOrderRes = await fetch(`${API_URL}/orders/razorpay/create-order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amountInRupees: total }),
-    });
-
+    // Step 1: the server prices the cart and opens a gateway order for that exact amount
+    const rzpOrderRes = await postJson('/orders/razorpay/create-order', orderPayload());
     if (!rzpOrderRes.ok) {
-      const err = await rzpOrderRes.json().catch(() => ({}));
-      throw new Error(err?.message || 'Could not initiate payment. Please try again.');
+      throw new Error(await errorMessage(rzpOrderRes, 'Could not initiate payment. Please try again.'));
     }
-
     const rzpOrder = await rzpOrderRes.json();
 
-    // Step 3: Open Razorpay popup
+    // Step 2: Razorpay popup
     const payment = await openRazorpayCheckout({
-      key: rzpOrder.keyId || RAZORPAY_KEY_ID || 'rzp_live_TmdTMss5YqJvBl',
-      amount: rzpOrder.amount,        // in paise from backend
+      key: rzpOrder.keyId,
+      amount: rzpOrder.amount, // paise, server-calculated
       currency: rzpOrder.currency,
       name: 'Corazonetouch',
       description: `Order of ${items.length} item(s)`,
@@ -109,26 +95,16 @@ export default function CheckoutPage() {
       theme: { color: '#171717' },
     });
 
-    // Step 4: Verify signature on backend & create order
-    const verifyRes = await fetch(`${API_URL}/orders/razorpay/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        razorpayOrderId: payment.razorpay_order_id,
-        razorpayPaymentId: payment.razorpay_payment_id,
-        razorpaySignature: payment.razorpay_signature,
-        order: buildOrderPayload({ paymentMethod: 'RAZORPAY' }),
-      }),
+    // Step 3: server verifies the signature and confirms the pending order
+    const verifyRes = await postJson('/orders/razorpay/verify', {
+      razorpayOrderId: payment.razorpay_order_id,
+      razorpayPaymentId: payment.razorpay_payment_id,
+      razorpaySignature: payment.razorpay_signature,
     });
-
     if (!verifyRes.ok) {
-      const err = await verifyRes.json().catch(() => ({}));
-      throw new Error(err?.message || 'Payment verification failed. Please contact support.');
+      throw new Error(await errorMessage(verifyRes, 'Payment verification failed. Please contact support.'));
     }
-
-    const dbOrder = await verifyRes.json();
-    clearCart();
-    router.push(`/order-confirmation/${dbOrder.id || 'order-success'}`);
+    goToConfirmation((await verifyRes.json()).id);
   };
 
   // ─── Main Submit Handler ───────────────────────────────────────────────────

@@ -1,47 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, generateId } from '@/lib/db';
-import { verifyAdminRequest } from '@/lib/adminAuth';
+import { requireAdmin, dbError } from '@/lib/adminAuth';
+import { parseCategoryBody } from '@/lib/adminFields';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const categories = await query(`
-      SELECT c.*,
-             (SELECT count(*)::int FROM "Product" p WHERE p."categoryId" = c.id) as "productCount"
-      FROM "Category" c
-      ORDER BY c.name ASC
-    `);
-
-    return NextResponse.json(categories);
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Failed to fetch categories' }, { status: 500 });
+    return NextResponse.json(
+      await query(`
+        SELECT c.*, (SELECT count(*)::int FROM "Product" p WHERE p."categoryId" = c.id) AS "productCount"
+        FROM "Category" c ORDER BY c.name ASC`),
+    );
+  } catch (err) {
+    return dbError(err, 'Failed to fetch categories.');
   }
 }
 
 export async function POST(req: NextRequest) {
-  const auth = verifyAdminRequest(req);
-  if (!auth.authorized) {
-    return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
-  }
+  const who = await requireAdmin(req, 'MANAGER');
+  if (who instanceof NextResponse) return who;
 
+  let c: ReturnType<typeof parseCategoryBody>;
   try {
-    const body = await req.json();
-    const { name, slug, parentId, isFeaturedCollection } = body;
-
-    if (!name || !slug) {
-      return NextResponse.json({ message: 'Name and slug are required' }, { status: 400 });
-    }
-
-    const id = generateId();
-    const rows = await query(`
-      INSERT INTO "Category" (id, name, slug, "parentId", "isFeaturedCollection")
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-    `, [id, name, slug, parentId || null, Boolean(isFeaturedCollection)]);
-
-    return NextResponse.json(rows[0], { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Failed to create category' }, { status: 500 });
+    c = parseCategoryBody(await req.json());
+  } catch (err) {
+    return NextResponse.json({ message: (err as Error).message }, { status: 400 });
+  }
+  try {
+    const [row] = await query(
+      `INSERT INTO "Category" (id, name, slug, "parentId", "isFeaturedCollection")
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [generateId(), c.name, c.slug, c.parentId ?? null, c.isFeaturedCollection ?? false],
+    );
+    return NextResponse.json(row, { status: 201 });
+  } catch (err) {
+    return dbError(err, 'Failed to create category.');
   }
 }

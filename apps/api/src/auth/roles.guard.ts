@@ -1,22 +1,20 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { getAuth, clerkClient } from '@clerk/express';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ROLES_KEY } from './roles.decorator';
+import { requireClerkId, resolveDbUser } from './clerk-user';
+import { verifyPinSession, masterPinUser } from './pin-session';
 
-const ROLE_HIERARCHY: Record<UserRole, number> = {
+export const ROLE_HIERARCHY: Record<UserRole, number> = {
   [UserRole.OWNER]: 4,
   [UserRole.MANAGER]: 3,
   [UserRole.SUPPORT]: 2,
   [UserRole.CUSTOMER]: 1,
 };
+
+export const isStaff = (role?: UserRole | null) =>
+  !!role && ROLE_HIERARCHY[role] >= ROLE_HIERARCHY[UserRole.SUPPORT];
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -30,107 +28,24 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-
     const request = context.switchToHttp().getRequest();
+    const pin = verifyPinSession(request.headers?.['x-admin-token']);
 
-    // 0. Support Master Admin PIN session tokens (adm_...)
-    const authHeader = request.headers['authorization'] || request.headers['x-admin-token'];
-    if (authHeader) {
-      const token = typeof authHeader === 'string' ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
-      if (token.startsWith('adm_')) {
-        try {
-          const raw = Buffer.from(token.replace('adm_', ''), 'base64').toString('utf8');
-          const [name] = raw.split(':');
-          request.dbUser = {
-            id: 'admin-master',
-            clerkId: 'admin-master',
-            role: UserRole.OWNER,
-            email: 'azra@corazontouch.com',
-            name: name || 'AZRA',
-          };
-          return true;
-        } catch {
-          // Fall through to Clerk verification
-        }
-      }
-    }
+    const user = pin ? masterPinUser(pin.name) : await resolveDbUser(this.prisma, requireClerkId(request));
+    if (!user) throw new ForbiddenException('Forbidden — User record not found.');
+    if (!isStaff(user.role)) throw new ForbiddenException('Forbidden — Staff privileges required.');
 
-    // 1. Authenticate caller via Clerk session token verification
-    let clerkId: string | null = null;
-    try {
-      const auth = getAuth(request);
-      clerkId = auth?.userId || null;
-    } catch {
-      throw new UnauthorizedException('Authentication verification failed.');
-    }
-
-    if (!clerkId) {
-      throw new UnauthorizedException('Unauthorized — valid Clerk session required.');
-    }
-
-    // 2. Fetch User from database by clerkId
-    let user = request.dbUser;
-    if (!user || user.clerkId !== clerkId) {
-      user = await this.prisma.user.findUnique({
-        where: { clerkId },
-      });
-
-      // SECURITY FIX: If user was pre-provisioned by email, link their clerkId
-      // using Clerk API to fetch email (not client headers)
-      if (!user) {
-        try {
-          const clerkUser = await clerkClient.users.getUser(clerkId);
-          const primaryEmail = clerkUser.emailAddresses.find(
-            (e) => e.id === clerkUser.primaryEmailAddressId,
-          );
-          if (primaryEmail) {
-            const emailMatch = await this.prisma.user.findFirst({
-              where: { email: { equals: primaryEmail.emailAddress, mode: 'insensitive' } },
-            });
-            if (emailMatch) {
-              user = await this.prisma.user.update({
-                where: { id: emailMatch.id },
-                data: { clerkId },
-              });
-            }
-          }
-        } catch {
-          // Clerk API call failed — user simply doesn't exist
-        }
-      }
-
-      request.dbUser = user;
-    }
-
-    if (!user) {
-      throw new UnauthorizedException('Unauthorized — user record not found in system.');
-    }
-
-    // 3. Customers must NEVER have admin route access
-    if (user.role === UserRole.CUSTOMER) {
-      throw new ForbiddenException('Forbidden — Staff privileges required.');
-    }
-
-    const userLevel = ROLE_HIERARCHY[user.role as UserRole] || 1;
-
-    // 4. If explicit roles are specified on the route handler or class
-    if (requiredRoles && requiredRoles.length > 0) {
-      const minRequiredLevel = Math.min(
-        ...requiredRoles.map((r) => ROLE_HIERARCHY[r] || 99),
-      );
-
-      if (userLevel < minRequiredLevel) {
+    // Default minimum is SUPPORT (already enforced above)
+    if (requiredRoles?.length) {
+      const minLevel = Math.min(...requiredRoles.map((r) => ROLE_HIERARCHY[r] ?? 99));
+      if (ROLE_HIERARCHY[user.role] < minLevel) {
         throw new ForbiddenException(
           `Forbidden — Access requires minimum '${requiredRoles.join('/')}' role privileges.`,
         );
       }
-    } else {
-      // Default: If RolesGuard is active with no specific role decorator, require at least SUPPORT
-      if (userLevel < ROLE_HIERARCHY[UserRole.SUPPORT]) {
-        throw new ForbiddenException('Forbidden — Staff privileges required.');
-      }
     }
 
+    request.dbUser = user;
     return true;
   }
 }
