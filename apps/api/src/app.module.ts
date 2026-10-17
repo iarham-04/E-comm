@@ -13,6 +13,7 @@ import { AdminModule } from './admin/admin.module';
 import { HomepageModule } from './homepage/homepage.module';
 import { SearchModule } from './search/elasticsearch.module';
 import { MailModule } from './mail/mail.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MailModule } from './mail/mail.module';
     ContactModule,
     AdminModule,
     HomepageModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [

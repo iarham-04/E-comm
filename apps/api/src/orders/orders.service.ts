@@ -1,10 +1,9 @@
-import { Prisma } from "@prisma/client";
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Prisma, UserRole, OrderStatus, PaymentStatus } from "@prisma/client";
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 
 export interface CreateOrderDto {
-
   userId?: string;
   guestEmail?: string;
   guestPhone?: string;
@@ -27,6 +26,8 @@ export interface CreateOrderDto {
     phone: string;
   };
   paymentMethod: 'COD' | 'RAZORPAY' | 'STRIPE';
+  paymentStatus?: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  status?: 'PLACED' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
   deliverySpeed?: 'STANDARD' | 'EXPRESS';
@@ -35,7 +36,7 @@ export interface CreateOrderDto {
     productId: string;
     variantId?: string;
     quantity: number;
-    price: number;
+    price?: number;
   }[];
 }
 
@@ -46,26 +47,7 @@ export class OrdersService {
     private mailService: MailService,
   ) {}
 
-  async create(dto: CreateOrderDto) {
-    if (!dto.userId && !dto.guestEmail) {
-      throw new BadRequestException('Order requires either a user ID or guest email.');
-    }
-
-    if (!dto.items || dto.items.length === 0) {
-      throw new BadRequestException('Order items cannot be empty.');
-    }
-
-    // Validate item quantities
-    for (const item of dto.items) {
-      if (!item.quantity || item.quantity <= 0 || !Number.isInteger(item.quantity)) {
-        throw new BadRequestException('Item quantities must be positive integers.');
-      }
-      if (item.quantity > 100) {
-        throw new BadRequestException('Maximum quantity per item is 100.');
-      }
-    }
-
-    // 1. Fetch Store Settings singleton
+  private async calculateOrderTotals(dto: CreateOrderDto) {
     let settings = await this.prisma.storeSettings.findUnique({ where: { id: 'singleton' } });
     if (!settings) {
       settings = {
@@ -79,7 +61,6 @@ export class OrdersService {
       };
     }
 
-    // Check payment method status
     if (dto.paymentMethod === 'COD' && !settings.codEnabled) {
       throw new BadRequestException('Cash on Delivery is currently disabled.');
     }
@@ -87,7 +68,6 @@ export class OrdersService {
       throw new BadRequestException('Razorpay online payments are currently disabled.');
     }
 
-    // 2. Check stock availability & fetch full product collection relations for discount evaluation
     const productIds = dto.items.map((i) => i.productId);
     const dbProducts = await this.prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -104,37 +84,27 @@ export class OrdersService {
       }
     }
 
-    // 3. SECURITY FIX: Compute subtotal using SERVER-SIDE prices from the database,
-    //    never trust client-supplied prices.
     const subtotal = dto.items.reduce((acc, item) => {
       const product = dbProducts.find((p) => p.id === item.productId);
       if (!product) return acc;
-
       let unitPrice = Number(product.price);
-
-      // If a variant is specified, add its priceDelta to the base price
       if (item.variantId && product.variants) {
         const variant = product.variants.find((v: any) => v.id === item.variantId);
         if (variant && variant.priceDelta) {
           unitPrice += Number(variant.priceDelta);
         }
       }
-
       return acc + unitPrice * item.quantity;
     }, 0);
 
-    // 4. Shipping computation using StoreSettings
     const freeThreshold = settings.freeShippingThreshold ? Number(settings.freeShippingThreshold) : 1999;
     const flatFee = Number(settings.flatShippingFee);
     const shippingFee = dto.deliverySpeed === 'EXPRESS' ? 250 : subtotal >= freeThreshold ? 0 : (flatFee || 99);
 
-    // 5. Discount Evaluation (Non-stacking rule: Code Coupon vs Automatic Collection Sale)
     let bestDiscount = 0;
     let appliedCouponCode: string | null = null;
-
     const now = new Date();
 
-    // Check Coupon Code if provided
     if (dto.couponCode) {
       const codeCoupon = await this.prisma.coupon.findUnique({
         where: { code: dto.couponCode.trim().toUpperCase() },
@@ -150,7 +120,6 @@ export class OrdersService {
           codeCoupon.discountType === 'PERCENTAGE'
             ? (subtotal * Number(codeCoupon.discountValue)) / 100
             : Number(codeCoupon.discountValue);
-
         if (codeDiscount > bestDiscount) {
           bestDiscount = codeDiscount;
           appliedCouponCode = codeCoupon.code;
@@ -158,7 +127,6 @@ export class OrdersService {
       }
     }
 
-    // Check Automatic Collection-wide Sales
     const activeCollectionCoupons = await this.prisma.coupon.findMany({
       where: {
         appliesToCollectionId: { not: null },
@@ -172,13 +140,10 @@ export class OrdersService {
     });
 
     for (const autoCoupon of activeCollectionCoupons) {
-      // Find items belonging to this collection
       const collectionItemSubtotal = dto.items.reduce((acc, item) => {
         const product = dbProducts.find((p) => p.id === item.productId);
         const belongsToCollection = product?.collections.some((c) => c.id === autoCoupon.appliesToCollectionId);
         if (!belongsToCollection) return acc;
-
-        // Use server-side price for discount calculation too
         const unitPrice = Number(product!.price);
         return acc + unitPrice * item.quantity;
       }, 0);
@@ -188,7 +153,6 @@ export class OrdersService {
           autoCoupon.discountType === 'PERCENTAGE'
             ? (collectionItemSubtotal * Number(autoCoupon.discountValue)) / 100
             : Number(autoCoupon.discountValue);
-
         if (autoDiscount > bestDiscount) {
           bestDiscount = autoDiscount;
           appliedCouponCode = autoCoupon.code || `[Collection Sale: ${autoCoupon.appliesToCollectionId}]`;
@@ -199,7 +163,6 @@ export class OrdersService {
     const discountAmount = Math.min(bestDiscount, subtotal);
     const total = Math.max(0, subtotal - discountAmount + shippingFee);
 
-    // Address Snapshot as JSON
     const addr: any = dto.shippingAddress || dto.addressSnapshot || {};
     const addressSnapshot = {
       fullName: addr.fullName || addr.name || 'Valued Collector',
@@ -211,12 +174,218 @@ export class OrdersService {
       phone: addr.phone || '',
     };
 
-    // Transactional Order Creation & Stock Deduction
-    const order = await this.prisma.$transaction(async (tx) => {
-      for (const item of dto.items) {
-        const product = dbProducts.find((p) => p.id === item.productId);
-        if (!product) continue;
+    return {
+      dbProducts,
+      subtotal,
+      shippingFee,
+      discountAmount,
+      appliedCouponCode,
+      total,
+      addressSnapshot,
+    };
+  }
 
+  async createOrderInsideTx(
+    tx: any,
+    dto: CreateOrderDto,
+    status: OrderStatus = OrderStatus.PLACED,
+    paymentStatus: PaymentStatus = PaymentStatus.PENDING,
+  ) {
+    const {
+      dbProducts,
+      subtotal,
+      shippingFee,
+      discountAmount,
+      appliedCouponCode,
+      total,
+      addressSnapshot,
+    } = await this.calculateOrderTotals(dto);
+
+    // Decrement stock inside transaction
+    for (const item of dto.items) {
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { stock: { decrement: item.quantity } },
+      });
+
+      if (item.variantId) {
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data: { stock: { decrement: item.quantity } },
+        });
+      }
+    }
+
+    const order = await tx.order.create({
+      data: {
+        userId: dto.userId || null,
+        guestEmail: dto.guestEmail || null,
+        guestPhone: dto.guestPhone || null,
+        addressSnapshot,
+        paymentMethod: dto.paymentMethod,
+        paymentStatus,
+        status,
+        deliverySpeed: dto.deliverySpeed || 'STANDARD',
+        subtotal,
+        shippingFee,
+        discountAmount,
+        couponCode: appliedCouponCode,
+        total,
+        razorpayOrderId: dto.razorpayOrderId || null,
+        razorpayPaymentId: dto.razorpayPaymentId || null,
+        items: {
+          create: dto.items.map((item) => {
+            const product = dbProducts.find((p) => p.id === item.productId);
+            let unitPrice = product ? Number(product.price) : 0;
+            if (item.variantId && product?.variants) {
+              const variant = (product.variants as any[]).find((v) => v.id === item.variantId);
+              if (variant?.priceDelta) unitPrice += Number(variant.priceDelta);
+            }
+            return {
+              productId: item.productId,
+              variantId: item.variantId || null,
+              quantity: item.quantity,
+              priceAtPurchase: unitPrice,
+            };
+          }),
+        },
+      },
+      include: {
+        items: { include: { product: true } },
+      },
+    });
+
+    return order;
+  }
+
+  async create(dto: CreateOrderDto) {
+    if (!dto.userId && !dto.guestEmail) {
+      throw new BadRequestException('Order requires either a user ID or guest email.');
+    }
+
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException('Order items cannot be empty.');
+    }
+
+    for (const item of dto.items) {
+      if (!item.quantity || item.quantity <= 0 || !Number.isInteger(item.quantity)) {
+        throw new BadRequestException('Item quantities must be positive integers.');
+      }
+      if (item.quantity > 100) {
+        throw new BadRequestException('Maximum quantity per item is 100.');
+      }
+    }
+
+    const initialPaymentStatus = dto.paymentMethod === 'COD' ? PaymentStatus.PENDING : PaymentStatus.PAID;
+    const initialOrderStatus = dto.paymentMethod === 'COD' ? OrderStatus.PLACED : OrderStatus.CONFIRMED;
+
+    const order = await this.prisma.$transaction(async (tx) => {
+      return this.createOrderInsideTx(tx, dto, initialOrderStatus, initialPaymentStatus);
+    });
+
+    this.mailService.sendOrderConfirmation(order.id).catch((err) => {
+      console.error('Failed to dispatch order confirmation email:', err);
+    });
+
+    return order;
+  }
+
+  /**
+   * Fast-path verification called by browser after Razorpay payment popup succeeds.
+   * Ensures idempotency: if webhook arrived first and already marked order PAID and decremented stock,
+   * stock will NOT be decremented again.
+   */
+  async verifyAndConfirmOrder(
+    razorpayOrderId: string,
+    razorpayPaymentId: string,
+    orderDto: CreateOrderDto,
+  ) {
+    const order = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.order.findUnique({
+        where: { razorpayOrderId },
+        include: { items: true },
+      });
+
+      if (existing) {
+        if (existing.paymentStatus === PaymentStatus.PAID) {
+          // Already confirmed by webhook; do not decrement stock again!
+          return existing;
+        }
+
+        // Exists in pending state; decrement stock now and mark PAID
+        for (const item of existing.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          });
+
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { decrement: item.quantity } },
+            });
+          }
+        }
+
+        return tx.order.update({
+          where: { id: existing.id },
+          data: {
+            status: OrderStatus.CONFIRMED,
+            paymentStatus: PaymentStatus.PAID,
+            razorpayPaymentId,
+          },
+          include: { items: { include: { product: true } } },
+        });
+      }
+
+      // Order does not exist in DB yet; create, confirm, and decrement stock inside transaction
+      return this.createOrderInsideTx(
+        tx,
+        {
+          ...orderDto,
+          razorpayOrderId,
+          razorpayPaymentId,
+        },
+        OrderStatus.CONFIRMED,
+        PaymentStatus.PAID,
+      );
+    });
+
+    this.mailService.sendOrderConfirmation(order.id).catch((err) => {
+      console.error('Failed to dispatch order confirmation email:', err);
+    });
+
+    return order;
+  }
+
+  /**
+   * Handles payment.captured webhook event.
+   * Idempotent: decrements stock only if the order was not already marked PAID.
+   */
+  async confirmRazorpayPayment(razorpayOrderId: string, razorpayPaymentId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { razorpayOrderId },
+        include: { items: true },
+      });
+
+      if (!order) {
+        return { received: true, message: `Order #${razorpayOrderId} not found.` };
+      }
+
+      // Idempotency: if already paid, do NOT decrement stock again!
+      if (order.paymentStatus === PaymentStatus.PAID) {
+        if (razorpayPaymentId && !order.razorpayPaymentId) {
+          await tx.order.update({
+            where: { id: order.id },
+            data: { razorpayPaymentId },
+          });
+        }
+        return { received: true, idempotent: true, orderId: order.id, status: 'ALREADY_PAID' };
+      }
+
+      // Decrement inventory stock exactly once
+      for (const item of order.items) {
         await tx.product.update({
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },
@@ -230,82 +399,87 @@ export class OrdersService {
         }
       }
 
-      return tx.order.create({
+      const updated = await tx.order.update({
+        where: { id: order.id },
         data: {
-          userId: dto.userId || null,
-          guestEmail: dto.guestEmail || null,
-          guestPhone: dto.guestPhone || null,
-          addressSnapshot,
-          paymentMethod: dto.paymentMethod,
-          paymentStatus: dto.paymentMethod === 'COD' ? 'PENDING' : 'PAID',
-          status: 'PLACED',
-          deliverySpeed: dto.deliverySpeed || 'STANDARD',
-          subtotal,
-          shippingFee,
-          discountAmount,
-          couponCode: appliedCouponCode,
-          total,
-          items: {
-            create: dto.items.map((item) => {
-              // Use server-side price for priceAtPurchase
-              const product = dbProducts.find((p) => p.id === item.productId);
-              let unitPrice = product ? Number(product.price) : 0;
-              if (item.variantId && product?.variants) {
-                const variant = (product.variants as any[]).find((v) => v.id === item.variantId);
-                if (variant?.priceDelta) unitPrice += Number(variant.priceDelta);
-              }
-              return {
-                productId: item.productId,
-                variantId: item.variantId || null,
-                quantity: item.quantity,
-                priceAtPurchase: unitPrice,
-              };
-            }),
-          },
+          status: OrderStatus.CONFIRMED,
+          paymentStatus: PaymentStatus.PAID,
+          ...(razorpayPaymentId ? { razorpayPaymentId } : {}),
         },
-        include: {
-          items: {
-            include: { product: true },
-          },
-        },
+        include: { items: true },
       });
+
+      this.mailService.sendOrderConfirmation(order.id).catch((err) => {
+        console.error('Failed to dispatch order confirmation email:', err);
+      });
+
+      return updated;
     });
-
-    // Trigger order confirmation email asynchronously
-    this.mailService.sendOrderConfirmation(order.id).catch((err) => {
-      console.error('Failed to dispatch order confirmation email:', err);
-    });
-
-    return order;
-  }
-
-  async trackOrder(id: string, email: string) {
-    if (!id || !email) {
-      throw new BadRequestException('Order ID and email are required for tracking.');
-    }
-
-    const order = await this.prisma.order.findFirst({
-      where: {
-        id,
-        OR: [{ guestEmail: email }, { user: { email } }],
-      },
-      include: {
-        items: { include: { product: true } },
-      },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order #${id} with matching email was not found.`);
-    }
-
-    return order;
   }
 
   /**
-   * Find order by ID — only accessible to the order's owner.
-   * Prevents unauthorized access to other users' order data (PII protection).
+   * Handles payment.failed webhook event.
+   * Sets paymentStatus to FAILED; does NOT touch inventory stock.
    */
-  async findOneForUser(id: string, userId: string) {
+  async failRazorpayPayment(razorpayOrderId: string, razorpayPaymentId?: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { razorpayOrderId },
+    });
+
+    if (!order) {
+      return { received: true, message: `Order #${razorpayOrderId} not found.` };
+    }
+
+    if (order.paymentStatus === PaymentStatus.PAID) {
+      return { received: true, ignored: true, reason: 'Order already completed and paid.' };
+    }
+
+    return this.prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentStatus: PaymentStatus.FAILED,
+        ...(razorpayPaymentId ? { razorpayPaymentId } : {}),
+      },
+    });
+  }
+
+  /**
+   * Entry point for incoming Razorpay Webhooks.
+   */
+  async handleRazorpayWebhook(payload: any) {
+    const event = payload?.event;
+    const payment = payload?.payload?.payment?.entity;
+    const razorpayPaymentId = payment?.id;
+    const razorpayOrderId = payment?.order_id;
+
+    if (!razorpayOrderId) {
+      return { received: true, ignored: true, reason: 'Missing order_id' };
+    }
+
+    if (event === 'payment.captured') {
+      return this.confirmRazorpayPayment(razorpayOrderId, razorpayPaymentId);
+    }
+
+    if (event === 'payment.failed') {
+      return this.failRazorpayPayment(razorpayOrderId, razorpayPaymentId);
+    }
+
+    return { received: true, event };
+  }
+
+  /**
+   * Secure Order Lookup for GET /orders/:id
+   * Returns order ONLY to:
+   * 1. The logged-in owner
+   * 2. Staff (SUPPORT, MANAGER, OWNER)
+   * 3. A caller providing the matching guest email (or customer email)
+   * Otherwise throws 404 NotFoundException to prevent order ID enumeration.
+   */
+  async findOneSecure(
+    id: string,
+    authUser: { id: string; role: UserRole; email: string } | null,
+    suppliedEmail?: string,
+  ) {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
@@ -322,6 +496,13 @@ export class OrdersService {
             },
           },
         },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -329,17 +510,61 @@ export class OrdersService {
       throw new NotFoundException(`Order #${id} not found.`);
     }
 
-    // Verify the requesting user owns this order
-    if (order.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this order.');
+    // 1. Staff access check (SUPPORT, MANAGER, OWNER)
+    if (
+      authUser &&
+      (authUser.role === UserRole.SUPPORT ||
+        authUser.role === UserRole.MANAGER ||
+        authUser.role === UserRole.OWNER)
+    ) {
+      return order;
+    }
+
+    // 2. Logged-in owner check
+    if (authUser && order.userId && order.userId === authUser.id) {
+      return order;
+    }
+
+    // 3. Matching guest email check
+    if (suppliedEmail) {
+      const normSupplied = suppliedEmail.toLowerCase().trim();
+      const guestMatch = order.guestEmail && order.guestEmail.toLowerCase().trim() === normSupplied;
+      const userMatch = order.user?.email && order.user.email.toLowerCase().trim() === normSupplied;
+      if (guestMatch || userMatch) {
+        return order;
+      }
+    }
+
+    // Fallback: 404 (do not leak existence to unauthorized callers)
+    throw new NotFoundException(`Order #${id} not found.`);
+  }
+
+  async trackOrder(id: string, email: string) {
+    if (!id || !email) {
+      throw new BadRequestException('Both order ID and email are required for tracking.');
+    }
+
+    const normEmail = email.toLowerCase().trim();
+    const order = await this.prisma.order.findFirst({
+      where: {
+        id: id.trim(),
+        OR: [
+          { guestEmail: { equals: normEmail, mode: 'insensitive' } },
+          { user: { email: { equals: normEmail, mode: 'insensitive' } } },
+        ],
+      },
+      include: {
+        items: { include: { product: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order #${id} with matching email was not found.`);
     }
 
     return order;
   }
 
-  /**
-   * Find order by ID — admin use only (no ownership check).
-   */
   async findOne(id: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },

@@ -14,6 +14,7 @@ import { PaymentService } from './payment.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { getAuth } from '@clerk/express';
+import { UserRole } from '@prisma/client';
 
 export interface RazorpayCreateOrderDto {
   amountInRupees: number;
@@ -36,7 +37,6 @@ export class OrdersController {
   ) {}
 
   // ─── Standard Order Creation (COD) ─────────────────────────────────────────
-  // Supports both logged-in users (tied to user account) and guest checkout (with email)
   @Post()
   async create(@Body() dto: CreateOrderDto, @Req() req: any) {
     let userId: string | undefined;
@@ -63,7 +63,7 @@ export class OrdersController {
     });
   }
 
-  // ─── Razorpay: Step 1 — Create a Razorpay Order (before showing popup) ────
+  // ─── Razorpay: Step 1 — Create a Razorpay Order ─────────────────────────────
   @Post('razorpay/create-order')
   async createRazorpayOrder(@Body() body: RazorpayCreateOrderDto) {
     const { amountInRupees, receiptId } = body;
@@ -74,7 +74,7 @@ export class OrdersController {
     return this.paymentService.createRazorpayOrder(amountInRupees, receipt);
   }
 
-  // ─── Razorpay: Step 2 — Verify Payment & Create Order in DB ───────────────
+  // ─── Razorpay: Step 2 — Verify Payment & Confirm Order (Fast Path) ──────────
   @Post('razorpay/verify')
   async verifyAndCreateOrder(@Body() body: RazorpayVerifyDto, @Req() req: any) {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, order } = body;
@@ -83,7 +83,7 @@ export class OrdersController {
       throw new BadRequestException('Missing Razorpay payment verification parameters.');
     }
 
-    // Verify HMAC signature — rejects tampered / fraudulent payments
+    // Verify HMAC signature
     const isValid = this.paymentService.verifyPaymentSignature(
       razorpayOrderId,
       razorpayPaymentId,
@@ -107,25 +107,25 @@ export class OrdersController {
       // Unauthenticated / guest session
     }
 
-    const dbOrder = await this.ordersService.create({
-      ...order,
-      ...(userId ? { userId } : {}),
-      paymentMethod: 'RAZORPAY',
-      razorpayPaymentId,
+    return this.ordersService.verifyAndConfirmOrder(
       razorpayOrderId,
-    });
-
-    return dbOrder;
+      razorpayPaymentId,
+      {
+        ...order,
+        ...(userId ? { userId } : {}),
+        paymentMethod: 'RAZORPAY',
+      },
+    );
   }
 
-  // ─── Authenticated: My Orders (MUST be before :id to avoid route shadowing) ─
+  // ─── Authenticated: My Orders ───────────────────────────────────────────────
   @Get('my-orders')
   @UseGuards(AuthGuard)
   findMyOrders(@Req() req: any) {
     return this.ordersService.findMyOrders(req.dbUser.id);
   }
 
-  // ─── Order Tracking (requires both order ID + email for verification) ──────
+  // ─── Order Tracking (requires both order ID + matching email) ──────────────
   @Get('track')
   trackOrder(@Query('id') id: string, @Query('email') email: string) {
     if (!id || !email) {
@@ -136,7 +136,29 @@ export class OrdersController {
 
   // ─── Order Receipt / Confirmation (rendered on order-confirmation/[id]) ───
   @Get(':id')
-  async getOrderById(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
+  async getOrderById(
+    @Param('id') id: string,
+    @Query('email') emailQuery: string,
+    @Req() req: any,
+  ) {
+    let authUser: { id: string; role: UserRole; email: string } | null = null;
+    try {
+      const auth = getAuth(req);
+      if (auth && auth.userId) {
+        const user = await this.prisma.user.findUnique({
+          where: { clerkId: auth.userId },
+        });
+        if (user) {
+          authUser = { id: user.id, role: user.role, email: user.email };
+        }
+      }
+    } catch {
+      // Unauthenticated
+    }
+
+    const emailHeader = (req.headers?.['x-guest-email'] || req.headers?.['x-user-email']) as string;
+    const suppliedEmail = (emailQuery || emailHeader || '').trim();
+
+    return this.ordersService.findOneSecure(id, authUser, suppliedEmail);
   }
 }

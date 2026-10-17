@@ -7,7 +7,7 @@ import { Lock, CreditCard, Banknote, ShieldCheck, AlertCircle, Loader2 } from 'l
 import { API_URL } from '@/lib/api';
 import { loadRazorpayScript, openRazorpayCheckout } from '@/lib/razorpay';
 
-const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TmdTMss5YqJvBl';
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -68,11 +68,15 @@ export default function CheckoutPage() {
 
     const data = await res.json();
     clearCart();
-    router.push(`/order-confirmation/${data.id || 'order-success'}`);
+    const emailParam = encodeURIComponent(guestEmail || '');
+    router.push(`/order-confirmation/${data.id || 'order-success'}${emailParam ? `?email=${emailParam}` : ''}`);
   };
 
   // ─── Razorpay Flow ─────────────────────────────────────────────────────────
   const handleRazorpay = async () => {
+    if (!RAZORPAY_KEY_ID) {
+      throw new Error('Razorpay payment is temporarily unavailable because the gateway key is not configured. Please choose Cash on Delivery.');
+    }
     // Step 1: Load Razorpay script
     const loaded = await loadRazorpayScript();
     if (!loaded) {
@@ -95,7 +99,7 @@ export default function CheckoutPage() {
 
     // Step 3: Open Razorpay popup
     const payment = await openRazorpayCheckout({
-      key: rzpOrder.keyId || RAZORPAY_KEY_ID || 'rzp_live_TmdTMss5YqJvBl',
+      key: RAZORPAY_KEY_ID || rzpOrder.keyId || '',
       amount: rzpOrder.amount,        // in paise from backend
       currency: rzpOrder.currency,
       name: 'Corazonetouch',
@@ -128,7 +132,8 @@ export default function CheckoutPage() {
 
     const dbOrder = await verifyRes.json();
     clearCart();
-    router.push(`/order-confirmation/${dbOrder.id || 'order-success'}`);
+    const emailParam = encodeURIComponent(guestEmail || '');
+    router.push(`/order-confirmation/${dbOrder.id || 'order-success'}${emailParam ? `?email=${emailParam}` : ''}`);
   };
 
   // ─── Main Submit Handler ───────────────────────────────────────────────────
@@ -389,9 +394,16 @@ export default function CheckoutPage() {
             <span className="text-2xl font-black text-neutral-900">₹{total.toLocaleString('en-IN')}</span>
           </div>
 
+          {paymentMethod === 'RAZORPAY' && !RAZORPAY_KEY_ID && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+              <span>Razorpay is currently unconfigured. Please select Cash on Delivery.</span>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || (paymentMethod === 'RAZORPAY' && !RAZORPAY_KEY_ID)}
             className="w-full bg-neutral-900 text-white font-bold text-xs py-4 px-4 rounded-xl hover:bg-neutral-800 transition-colors shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (
