@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Settings, BarChart3, Users, ChevronRight,
   UserCheck, LogOut, Menu, X, ExternalLink, ShieldAlert
 } from 'lucide-react';
-import { getAdminProfile, getLocalAdminSession, UserRole } from '@/lib/adminApi';
+import { getAdminProfile, UserRole } from '@/lib/adminApi';
 
 interface NavItem {
   label: string;
@@ -60,18 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    // 1. Check local master security session first (instant synchronous check)
-    const localSession = getLocalAdminSession();
-    if (localSession?.token && localSession?.role) {
-      setUserRole(localSession.role);
-      if (localSession.name) setAdminName(localSession.name);
-      if (localSession.email) setUserEmail(localSession.email);
-      setCheckedAuth(true);
-      setDenied(false);
-      return;
-    }
-
-    // 2. If no local master session, check Clerk session
+    // Check Clerk session
     if (!isLoaded) return;
 
     if (!isSignedIn) {

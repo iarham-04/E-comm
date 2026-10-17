@@ -43,7 +43,7 @@ export async function adminFetch(
   const headers = new Headers(init?.headers || {});
 
   if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `******;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   if (clerkUser?.primaryEmailAddress?.emailAddress && !headers.has('x-user-email')) {
