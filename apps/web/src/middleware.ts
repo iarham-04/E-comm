@@ -16,7 +16,9 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/track-order(.*)',
   '/wishlist(.*)',
-  '/admin/login(.*)', // admin role is verified by the API, the login page itself is public
+  // Admin pages may be opened with a master-PIN session (no Clerk login). They render no data themselves:
+  // every admin API call is verified server-side (signed PIN token or Clerk + staff role).
+  '/admin(.*)',
   '/api/(.*)',
 ]);
 
