@@ -207,3 +207,62 @@ describe('resolveDbUser account linking', () => {
     expect(user.email).toBe('user_attacker@clerk.user');
   });
 });
+
+describe('RolesGuard master-PIN sessions', () => {
+  const crypto = jest.requireActual('crypto');
+  const SECRET = 'test-secret-that-is-at-least-32-characters-long';
+  const makeToken = (payload: object, secret = SECRET) => {
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    return `pin.${body}.${crypto.createHmac('sha256', secret).update(body).digest('base64url')}`;
+  };
+  const ctx = (headers: Record<string, string>) => {
+    const request: any = { headers };
+    return {
+      request,
+      context: {
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: () => ({ getRequest: () => request }),
+      } as unknown as ExecutionContext,
+    };
+  };
+  let guard: RolesGuard;
+
+  beforeEach(() => {
+    process.env.ADMIN_SESSION_SECRET = SECRET;
+    const reflector = new Reflector();
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.OWNER]);
+    guard = new RolesGuard(reflector, { user: { findUnique: jest.fn().mockResolvedValue(null) } } as any);
+    (clerkExpress.getAuth as jest.Mock).mockReturnValue({ userId: null });
+  });
+
+  afterAll(() => delete process.env.ADMIN_SESSION_SECRET);
+
+  it('accepts a valid signed PIN token as OWNER', async () => {
+    const { context, request } = ctx({
+      'x-admin-token': makeToken({ name: 'Azra', role: 'OWNER', exp: Date.now() + 60000 }),
+    });
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(request.dbUser.role).toBe(UserRole.OWNER);
+  });
+
+  it('rejects a token signed with the wrong secret', async () => {
+    const forged = makeToken({ name: 'x', role: 'OWNER', exp: Date.now() + 60000 }, 'attacker-guess-attacker-guess-attacker');
+    await expect(guard.canActivate(ctx({ 'x-admin-token': forged }).context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it('rejects an expired token', async () => {
+    const expired = makeToken({ name: 'x', role: 'OWNER', exp: Date.now() - 1 });
+    await expect(guard.canActivate(ctx({ 'x-admin-token': expired }).context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it('ignores spoofed identity headers', async () => {
+    await expect(
+      guard.canActivate(ctx({ 'x-user-name': 'AZRA', 'x-user-email': 'owner@corazontouch.com' }).context),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+});

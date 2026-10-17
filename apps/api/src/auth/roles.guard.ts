@@ -4,6 +4,7 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ROLES_KEY } from './roles.decorator';
 import { requireClerkId, resolveDbUser } from './clerk-user';
+import { verifyPinSession, masterPinUser } from './pin-session';
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   [UserRole.OWNER]: 4,
@@ -28,9 +29,9 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     const request = context.switchToHttp().getRequest();
-    const clerkId = requireClerkId(request);
+    const pin = verifyPinSession(request.headers?.['x-admin-token']);
 
-    const user = await resolveDbUser(this.prisma, clerkId);
+    const user = pin ? masterPinUser(pin.name) : await resolveDbUser(this.prisma, requireClerkId(request));
     if (!user) throw new ForbiddenException('Forbidden — User record not found.');
     if (!isStaff(user.role)) throw new ForbiddenException('Forbidden — Staff privileges required.');
 

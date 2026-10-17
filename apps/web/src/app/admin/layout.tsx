@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Settings, BarChart3, Users, ChevronRight,
   UserCheck, LogOut, Menu, X, ExternalLink, ShieldAlert
 } from 'lucide-react';
-import { getAdminProfile, UserRole } from '@/lib/adminApi';
+import { getAdminProfile, getLocalAdminSession, clearLocalAdminSession, UserRole } from '@/lib/adminApi';
 
 interface NavItem {
   label: string;
@@ -60,12 +60,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    // Check Clerk session
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      window.location.href = '/admin/login';
-      return;
+    // A master-PIN session or a Clerk session is required; either way the server verifies it below.
+    if (!getLocalAdminSession()) {
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        window.location.href = '/admin/login';
+        return;
+      }
     }
 
     let isCancelled = false;
@@ -105,10 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   const handleLogout = async () => {
-    try {
-      localStorage.removeItem('corazon_admin_session');
-      document.cookie = 'corazon_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    } catch {}
+    clearLocalAdminSession();
 
     if (isSignedIn) {
       try {
