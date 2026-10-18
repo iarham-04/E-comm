@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateOrderApiDto } from '../common/dto/api-contract.dto';
 import { isStaff } from '../auth/roles.guard';
+import { COUNTRY_OPTIONS, getAddressErrors, normalizePhone, resolveCountryCode } from '@corazon/checkout-data';
 
 export type OrderInput = CreateOrderApiDto & { userId?: string };
 export type OrderQuote = Awaited<ReturnType<OrdersService['quote']>>;
@@ -32,6 +33,13 @@ export class OrdersService {
   async quote(dto: OrderInput, db: Tx = this.prisma) {
     if (dto.paymentMethod !== 'RAZORPAY') {
       throw new BadRequestException('Only Razorpay online payments are supported.');
+    }
+    const addressErrors = getAddressErrors(dto.shippingAddress);
+    if (Object.keys(addressErrors).length) {
+      throw new BadRequestException(Object.values(addressErrors).join(' '));
+    }
+    if (dto.guestPhone != null && !normalizePhone(dto.guestPhone)) {
+      throw new BadRequestException('Enter a valid contact phone number including its country calling code.');
     }
     const settings = await db.storeSettings.findUnique({ where: { id: 'singleton' } });
     if (dto.paymentMethod === 'RAZORPAY' && settings && !settings.razorpayEnabled) {
@@ -107,6 +115,7 @@ export class OrdersService {
 
     const discountAmount = round2(Math.min(best?.off ?? 0, subtotal));
     const a = dto.shippingAddress;
+    const countryCode = resolveCountryCode(a.country ?? 'IN')!;
     return {
       lines,
       subtotal,
@@ -118,11 +127,14 @@ export class OrdersService {
       addressSnapshot: {
         fullName: a.fullName.trim(),
         street: a.street.trim(),
-        city: a.city.trim(),
-        state: a.state.trim(),
-        postalCode: a.postalCode.trim(),
-        country: a.country?.trim() || 'India',
-        phone: a.phone.trim(),
+        street2: a.street2?.trim() || '',
+        city: a.city?.trim() || '',
+        state: a.state?.trim() || '',
+        district: a.district?.trim() || '',
+        postalCode: a.postalCode?.trim() || '',
+        country: COUNTRY_OPTIONS.find((country) => country.value === countryCode)!.label,
+        countryCode,
+        phone: normalizePhone(a.phone)!,
       },
     };
   }
@@ -137,7 +149,7 @@ export class OrdersService {
     return {
       userId: dto.userId ?? null,
       guestEmail: dto.guestEmail?.trim().toLowerCase() || null,
-      guestPhone: dto.guestPhone?.trim() || q.addressSnapshot.phone || null,
+      guestPhone: normalizePhone(dto.guestPhone) || q.addressSnapshot.phone || null,
       addressSnapshot: q.addressSnapshot,
       paymentMethod: dto.paymentMethod,
       paymentStatus,

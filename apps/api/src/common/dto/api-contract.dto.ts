@@ -14,7 +14,11 @@ import {
   ArrayMinSize,
   ArrayMaxSize,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { normalizePhone } from '@corazon/checkout-data';
+import { IsCountryAddress, IsInternationalPhone } from './checkout.validators';
+
+const phoneValue = ({ value }: { value: unknown }) => normalizePhone(value) || value;
 
 export class AddressDto {
   @IsString() @IsNotEmpty() @MaxLength(120)
@@ -23,19 +27,26 @@ export class AddressDto {
   @IsString() @IsNotEmpty() @MaxLength(300)
   street: string;
 
-  @IsString() @IsNotEmpty() @MaxLength(100)
-  city: string;
+  @IsOptional() @IsString() @MaxLength(200)
+  street2?: string;
 
-  @IsString() @IsNotEmpty() @MaxLength(100)
-  state: string;
+  @IsOptional() @IsString() @MaxLength(100)
+  city?: string;
 
-  @IsString() @IsNotEmpty() @MaxLength(20)
-  postalCode: string;
+  @IsOptional() @IsString() @MaxLength(100)
+  state?: string;
+
+  @IsOptional() @IsString() @MaxLength(100)
+  district?: string;
+
+  @IsOptional() @IsString() @MaxLength(20)
+  postalCode?: string;
 
   @IsOptional() @IsString() @MaxLength(60)
   country?: string;
 
-  @IsString() @IsNotEmpty() @MaxLength(20)
+  @Transform(phoneValue)
+  @IsString() @IsNotEmpty() @MaxLength(20) @IsInternationalPhone()
   phone: string;
 }
 
@@ -58,10 +69,11 @@ export class CreateOrderApiDto {
   @IsOptional() @IsEmail() @MaxLength(254)
   guestEmail?: string;
 
-  @IsOptional() @IsString() @MaxLength(20)
+  @Transform(phoneValue)
+  @IsOptional() @IsString() @MaxLength(20) @IsInternationalPhone()
   guestPhone?: string;
 
-  @ValidateNested() @Type(() => AddressDto)
+  @IsCountryAddress() @ValidateNested() @Type(() => AddressDto)
   shippingAddress: AddressDto;
 
   @IsIn(['RAZORPAY'])

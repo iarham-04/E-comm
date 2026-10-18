@@ -1,0 +1,10 @@
+{
+  "name": "@corazon/checkout-data",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "libphonenumber-js": "^1.13.15"
+  }
+}

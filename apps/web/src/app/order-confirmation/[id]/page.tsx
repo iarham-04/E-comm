@@ -43,6 +43,8 @@ interface OrderData {
   addressSnapshot?: {
     fullName?: string;
     street?: string;
+    street2?: string;
+    district?: string;
     city?: string;
     state?: string;
     postalCode?: string;
@@ -235,6 +237,8 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
                   <div className="text-xs text-neutral-600 space-y-1 leading-relaxed">
                     <p className="font-bold text-neutral-900 text-sm">{order.addressSnapshot.fullName || 'Customer'}</p>
                     <p>{order.addressSnapshot.street}</p>
+                    {order.addressSnapshot.street2 && <p>{order.addressSnapshot.street2}</p>}
+                    {order.addressSnapshot.district && <p>{order.addressSnapshot.district}</p>}
                     <p>{[order.addressSnapshot.city, order.addressSnapshot.state, order.addressSnapshot.postalCode].filter(Boolean).join(', ')}</p>
                     <p className="text-neutral-500">{order.addressSnapshot.country || 'India'}</p>
                     {order.addressSnapshot.phone && (
