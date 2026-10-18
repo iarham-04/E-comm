@@ -127,11 +127,11 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   // Pricing calculations
   const priceDelta = Number(selectedVariant?.priceDelta || 0);
-  const basePrice = Number(product.price || 0);
+  const basePrice = Number(product?.price || 0);
   const finalUnitPrice = basePrice + priceDelta;
 
-  const isWishlisted = isInWishlist(product.id);
-  const reviews = product.reviews || [];
+  const isWishlisted = product ? isInWishlist(product.id) : false;
+  const reviews = product?.reviews || [];
   const avgRating = reviews.length
     ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length
     : null;
