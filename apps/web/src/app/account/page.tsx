@@ -4,28 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Package, Heart, MapPin, Star, ChevronDown, ChevronUp, RotateCcw, ShoppingBag } from 'lucide-react';
 
-const DEMO_ORDERS = [
-  {
-    id: 'CT-9821',
-    date: '2026-07-20',
-    total: 34999.00,
-    status: 'SHIPPED',
-    estimatedDelivery: 'July 28, 2026',
-    items: [
-      { name: 'Full Suit of Templar Knight Armor', qty: 1, price: 34999.00, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=200', slug: 'templar-knight-armor' },
-    ],
-  },
-  {
-    id: 'CT-8412',
-    date: '2026-06-14',
-    total: 8499.00,
-    status: 'DELIVERED',
-    estimatedDelivery: 'June 20, 2026',
-    items: [
-      { name: 'Hand-Carved Nordic Viking Battle Axe', qty: 1, price: 8499.00, image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=200', slug: 'viking-battle-axe' },
-    ],
-  },
-];
+const DEMO_ORDERS: Array<{
+  id: string;
+  date: string;
+  total: number;
+  status: string;
+  estimatedDelivery: string;
+  items: Array<{ name: string; qty: number; price: number; image: string; slug: string }>;
+}> = [];
 
 const STATUS_STYLES: Record<string, string> = {
   PLACED: 'bg-amber-100 text-amber-800',

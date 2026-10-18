@@ -104,19 +104,7 @@ const DEFAULT_EDITORIAL = {
   ],
 };
 
-const COLLECTION_PRODUCTS: Record<string, any[]> = {
-  medieval: [
-    { id: 'bs-1', name: 'Full Suit of Templar Knight Armor', slug: 'templar-knight-armor', category: 'Medieval', price: 34999.00, rating: 4.9, reviewsCount: 84, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=800', stock: 5 },
-    { id: 'na-2', name: 'Medieval Leather & Steel Gauntlets', slug: 'steel-gauntlets', category: 'Medieval', price: 4999.00, rating: 4.6, reviewsCount: 18, image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800', stock: 9 },
-  ],
-  viking: [
-    { id: 'bs-2', name: 'Hand-Carved Nordic Viking Battle Axe', slug: 'viking-battle-axe', category: 'Viking', price: 8499.00, rating: 4.8, reviewsCount: 112, image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800', stock: 12 },
-  ],
-  roman: [
-    { id: 'bs-3', name: 'Roman Centurion Brass Officer Helmet', slug: 'roman-officer-helmet', category: 'Roman', price: 6299.00, rating: 4.7, reviewsCount: 46, image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=800', stock: 8 },
-    { id: 'na-4', name: 'Ancient Roman Legionary Shield Replica', slug: 'roman-legionary-shield', category: 'Roman', price: 9499.00, rating: 4.8, reviewsCount: 22, image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=800', stock: 4 },
-  ],
-};
+const COLLECTION_PRODUCTS: Record<string, any[]> = {};
 
 export default function CollectionPage({ params }: { params: { slug: string } }) {
   const slug = params.slug.toLowerCase();
