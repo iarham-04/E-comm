@@ -7,17 +7,6 @@ import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { API_URL } from '@/lib/api';
 
-const DEMO_PRODUCTS = [
-  { id: 'p-1', name: 'Full Suit of Templar Knight Armor', slug: 'templar-knight-armor', category: 'Medieval', price: 34999.00, rating: 4.9, reviewsCount: 84, image: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=800', stock: 5, material: 'Steel', isLimitedEdition: true },
-  { id: 'p-2', name: 'Hand-Carved Nordic Viking Battle Axe', slug: 'viking-battle-axe', category: 'Viking', price: 8499.00, rating: 4.8, reviewsCount: 112, image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800', stock: 12, material: 'Steel', isLimitedEdition: false },
-  { id: 'p-3', name: 'Roman Centurion Brass Officer Helmet', slug: 'roman-officer-helmet', category: 'Roman', price: 6299.00, rating: 4.7, reviewsCount: 46, image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=800', stock: 8, material: 'Brass', isLimitedEdition: false },
-  { id: 'p-4', name: 'Artisan Solid Oak Gothic Armchair', slug: 'gothic-oak-armchair', category: 'Furniture', price: 18999.00, rating: 5.0, reviewsCount: 29, image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800', stock: 3, material: 'Oak', isLimitedEdition: false },
-  { id: 'p-5', name: 'Gothic Iron Candelabra Set', slug: 'gothic-iron-candelabra', category: 'Home Décor', price: 3499.00, rating: 4.9, reviewsCount: 63, image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800', stock: 15, material: 'Iron', isLimitedEdition: false },
-  { id: 'p-6', name: 'Hand-Forged Damascene Steel Dagger', slug: 'damascene-steel-dagger', category: 'Collectibles', price: 7299.00, rating: 4.9, reviewsCount: 31, image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800', stock: 6, material: 'Damascene Steel', isLimitedEdition: true },
-  { id: 'p-7', name: 'Twin Stick Alabaster Sconce', slug: 'twin-stick-wall-sconce', category: 'Home Décor', price: 14500.00, rating: 4.8, reviewsCount: 15, image: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=800', stock: 8, material: 'Brass', isLimitedEdition: false },
-  { id: 'p-8', name: 'Capsula Modern Alabaster Wall Sconce', slug: 'capsula-modern-alabaster-sconce', category: 'Home Décor', price: 16800.00, rating: 5.0, reviewsCount: 19, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=800', stock: 4, material: 'Stone', isLimitedEdition: false },
-];
-
 const SORT_OPTIONS = [
   { value: 'relevance',  label: 'Relevance' },
   { value: 'newest',     label: 'Newest Arrivals' },
@@ -27,7 +16,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function ProductsPage({ searchParams }: { searchParams?: { search?: string } }) {
-  const [products, setProducts] = useState<any[]>(DEMO_PRODUCTS);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams?.search ?? '');
   const [category, setCategory] = useState('All');
