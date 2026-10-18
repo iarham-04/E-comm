@@ -8,6 +8,11 @@ describe('PaymentService', () => {
     expect(() => new PaymentService(config({ RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 's' }))).not.toThrow();
   });
 
+  it('starts without keys and only fails when a payment is attempted', async () => {
+    const svc = new PaymentService(config({}));
+    await expect(svc.createRazorpayOrder(100, 'r')).rejects.toThrow('Payment gateway not configured.');
+  });
+
   it('verifies checkout signatures and rejects tampered ones', () => {
     const svc = new PaymentService(config({ RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 'secret' }));
     const sig = crypto.createHmac('sha256', 'secret').update('order_1|pay_1').digest('hex');

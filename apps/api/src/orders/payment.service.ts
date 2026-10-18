@@ -16,7 +16,7 @@ export function hmacMatches(secret: string, payload: string, signature: string):
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
-  private readonly razorpay: any;
+  private client: any = null;
   private readonly keyId: string;
   private readonly keySecret: string;
 
@@ -26,7 +26,12 @@ export class PaymentService {
     if (!this.keyId || !this.keySecret) {
       this.logger.warn('RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not configured. Razorpay payments will fail.');
     }
-    this.razorpay = new Razorpay({ key_id: this.keyId, key_secret: this.keySecret });
+  }
+
+  /** Created on first use: the SDK throws without keys, which must not take the whole API down. */
+  private get razorpay() {
+    this.assertConfigured();
+    return (this.client ??= new Razorpay({ key_id: this.keyId, key_secret: this.keySecret }));
   }
 
   private assertConfigured() {
