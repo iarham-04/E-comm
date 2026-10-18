@@ -38,6 +38,8 @@ export const useWishlistStore = create<WishlistStore>()(
     }),
     {
       name: 'storefront_wishlist_storage',
+      // Loaded after mount (see AppShell) so server and first client render match
+      skipHydration: true,
     },
   ),
 );

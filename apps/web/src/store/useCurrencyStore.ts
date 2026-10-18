@@ -41,6 +41,8 @@ export const useCurrencyStore = create<CurrencyStore>()(
     }),
     {
       name: 'storefront_currency_storage',
+      // Loaded after mount (see AppShell) so server and first client render match
+      skipHydration: true,
     },
   ),
 );

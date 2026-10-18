@@ -68,6 +68,8 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'storefront_cart_storage',
+      // Loaded after mount (see AppShell) so server and first client render match
+      skipHydration: true,
     },
   ),
 );
