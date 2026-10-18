@@ -118,7 +118,7 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
             <span>•</span>
             <div className="flex items-center space-x-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Verified Collector Packaging</span>
+              <span>Sealed Fresh Packaging</span>
             </div>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
                             href={item.product?.slug ? `/products/${item.product.slug}` : '#'} 
                             className="font-bold text-neutral-900 text-sm hover:text-[#B38728] transition-colors truncate block"
                           >
-                            {item.product?.name || 'Handcrafted Artifact'}
+                            {item.product?.name || 'Item'}
                           </Link>
                           {(item.variant?.size || item.variant?.color) && (
                             <p className="text-[11px] text-neutral-500 mt-0.5">
@@ -233,7 +233,7 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
                 </div>
                 {order.addressSnapshot ? (
                   <div className="text-xs text-neutral-600 space-y-1 leading-relaxed">
-                    <p className="font-bold text-neutral-900 text-sm">{order.addressSnapshot.fullName || 'Valued Collector'}</p>
+                    <p className="font-bold text-neutral-900 text-sm">{order.addressSnapshot.fullName || 'Customer'}</p>
                     <p>{order.addressSnapshot.street}</p>
                     <p>{[order.addressSnapshot.city, order.addressSnapshot.state, order.addressSnapshot.postalCode].filter(Boolean).join(', ')}</p>
                     <p className="text-neutral-500">{order.addressSnapshot.country || 'India'}</p>

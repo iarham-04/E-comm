@@ -1,41 +1,26 @@
 import Link from 'next/link';
-import { ShieldCheck, Truck, RotateCcw, Lock, Star, Award, PhoneCall } from 'lucide-react';
+import { Leaf, Truck, Banknote, Lock } from 'lucide-react';
 
 const TRUST_ELEMENTS = [
   {
-    icon: ShieldCheck,
-    title: 'Authenticity Guaranteed',
-    description: 'Museum-grade historical accuracy forged by master blacksmiths.',
+    icon: Leaf,
+    title: 'Hand-Sorted & Fresh',
+    description: 'Every batch is sorted by hand and sealed in food-grade packs. No added preservatives.',
   },
   {
     icon: Truck,
-    title: '3–5 Day Express Delivery',
-    description: 'Tracked dispatch in archival velvet & wooden presentation boxes.',
+    title: 'Free Shipping over ₹1,999',
+    description: 'Standard delivery in 3–5 business days across India, or choose express at checkout.',
   },
   {
-    icon: RotateCcw,
-    title: '30-Day Easy Returns',
-    description: 'Hassle-free 30-day return & exchange guarantee.',
+    icon: Banknote,
+    title: 'Cash on Delivery',
+    description: 'Pay when your order arrives, or online with UPI, cards and net banking.',
   },
   {
     icon: Lock,
-    title: '256-Bit Encrypted Payments',
-    description: 'Bank-grade secure checkout via Razorpay, Credit Cards & UPI.',
-  },
-  {
-    icon: Star,
-    title: '4.9 / 5 Collector Rating',
-    description: 'Over 10,000+ verified 5-star collector reviews nationwide.',
-  },
-  {
-    icon: Award,
-    title: 'Genuine Material Specs',
-    description: '1095 high-carbon steel, solid teak wood & natural leather.',
-  },
-  {
-    icon: PhoneCall,
-    title: '24/7 Concierge Support',
-    description: 'Direct support from our historical artifact specialists.',
+    title: 'Secure Payments',
+    description: 'Online payments are processed by Razorpay over an encrypted connection.',
   },
 ];
 
@@ -44,49 +29,36 @@ export default function TrustBadges() {
     <section className="py-16 bg-slate-50 border-y border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">Built On Proven Trust</span>
+          <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">Why Shop With Us</span>
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-            Continuous Confidence at Every Interaction
+            Quality You Can Taste, Service You Can Trust
           </h2>
           <p className="text-xs text-slate-500">
-            From archival packaging to bank-grade encryption, trust is built into every step of your journey.
+            From sourcing to your doorstep, every step is handled with care.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TRUST_ELEMENTS.slice(0, 4).map((b, idx) => {
-            const Icon = b.icon;
-            return (
-              <div key={idx} className="flex items-start space-x-4 p-5 bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-150">
-                <div className="p-3 bg-slate-900 text-amber-400 rounded-xl flex-shrink-0 shadow-sm">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-xs">{b.title}</h3>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{b.description}</p>
-                </div>
+          {TRUST_ELEMENTS.map(({ icon: Icon, title, description }) => (
+            <div key={title} className="flex items-start space-x-4 p-5 bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-150">
+              <div className="p-3 bg-slate-900 text-amber-400 rounded-xl flex-shrink-0 shadow-sm">
+                <Icon className="w-5 h-5" />
               </div>
-            );
-          })}
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">{title}</h3>
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{description}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Secondary Trust Ribbon */}
         <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <div className="flex items-center space-x-6 flex-wrap justify-center">
-            <div className="flex items-center space-x-2">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              <span className="font-bold">4.9 / 5 Collector Score</span>
-            </div>
-            <div className="hidden sm:block text-slate-600">•</div>
-            <div>Verified 1095 High-Carbon Steel &amp; Teak</div>
-            <div className="hidden sm:block text-slate-600">•</div>
-            <div>256-Bit SSL Encrypted</div>
-          </div>
+          <p>Buying for an event, office or festival? We pack custom dry fruit hampers in bulk.</p>
           <Link
             href="/contact-us"
             className="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors whitespace-nowrap underline"
           >
-            Speak to a Concierge Specialist →
+            Ask about bulk &amp; corporate orders →
           </Link>
         </div>
       </div>

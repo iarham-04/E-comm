@@ -7,18 +7,18 @@ import ProductGridCard from '@/components/ProductGridCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   Search, X, ChevronDown, ChevronUp, SlidersHorizontal,
-  Package, Loader2, Sparkles, Shield, Armchair, Sword,
+  Package, Loader2, Sparkles, Nut, Grape, Gift,
 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_URL } from '@/lib/api';
 const PAGE_SIZE = 24;
 
-const MATERIALS = ['Steel', 'Brass', 'Bronze', 'Iron', 'Teak Wood', 'Oak', 'Leather', 'Copper', 'Silver', 'Ceramic'];
+/** Matches the product “Variety” field set in the admin panel. */
+const MATERIALS = ['Kashmiri', 'Mamra', 'Californian', 'Afghan', 'Medjool', 'Ajwa', 'Kimia', 'Roasted', 'Organic'];
 
 const POPULAR_CATEGORIES = [
-  { name: 'Medieval Armor', slug: 'medieval', icon: Shield },
-  { name: 'Viking Weaponry', slug: 'viking', icon: Sword },
-  { name: 'Home Décor', slug: 'home-decor', icon: Armchair },
+  { name: 'Almonds', slug: 'almonds', icon: Nut },
+  { name: 'Dates', slug: 'dates', icon: Grape },
+  { name: 'Gift Hampers', slug: 'gift-hampers', icon: Gift },
 ];
 
 /* ─── Skeleton card for loading state ─────────────────────────────────────── */
@@ -247,8 +247,8 @@ function SearchPageContent() {
         </div>
       </FilterSection>
 
-      {/* Material */}
-      <FilterSection title="Material">
+      {/* Variety */}
+      <FilterSection title="Variety">
         <div className="space-y-1.5">
           {MATERIALS.map((mat) => (
             <button
@@ -264,8 +264,8 @@ function SearchPageContent() {
         </div>
       </FilterSection>
 
-      {/* Limited Edition */}
-      <FilterSection title="Edition">
+      {/* Limited batches */}
+      <FilterSection title="Batch">
         <label className="flex items-center space-x-2.5 cursor-pointer px-1">
           <input
             type="checkbox"
@@ -273,7 +273,7 @@ function SearchPageContent() {
             onChange={(e) => setLimitedOnly(e.target.checked)}
             className="w-4 h-4 accent-slate-900 rounded"
           />
-          <span className="text-xs font-semibold text-slate-700">Limited Edition Only</span>
+          <span className="text-xs font-semibold text-slate-700">Limited Seasonal Batches</span>
         </label>
       </FilterSection>
 
@@ -328,7 +328,7 @@ function SearchPageContent() {
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-slate-900">What are you looking for?</h2>
             <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Search for museum-grade armor, hand-forged weapons, artisan home décor, and collector pieces — or browse a curated collection below.
+              Search for almonds, cashews, walnuts, dates, raisins or gift hampers — or start with a popular category below.
             </p>
           </div>
 
@@ -421,7 +421,7 @@ function SearchPageContent() {
                     onRemove={() => { setMinPrice(''); setMaxPrice(''); }}
                   />
                 )}
-                {limitedOnly && <FilterChip label="Limited Edition" onRemove={() => setLimitedOnly(false)} />}
+                {limitedOnly && <FilterChip label="Limited Batch" onRemove={() => setLimitedOnly(false)} />}
                 {inStockOnly && <FilterChip label="In Stock Only" onRemove={() => setInStockOnly(false)} />}
                 <button
                   onClick={clearFilters}

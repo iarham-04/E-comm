@@ -88,10 +88,10 @@ export default function TermsPage() {
               4. Products, Descriptions &amp; Pricing
             </h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>We make every effort to display product imagery, specifications, dimensions, and materials with exacting precision. However, due to the artisanal nature of hand-forged metals, bespoke leather, and crafted artifacts, minor natural variations in tone, patina, or finish may occur and do not constitute a manufacturing defect.</li>
+              <li>We make every effort to display product imagery, specifications, dimensions, and materials with exacting precision. However, dry fruits and nuts are natural agricultural products, so minor variations in size, colour and texture between batches are normal and do not constitute a defect.</li>
               <li>All prices are stated in <strong>Indian Rupees (INR &#8377;)</strong> and include or exclude applicable goods and services taxes as indicated at checkout.</li>
               <li>We reserve the right to rectify any inadvertent typographical or pricing errors, even after an order has been submitted. In such cases, we will notify you before fulfilling your order.</li>
-              <li>Limited edition pieces are sequentially numbered and allocated on a strict first-come, first-served basis; edition numbers cannot be reserved prior to purchase.</li>
+              <li>Seasonal and limited batches are available while stocks last and are allocated on a first-come, first-served basis.</li>
             </ul>
           </section>
 
@@ -136,10 +136,10 @@ export default function TermsPage() {
               8. Cancellations, Returns &amp; Refunds
             </h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Cancellation:</strong> Orders may be cancelled free of charge prior to warehouse dispatch and courier pickup. Once an order is in transit, it cannot be recalled and must follow the standard return procedure.</li>
-              <li><strong>Returns:</strong> Returns are accepted within <strong>7 days of verified delivery</strong> for items in unused, unblemished condition with all original packaging, tags, and certificates of authenticity. Custom-made or personalized pieces are final sale unless damaged during transit.</li>
+              <li><strong>Cancellation:</strong> Orders may be cancelled free of charge prior to warehouse dispatch and courier pickup. Once an order is in transit, it cannot be recalled.</li>
+              <li><strong>Returns:</strong> As dry fruits are food products, opened packs cannot be returned for hygiene reasons. Custom gift hampers are final sale unless damaged in transit.</li>
               <li><strong>Refunds:</strong> Approved refunds are credited to the original payment source within <strong>5 to 7 business days</strong> following our warehouse quality inspection. COD orders are refunded via verified UPI or direct bank transfer (NEFT).</li>
-              <li><strong>Transit Damage:</strong> In the unlikely event an item arrives damaged, please notify our team within <strong>48 to 72 hours of delivery</strong> with unboxing photographs for immediate replacement or full refund.</li>
+              <li><strong>Damaged, Wrong or Stale Items:</strong> If an item arrives damaged, incorrect or not fresh, notify our team within <strong>48 hours of delivery</strong> with photographs for a free replacement or full refund.</li>
             </ul>
           </section>
 
@@ -156,10 +156,10 @@ export default function TermsPage() {
           {/* Section 10 */}
           <section className="space-y-3">
             <h2 className="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-2">
-              10. User-Generated Content &amp; Collector Reviews
+              10. User-Generated Content &amp; Customer Reviews
             </h2>
             <p>
-              By posting a product review or feedback, you grant Corazonetouch a royalty-free, perpetual license to display and publish that review across our website and marketing channels. Reviews must represent genuine firsthand collector experiences and must remain free from offensive, defamatory, or promotional solicitations.
+              By posting a product review or feedback, you grant Corazonetouch a royalty-free, perpetual license to display and publish that review across our website and marketing channels. Reviews must represent genuine firsthand customer experiences and must remain free from offensive, defamatory, or promotional solicitations.
             </p>
           </section>
 

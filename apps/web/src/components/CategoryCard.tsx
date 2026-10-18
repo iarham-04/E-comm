@@ -7,7 +7,7 @@ interface CategoryCardProps {
   itemCount?: number;
 }
 
-export default function CategoryCard({ name, slug, image, itemCount = 24 }: CategoryCardProps) {
+export default function CategoryCard({ name, slug, image, itemCount }: CategoryCardProps) {
   return (
     <Link
       href={`/collections/${slug}`}
@@ -24,14 +24,16 @@ export default function CategoryCard({ name, slug, image, itemCount = 24 }: Cate
 
       {/* Card Content */}
       <div className="absolute inset-0 p-6 flex flex-col justify-end">
-        <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest mb-1">
-          {itemCount} Artifacts
-        </span>
+        {itemCount != null && (
+          <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest mb-1">
+            {itemCount} {itemCount === 1 ? 'Product' : 'Products'}
+          </span>
+        )}
         <h3 className="text-2xl font-black text-white group-hover:text-amber-300 transition-colors">
           {name}
         </h3>
         <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 font-medium">
-          Explore Collection →
+          Shop Now →
         </p>
       </div>
     </Link>

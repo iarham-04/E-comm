@@ -84,7 +84,7 @@ model Product {
   metaTitle            String?
   metaDescription      String?
   // Persona-driven fields
-  craftsmanshipStory   String?          // Collector: materials, origin, technique
+  craftsmanshipStory   String?          // Origin & sourcing story shown on the product page
   material             String?          // Designer: filterable, e.g. "Brass", "Teak"
   heightCm             Decimal?         @db.Decimal(6, 2)
   widthCm              Decimal?         @db.Decimal(6, 2)

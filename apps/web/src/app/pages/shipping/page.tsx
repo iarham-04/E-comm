@@ -1,11 +1,36 @@
+import InfoPage from '@/components/InfoPage';
+import { SITE, inr } from '@/lib/site';
+
+export const metadata = { title: 'Shipping & Delivery — Corazonetouch' };
+
 export default function ShippingPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 mb-4">Shipping & Delivery Information</h1>
-      <div className="bg-white p-8 rounded-xl border border-slate-200 prose max-w-none text-slate-600 space-y-4">
-        <p>All items are securely packaged with protective armor padding and shipped via verified courier partners.</p>
-        <p>Free Standard shipping is automatically applied to orders over ₹1,999.</p>
-      </div>
-    </div>
+    <InfoPage
+      title="Shipping & Delivery"
+      intro="We deliver across India. Every order is packed in sealed, food-grade packaging to keep your dry fruits fresh in transit."
+      sections={[
+        {
+          heading: 'Delivery options',
+          body: (
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Standard:</strong> {SITE.standardDelivery}. Free on orders of {inr(SITE.freeShippingThreshold)} or more; otherwise {inr(SITE.standardShippingFee)}.</li>
+              <li><strong>Express:</strong> {SITE.expressDelivery}, {inr(SITE.expressShippingFee)} flat.</li>
+            </ul>
+          ),
+        },
+        {
+          heading: 'Order processing',
+          body: <p>Orders are usually packed and dispatched within 1 business day. You will get an email when your order ships, with the courier name and tracking number.</p>,
+        },
+        {
+          heading: 'Tracking your order',
+          body: <p>Visit the Track Order page and enter your Order ID and the email used at checkout.</p>,
+        },
+        {
+          heading: 'Festive season',
+          body: <p>During Diwali, Eid and other festivals, couriers are busier than usual. Please order early, especially for gift hampers.</p>,
+        },
+      ]}
+    />
   );
 }

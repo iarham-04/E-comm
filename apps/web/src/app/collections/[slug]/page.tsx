@@ -1,172 +1,291 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import ProductGridCard from '@/components/ProductGridCard';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/Badge';
-import { BookOpen, Hammer, Sparkles, ShieldAlert, Compass, ChevronDown, ChevronUp } from 'lucide-react';
+import { BookOpen, Heart, Sparkles, Archive, Leaf, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { categoryBySlug, fetchProductCards } from '@/lib/catalog';
 
-const CATEGORY_EDITORIAL: Record<string, {
+interface Editorial {
   title: string;
   subtitle: string;
-  historicalBackground: string;
-  craftsmanship: string;
-  stylingInspiration: string[];
-  careInstructions: string[];
-  buyingGuide: { tip: string; detail: string }[];
-}> = {
-  medieval: {
-    title: 'Medieval Arms & Armor',
-    subtitle: '11th to 15th Century Feudal European Heritage',
-    historicalBackground:
-      'The High Middle Ages saw armorsmithing evolve from simple riveted chainmail into full, articulated plate armor forged to withstand war-bows and lances. Knights relied on Toledo steel and German armories in Augsburg and Nuremberg, where armorsmiths stamped maker’s marks guaranteeing combat readiness.',
-    craftsmanship:
-      'Every piece in our Medieval collection is individually hammer-worked from 2mm high-carbon forged steel. Plates are oil-quenched at 58 HRC hardness to achieve the iconic blackened patina that historical knights used for corrosion resistance against field moisture.',
-    stylingInspiration: [
-      'Mount gauntlets or a full suit in a wood-paneled study or library corner on an oak pedestal.',
-      'Pair steel broadswords or daggers above stone fireplace mantels alongside warm amber lighting.',
-      'Use candelabras with hand-poured beeswax candles to cast dramatic cast-iron shadows across exposed brick walls.',
+  about: string;
+  benefits: string[];
+  enjoy: string[];
+  storage: string[];
+  guide: { tip: string; detail: string }[];
+}
+
+const STANDARD_STORAGE = [
+  'Store in an airtight container in a cool, dry place away from direct sunlight.',
+  'Once opened, use within 4–6 weeks, or refrigerate to keep them fresh for longer.',
+  'Always use a dry spoon — moisture is the main cause of spoilage.',
+];
+
+const CATEGORY_EDITORIAL: Record<string, Editorial> = {
+  almonds: {
+    title: 'Almonds',
+    subtitle: 'Kashmiri Mamra · Californian · Afghan',
+    about:
+      'Almonds are the most loved dry fruit in Indian homes. Kashmiri Mamra almonds are smaller, more concave and naturally richer in oil, with a sweeter taste. Californian almonds are larger and uniform — great for everyday snacking and cooking.',
+    benefits: [
+      'A good source of vitamin E, magnesium and plant protein.',
+      'Contain healthy monounsaturated fats and dietary fibre.',
+      'A filling snack — a small handful (about 20–23 almonds) is a typical daily serving.',
     ],
-    careInstructions: [
-      'Apply a thin coat of mineral oil or Renaissance Wax twice a year to prevent humidity oxidization.',
-      'Avoid handling polished steel plates with bare hands — natural skin oils attract moisture.',
-      'Store in low-humidity environments (under 50% relative humidity).',
+    enjoy: [
+      'Soak 6–8 almonds overnight, peel and eat first thing in the morning.',
+      'Blend into badam milk with saffron and cardamom.',
+      'Slice over kheer, halwa, oats or salads for crunch.',
     ],
-    buyingGuide: [
-      { tip: 'Weight & Gauge', detail: 'Museum-grade plate armor uses 16 to 18-gauge steel (1.5mm–2mm). Beware of thin decorative replicas under 20-gauge.' },
-      { tip: 'Articulated Joints', detail: 'Authentic suits feature fully sliding rivets allowing natural range of motion for gauntlets and pauldrons.' },
-      { tip: 'Finish Authenticity', detail: 'Oil-blackened or satin steel finishes reflect genuine period techniques; chrome-plated surfaces are non-historical.' },
-    ],
-  },
-  viking: {
-    title: 'Nordic Viking Heritage',
-    subtitle: '8th to 11th Century Scandinavian Craftsmanship',
-    historicalBackground:
-      'Viking craftsmen were master metallurgists who forged pattern-welded iron and steel using Nordic timber charcoal. Axes were both vital survival tools for timber building and feared weapons in shield-wall tactics, featuring intricate knotwork carvings representing Yggdrasil and Ouroboros.',
-    craftsmanship:
-      'Our Viking axes and accessories are hand-carved from solid teak and ash wood. Axe heads are forged from high-carbon tool steel with hand-etched Runic inscriptions and leather-wrapped handles treated with natural beeswax.',
-    stylingInspiration: [
-      'Display hand-bearded battle axes on dark timber wall mounts above a leather sofa.',
-      'Incorporate rune-engraved drinking horns and wooden bowls into rustic dining room sideboards.',
-      'Combine sheepskin throws and cast-iron braziers with Nordic collectibles for an authentic hygge aesthetic.',
-    ],
-    careInstructions: [
-      'Oil the steel axe edge periodically with camellia oil or mineral spirits.',
-      'Condition leather haft wrappings with natural mink oil to prevent drying and cracking.',
-      'Keep wooden handles away from direct radiators or dry heat sources to avoid wood shrinkage.',
-    ],
-    buyingGuide: [
-      { tip: 'Steel Selection', detail: 'High-carbon 1095 steel retains a razor edge and offers superior impact resistance compared to stainless steel.' },
-      { tip: 'Grain Alignment', detail: 'Haft wood grain should run parallel to the blade head for maximum structural integrity.' },
+    storage: STANDARD_STORAGE,
+    guide: [
+      { tip: 'Mamra vs. Californian', detail: 'Mamra almonds cost more because they are rarer, hand-cracked and higher in natural oil. Californian almonds are better value for daily use and baking.' },
+      { tip: 'Check for freshness', detail: 'Good almonds snap cleanly, smell nutty and have an even brown skin. A bitter or paint-like smell means the oils have turned rancid.' },
     ],
   },
-  roman: {
-    title: 'Imperial Roman Collectibles',
-    subtitle: 'Legionary Helmets, Shields & Centurion Relics',
-    historicalBackground:
-      'The Roman legionary was equipped with standardized, mass-produced armaments manufactured in imperial fabricae. From the Gallic-type iron helmets with brass brow bands to the curved wood scutum shield, Roman armaments balanced soldier protection with tactical mobility across the Empire.',
-    craftsmanship:
-      'Forged using hand-spun brass and high-gauge polished iron, our Roman helmets feature real horsehair crests, cheek guards with leather ties, and embossed imperial eagles.',
-    stylingInspiration: [
-      'Place a red-crested Centurion helmet on a white marble pedestal for classical contrast.',
-      'Hang a curved legionary scutum shield in a hallway entry as an impressive statement art piece.',
+  cashews: {
+    title: 'Cashews',
+    subtitle: 'Whole W180 · W240 · W320',
+    about:
+      'Creamy, mildly sweet cashews from Goa and Kerala. The “W” grade tells you how many whole kernels make up a pound — the lower the number, the bigger and more premium the cashew.',
+    benefits: [
+      'Rich in copper, magnesium and zinc.',
+      'Provide plant protein and healthy fats.',
+      'Their creamy texture makes them a natural dairy-free base for gravies and desserts.',
     ],
-    careInstructions: [
-      'Polish brass fittings using specialized non-abrasive brass cleaner.',
-      'Keep horsehair crests dry and gently comb with a wide-tooth comb to maintain volume.',
+    enjoy: [
+      'Roast lightly with a pinch of salt and pepper for a quick snack.',
+      'Soak and blend into a smooth paste for shahi paneer and korma gravies.',
+      'Add to pulao, biryani and upma, or garnish sweets.',
     ],
-    buyingGuide: [
-      { tip: 'Crest Type', detail: 'Centurion crests run transverse (side-to-side), while Optio crests run sagittal (front-to-back).' },
-      { tip: 'Cheek Guard Hinging', detail: 'Ensure cheek plates swing freely on leather or brass hinges.' },
+    storage: STANDARD_STORAGE,
+    guide: [
+      { tip: 'Understanding grades', detail: 'W180 is the largest “king” cashew, W240 is the popular premium size and W320 is the best value for everyday cooking. Splits (JH/SW) are ideal for gravies.' },
+      { tip: 'Colour and texture', detail: 'Look for ivory-white, uniform kernels without dark spots or a shrivelled surface.' },
+    ],
+  },
+  walnuts: {
+    title: 'Walnuts',
+    subtitle: 'Kashmiri Kernels & In-Shell',
+    about:
+      'Kashmiri walnuts are prized for their light-amber kernels and mild, buttery taste. Choose kernels for convenience, or in-shell walnuts that stay fresh longer.',
+    benefits: [
+      'One of the best plant sources of omega-3 fatty acids (ALA).',
+      'Contain antioxidants and polyphenols.',
+      'A small serving of about 4–7 halves a day fits easily into a balanced diet.',
+    ],
+    enjoy: [
+      'Eat 2–3 soaked walnut halves in the morning.',
+      'Chop into brownies, banana bread and cookies.',
+      'Toss onto salads, yoghurt bowls and oatmeal.',
+    ],
+    storage: [
+      'Walnuts have more delicate oils than other nuts — refrigerate kernels after opening.',
+      'In-shell walnuts keep for several months in a cool, dry place.',
+      'Freeze in an airtight bag for up to a year.',
+    ],
+    guide: [
+      { tip: 'Light vs. dark kernels', detail: 'Light, golden kernels (“extra light”) are milder and sweeter; darker kernels are more bitter but still good for baking.' },
+      { tip: 'Freshness test', detail: 'Fresh walnuts taste sweet and buttery. A sharp, bitter aftertaste means they have gone stale.' },
+    ],
+  },
+  dates: {
+    title: 'Dates',
+    subtitle: 'Medjool · Ajwa · Kimia',
+    about:
+      'Soft, caramel-sweet dates are nature’s own sweets. Medjool dates are large and fudgy, Ajwa dates from Madinah are dark and delicately sweet, and Kimia dates are soft and juicy.',
+    benefits: [
+      'A natural source of quick energy from fruit sugars.',
+      'Provide dietary fibre, potassium and iron.',
+      'A wholesome swap for refined sugar in desserts and smoothies.',
+    ],
+    enjoy: [
+      'Break your fast during Ramadan with dates and water, as is tradition.',
+      'Stuff with almonds or walnuts for an easy festive treat.',
+      'Blend into smoothies, laddoos and energy bars instead of sugar.',
+    ],
+    storage: [
+      'Keep in an airtight container; refrigerate to keep them soft for months.',
+      'Bring to room temperature before serving for the best texture.',
+      'A white powdery coating can be natural sugar crystals — this is normal.',
+    ],
+    guide: [
+      { tip: 'Which date to choose?', detail: 'Medjool for gifting and a rich dessert-like bite, Ajwa for tradition, Kimia for everyday soft snacking.' },
+      { tip: 'Seeded vs. seedless', detail: 'Seeded dates keep their shape and moisture better; seedless dates are more convenient for cooking.' },
+    ],
+  },
+  'raisins-berries': {
+    title: 'Raisins & Berries',
+    subtitle: 'Black Raisins · Golden Kishmish · Cranberries · Blueberries',
+    about:
+      'Sun-dried grapes and berries with concentrated natural sweetness. Afghan black raisins are seedless and rich, golden kishmish is plump and tangy, and dried cranberries and blueberries add a bright, fruity bite.',
+    benefits: [
+      'Natural sweetness with dietary fibre.',
+      'Black raisins contain iron and antioxidants.',
+      'Cranberries and blueberries are rich in polyphenols.',
+    ],
+    enjoy: [
+      'Soak black raisins overnight and eat in the morning.',
+      'Add kishmish to pulao, sheer khurma, kheer and halwa.',
+      'Mix berries into trail mix, granola and baked goods.',
+    ],
+    storage: STANDARD_STORAGE,
+    guide: [
+      { tip: 'Sweetened berries', detail: 'Dried cranberries are usually lightly sweetened because they are very tart on their own — check the label if you prefer unsweetened.' },
+      { tip: 'Quality check', detail: 'Good raisins are plump, glossy and evenly coloured, without stems, grit or a fermented smell.' },
+    ],
+  },
+  'mixed-nuts': {
+    title: 'Mixed Nuts',
+    subtitle: 'Balanced Everyday Mixes',
+    about:
+      'Ready-to-eat mixes of almonds, cashews, walnuts, pistachios and raisins — so you get the benefits of several dry fruits in one handful.',
+    benefits: [
+      'A mix of nutrients from different nuts and dried fruits in one serving.',
+      'Protein, healthy fats and fibre keep you full between meals.',
+      'A smart replacement for fried and packaged snacks.',
+    ],
+    enjoy: [
+      'Carry a small box for office and travel snacking.',
+      'Pre-portion a handful a day to keep servings in check.',
+      'Sprinkle over breakfast cereal or yoghurt.',
+    ],
+    storage: STANDARD_STORAGE,
+    guide: [
+      { tip: 'Roasted or raw?', detail: 'Raw mixes are best for daily health snacking; lightly roasted and salted mixes are great for parties.' },
+      { tip: 'Read the ratio', detail: 'Check how much of the pack is premium nuts versus filler like peanuts or raisins.' },
+    ],
+  },
+  'gift-hampers': {
+    title: 'Dry Fruit Gift Hampers',
+    subtitle: 'Diwali · Eid · Weddings · Corporate',
+    about:
+      'Thoughtfully packed boxes of our best almonds, cashews, walnuts, dates and raisins — a healthy, timeless gift for festivals, weddings, housewarmings and clients.',
+    benefits: [
+      'A gift everyone can enjoy, with a long shelf life.',
+      'Healthier than sweets and mithai boxes.',
+      'Available in multiple sizes and budgets.',
+    ],
+    enjoy: [
+      'Order early for Diwali and Eid — festive weeks book up fast.',
+      'Add a personal message card to your order notes.',
+      'Contact us for bulk and corporate orders with custom branding.',
+    ],
+    storage: STANDARD_STORAGE,
+    guide: [
+      { tip: 'Bulk & corporate orders', detail: 'For 20+ hampers we can customise contents, packaging and delivery to multiple addresses — reach us through the Contact page.' },
+      { tip: 'Delivery timelines', detail: 'Allow 3–5 business days for standard delivery; choose express at checkout for urgent gifts.' },
     ],
   },
 };
 
-const DEFAULT_EDITORIAL = {
-  title: 'Curated Heritage Artifacts',
-  subtitle: 'Handcrafted Collectibles & Historic Home Decor',
-  historicalBackground:
-    'Every artifact in this collection is built to bridge the gap between historical authenticity and modern living. Inspired by museum archives and forged by master artisans.',
-  craftsmanship:
-    'Forged using traditional blacksmithing techniques, natural hardwoods, high-carbon steel, and solid brass fittings.',
-  stylingInspiration: [
-    'Feature as central focal points on dark wood credenzas or mantelpieces.',
-    'Highlight with warm 2700K directional spotlighting to accentuate metal textures.',
-  ],
-  careInstructions: [
-    'Dust regularly with a dry microfiber cloth.',
-    'Apply mineral oil to metal surfaces once or twice annually.',
-  ],
-  buyingGuide: [
-    { tip: 'Authenticity Guarantee', detail: 'Check for maker marks and accompanying certificates of craftsmanship.' },
-  ],
+const DEFAULT_EDITORIAL: Editorial = {
+  title: 'Dry Fruits & Nuts',
+  subtitle: 'Hand-Sorted · Packed Fresh',
+  about: 'Premium dry fruits and nuts, hand-sorted and packed fresh for your family.',
+  benefits: ['A wholesome, natural snack with protein, healthy fats and fibre.'],
+  enjoy: ['Enjoy a small handful a day as a snack, or add to your favourite recipes.'],
+  storage: STANDARD_STORAGE,
+  guide: [{ tip: 'Freshness first', detail: 'Buy in quantities you can finish within a few weeks of opening.' }],
 };
 
-const COLLECTION_PRODUCTS: Record<string, any[]> = {};
+const TABS = [
+  { id: 'products', label: 'Products' },
+  { id: 'about', label: 'About' },
+  { id: 'benefits', label: 'Health Benefits' },
+  { id: 'enjoy', label: 'Ways to Enjoy' },
+  { id: 'storage', label: 'Storage' },
+  { id: 'guide', label: 'Buying Guide' },
+] as const;
+
+function NumberedList({ items }: { items: string[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      {items.map((text, i) => (
+        <div key={i} className="flex items-start space-x-3 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+            {i + 1}
+          </span>
+          <p className="text-xs text-slate-700 leading-relaxed font-medium">{text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionHeading({ icon: Icon, kicker, title }: { icon: typeof Leaf; kicker: string; title: string }) {
+  return (
+    <>
+      <div className="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-widest">
+        <Icon className="w-4 h-4" />
+        <span>{kicker}</span>
+      </div>
+      <h2 className="font-display text-2xl font-bold text-slate-900">{title}</h2>
+    </>
+  );
+}
 
 export default function CollectionPage({ params }: { params: { slug: string } }) {
   const slug = params.slug.toLowerCase();
-  const collectionName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  const editorial = CATEGORY_EDITORIAL[slug] || DEFAULT_EDITORIAL;
-  const products = COLLECTION_PRODUCTS[slug] || [];
+  const name = categoryBySlug(slug)?.name ?? slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const editorial = CATEGORY_EDITORIAL[slug] ?? { ...DEFAULT_EDITORIAL, title: name };
 
-  const [activeTab, setActiveTab] = useState<'products' | 'history' | 'craft' | 'styling' | 'care' | 'guide'>('products');
-  const [buyingGuideOpen, setBuyingGuideOpen] = useState<number | null>(0);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['id']>('products');
+  const [guideOpen, setGuideOpen] = useState<number | null>(0);
+
+  useEffect(() => {
+    fetchProductCards({ category: slug, limit: 100 })
+      .then(setProducts)
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false));
+  }, [slug]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-      {/* Breadcrumb */}
-      <Breadcrumb items={[{ label: 'Collections', href: '/products' }, { label: `${collectionName} Collection` }]} />
+      <Breadcrumb items={[{ label: 'Shop', href: '/products' }, { label: name }]} />
 
       {/* Header Banner */}
       <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 space-y-4 relative overflow-hidden shadow-xl">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-900/30 via-slate-900 to-slate-900" />
         <div className="relative z-10 space-y-3">
           <Badge variant="gold" size="sm">{editorial.subtitle}</Badge>
-          <h1 className="font-display text-3xl sm:text-5xl font-black tracking-tight">
-            {editorial.title}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-            {editorial.historicalBackground}
-          </p>
+          <h1 className="font-display text-3xl sm:text-5xl font-black tracking-tight">{editorial.title}</h1>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">{editorial.about}</p>
         </div>
       </div>
 
-      {/* Editorial Navigation Tabs */}
+      {/* Tabs */}
       <div className="flex items-center space-x-2 border-b border-slate-200 overflow-x-auto pb-1 text-xs font-bold text-slate-600">
-        {[
-          { id: 'products', label: `Collection (${products.length})` },
-          { id: 'history', label: 'Historical Lore' },
-          { id: 'craft', label: 'Craftsmanship' },
-          { id: 'styling', label: 'Styling Guide' },
-          { id: 'care', label: 'Care & Preservation' },
-          { id: 'guide', label: 'Buying Guide' },
-        ].map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-3 border-b-2 font-bold whitespace-nowrap transition-colors ${
-              activeTab === tab.id
-                ? 'border-slate-900 text-slate-900'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+              activeTab === tab.id ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            {tab.label}
+            {tab.id === 'products' && !loading ? `${tab.label} (${products.length})` : tab.label}
           </button>
         ))}
       </div>
 
-      {/* Tab 1: Products Grid */}
       {activeTab === 'products' && (
         <section className="space-y-6">
-          {products.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            </div>
+          ) : products.length === 0 ? (
             <EmptyState
               icon={<BookOpen className="w-8 h-8 text-slate-400" />}
-              title={`No ${collectionName} items currently in stock`}
-              description="Our master smiths are forging a new batch. Explore our historical lore guides while you wait."
-              actionLabel="Explore All Products"
+              title={`No ${name} in stock right now`}
+              description="A fresh batch is on its way. Browse our other dry fruits in the meantime."
+              actionLabel="Shop All Products"
               actionHref="/products"
             />
           ) : (
@@ -179,96 +298,52 @@ export default function CollectionPage({ params }: { params: { slug: string } })
         </section>
       )}
 
-      {/* Tab 2: Historical Background */}
-      {activeTab === 'history' && (
+      {activeTab === 'about' && (
         <section className="max-w-3xl space-y-4">
-          <div className="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-widest">
-            <Compass className="w-4 h-4" />
-            <span>Historical Context &amp; Archives</span>
-          </div>
-          <h2 className="font-display text-2xl font-bold text-slate-900">The History of {collectionName}</h2>
+          <SectionHeading icon={Leaf} kicker="Origin & Varieties" title={`About ${name}`} />
           <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-200">
-            {editorial.historicalBackground}
+            {editorial.about}
           </p>
         </section>
       )}
 
-      {/* Tab 3: Craftsmanship */}
-      {activeTab === 'craft' && (
-        <section className="max-w-3xl space-y-4">
-          <div className="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-widest">
-            <Hammer className="w-4 h-4" />
-            <span>Artisan Techniques &amp; Metallurgy</span>
-          </div>
-          <h2 className="font-display text-2xl font-bold text-slate-900">How It Is Forged</h2>
-          <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-200">
-            {editorial.craftsmanship}
-          </p>
-        </section>
-      )}
-
-      {/* Tab 4: Styling Inspiration */}
-      {activeTab === 'styling' && (
+      {activeTab === 'benefits' && (
         <section className="max-w-3xl space-y-6">
-          <div className="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-widest">
-            <Sparkles className="w-4 h-4" />
-            <span>Interior Design &amp; Placement</span>
-          </div>
-          <h2 className="font-display text-2xl font-bold text-slate-900">Styling Inspiration</h2>
-          <div className="grid grid-cols-1 gap-4">
-            {editorial.stylingInspiration.map((idea, i) => (
-              <div key={i} className="flex items-start space-x-3 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                  {i + 1}
-                </span>
-                <p className="text-xs text-slate-700 leading-relaxed font-medium">{idea}</p>
-              </div>
-            ))}
-          </div>
+          <SectionHeading icon={Heart} kicker="Nutrition" title="Health Benefits" />
+          <NumberedList items={editorial.benefits} />
+          <p className="text-[11px] text-slate-400">General nutrition information only — not medical advice.</p>
         </section>
       )}
 
-      {/* Tab 5: Care Instructions */}
-      {activeTab === 'care' && (
+      {activeTab === 'enjoy' && (
         <section className="max-w-3xl space-y-6">
-          <div className="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-widest">
-            <ShieldAlert className="w-4 h-4" />
-            <span>Preservation &amp; Maintenance</span>
-          </div>
-          <h2 className="font-display text-2xl font-bold text-slate-900">Care Instructions</h2>
-          <ul className="space-y-3">
-            {editorial.careInstructions.map((care, i) => (
-              <li key={i} className="flex items-start space-x-3 bg-white border border-slate-200 rounded-2xl p-4 text-xs text-slate-700">
-                <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" />
-                <span>{care}</span>
-              </li>
-            ))}
-          </ul>
+          <SectionHeading icon={Sparkles} kicker="Recipes & Ideas" title="Ways to Enjoy" />
+          <NumberedList items={editorial.enjoy} />
         </section>
       )}
 
-      {/* Tab 6: Buying Guide */}
+      {activeTab === 'storage' && (
+        <section className="max-w-3xl space-y-6">
+          <SectionHeading icon={Archive} kicker="Keep Them Fresh" title="Storage Tips" />
+          <NumberedList items={editorial.storage} />
+        </section>
+      )}
+
       {activeTab === 'guide' && (
         <section className="max-w-3xl space-y-6">
-          <div className="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-widest">
-            <BookOpen className="w-4 h-4" />
-            <span>Collector Checklist</span>
-          </div>
-          <h2 className="font-display text-2xl font-bold text-slate-900">Buying Guide for {collectionName}</h2>
+          <SectionHeading icon={BookOpen} kicker="Choose the Right Pack" title={`Buying Guide: ${name}`} />
           <div className="space-y-3">
-            {editorial.buyingGuide.map((item, idx) => (
+            {editorial.guide.map((item, idx) => (
               <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
                 <button
-                  onClick={() => setBuyingGuideOpen(buyingGuideOpen === idx ? null : idx)}
+                  onClick={() => setGuideOpen(guideOpen === idx ? null : idx)}
                   className="w-full flex justify-between items-center p-5 text-left text-xs font-bold text-slate-900 hover:bg-slate-50 transition-colors"
                 >
                   <span>{item.tip}</span>
-                  {buyingGuideOpen === idx ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  {guideOpen === idx ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </button>
-                {buyingGuideOpen === idx && (
-                  <div className="px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                    {item.detail}
-                  </div>
+                {guideOpen === idx && (
+                  <div className="px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-3">{item.detail}</div>
                 )}
               </div>
             ))}

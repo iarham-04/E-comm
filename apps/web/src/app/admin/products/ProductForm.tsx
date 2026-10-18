@@ -29,6 +29,8 @@ interface ProductFormData {
   metaTitle: string;
   metaDescription: string;
   craftsmanshipStory: string;
+  material: string;
+  packGrams: string;
   isLimitedEdition: boolean;
   editionNumber: string;
   editionTotal: string;
@@ -39,7 +41,7 @@ const EMPTY_FORM: ProductFormData = {
   name: '', slug: '', description: '', price: '', categoryId: '',
   stock: '10', images: [], isActive: true, status: 'PUBLISHED',
   metaTitle: '', metaDescription: '',
-  craftsmanshipStory: '',
+  craftsmanshipStory: '', material: '', packGrams: '',
   isLimitedEdition: false, editionNumber: '', editionTotal: '',
   isGiftEligible: true,
 };
@@ -67,23 +69,9 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           if (!form.categoryId && data[0]?.id) {
             set('categoryId', data[0].id);
           }
-        } else {
-          // Fallback categories
-          setCategories([
-            { id: 'cat-almonds', name: 'Almonds' },
-            { id: 'cat-cashews', name: 'Cashews' },
-            { id: 'cat-pistachios', name: 'Pistachios' },
-            { id: 'cat-mixed-dry-fruits', name: 'Mixed Dry Fruits' },
-          ]);
         }
       })
-      .catch(() => {
-        setCategories([
-          { id: 'cat-almonds', name: 'Almonds' },
-          { id: 'cat-cashews', name: 'Cashews' },
-          { id: 'cat-pistachios', name: 'Pistachios' },
-        ]);
-      })
+      .catch(() => setError('Could not load categories. Refresh the page to try again.'))
       .finally(() => setLoadingCategories(false));
   }, []);
 
@@ -196,11 +184,11 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
 
     if (form.isLimitedEdition) {
       if (!form.editionNumber || !form.editionTotal) {
-        setError('Both Edition Number and Edition Total are required for limited edition products.');
+        setError('Both batch number and batch size are required for limited batches.');
         return;
       }
       if (Number(form.editionNumber) > Number(form.editionTotal)) {
-        setError(`Edition Number (${form.editionNumber}) must be ≤ Edition Total (${form.editionTotal}).`);
+        setError(`Batch number (${form.editionNumber}) must be ≤ batch size (${form.editionTotal}).`);
         return;
       }
     }
@@ -224,6 +212,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
       };
 
       if (form.craftsmanshipStory) payload.craftsmanshipStory = form.craftsmanshipStory;
+      payload.material = form.material.trim() || null;
+      payload.weightKg = form.packGrams ? Number(form.packGrams) / 1000 : null;
       if (form.isLimitedEdition) {
         payload.editionNumber = Number(form.editionNumber);
         payload.editionTotal  = Number(form.editionTotal);
@@ -305,7 +295,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
                   if (!form.slug || mode === 'create') set('slug', autoSlug(e.target.value));
                 }}
                 className={inputCls}
-                placeholder="e.g. Damascus Steel Viking Battle Axe"
+                placeholder="e.g. Kashmiri Mamra Almonds 500g"
               />
             </div>
             <div>
@@ -315,7 +305,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
                 value={form.slug}
                 onChange={(e) => set('slug', e.target.value)}
                 className={`${inputCls} font-mono`}
-                placeholder="damascus-steel-viking-battle-axe"
+                placeholder="kashmiri-mamra-almonds-500g"
               />
             </div>
             <div className="sm:col-span-2">
@@ -339,7 +329,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
                 value={form.price}
                 onChange={(e) => set('price', e.target.value)}
                 className={inputCls}
-                placeholder="14999.00"
+                placeholder="899.00"
               />
             </div>
             <div>
@@ -428,7 +418,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
             <div>
-              <h2 className="text-sm font-bold text-white flex items-center space-x-2">
+              <h2 className="text-sm font-bold text-neutral-900 flex items-center space-x-2">
                 <ImageIcon className="w-4 h-4 text-neutral-600" />
                 <span>Product Images (AWS S3 Cloud Storage)</span>
               </h2>
@@ -499,12 +489,12 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           )}
         </section>
 
-        {/* ── Craftsmanship & Origin ─────────────────────────────────── */}
+        {/* ── Origin, variety & pack size ──────────────────────────────── */}
         <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
           <div className="border-b border-neutral-200 pb-3">
-            <h2 className="text-sm font-bold text-white">Craftsmanship &amp; Historical Origin</h2>
+            <h2 className="text-sm font-bold text-neutral-900">Origin, Variety &amp; Pack Size</h2>
             <p className="text-[11px] text-neutral-500 mt-0.5">
-              Tells the blacksmithing, forging, or historical story displayed on the product page.
+              Where it comes from and how it is sorted and packed — shown on the product page.
             </p>
           </div>
           <textarea
@@ -512,14 +502,37 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
             value={form.craftsmanshipStory}
             onChange={(e) => set('craftsmanshipStory', e.target.value)}
             className={inputCls}
-            placeholder="Hand-forged using 1095 high-carbon steel folded 512 times..."
+            placeholder="Hand-picked from orchards in Pulwama, Kashmir. Sorted by hand and nitrogen-flushed for freshness..."
           />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Variety</label>
+              <input
+                type="text"
+                value={form.material}
+                onChange={(e) => set('material', e.target.value)}
+                className={inputCls}
+                placeholder="e.g. Mamra, Californian, Medjool"
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Pack Size (grams)</label>
+              <input
+                type="number"
+                min="1"
+                value={form.packGrams}
+                onChange={(e) => set('packGrams', e.target.value)}
+                className={inputCls}
+                placeholder="500"
+              />
+            </div>
+          </div>
         </section>
 
-        {/* ── Limited Edition & Gifting ───────────────────────────────── */}
+        {/* ── Limited batch & gifting ──────────────────────────────────── */}
         <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
           <h2 className="text-sm font-bold text-neutral-900 border-b border-neutral-200 pb-3">
-            Limited Edition &amp; Gifting Options
+            Limited Batch &amp; Gifting Options
           </h2>
           <label className="flex items-start space-x-2.5 cursor-pointer">
             <input
@@ -529,9 +542,9 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               className="w-4 h-4 accent-amber-500 rounded mt-0.5"
             />
             <div>
-              <span className="text-xs font-bold text-neutral-700">Limited Edition Batch</span>
+              <span className="text-xs font-bold text-neutral-700">Limited Seasonal Batch</span>
               <p className="text-[11px] text-neutral-500">
-                Displays a &ldquo;127 of 500&rdquo; numbered badge on the storefront.
+                Shows a &ldquo;Limited Seasonal Batch&rdquo; badge, e.g. first-harvest or festive stock.
               </p>
             </div>
           </label>
@@ -539,7 +552,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           {form.isLimitedEdition && (
             <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-amber-500/40">
               <div>
-                <label className={labelCls}>Edition Number *</label>
+                <label className={labelCls}>Batch Number *</label>
                 <input
                   required
                   type="number"
@@ -551,7 +564,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
                 />
               </div>
               <div>
-                <label className={labelCls}>Total Edition Batch Size *</label>
+                <label className={labelCls}>Total Batches *</label>
                 <input
                   required
                   type="number"
@@ -590,7 +603,7 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
           >
             <div className="flex items-center space-x-2">
               <Globe className="w-4 h-4 text-neutral-600" />
-              <h2 className="text-sm font-bold text-white">
+              <h2 className="text-sm font-bold text-neutral-900">
                 SEO &amp; Google Search Meta Tags
               </h2>
             </div>

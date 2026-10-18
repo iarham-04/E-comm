@@ -4,80 +4,60 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
-import { Search, ShoppingBag, Heart, ChevronDown, User, Globe, Shield, Clock, Home, Award, BookOpen, Tag, Layers, ArrowRight, X } from 'lucide-react';
+import { Search, ShoppingBag, Heart, ChevronDown, User, Globe, Nut, Grape, Gift, LifeBuoy, BookOpen, Tag, Layers, ArrowRight, X } from 'lucide-react';
 import { useCurrencyStore, CurrencyCode } from '@/store/useCurrencyStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useWishlistStore } from '@/store/useWishlistStore';
 import { API_URL } from '@/lib/api';
+import { CATEGORIES } from '@/lib/catalog';
 
-const COLLECTIONS = [
-  { name: 'Medieval', href: '/collections/medieval' },
-  { name: 'Viking', href: '/collections/viking' },
-  { name: 'Roman', href: '/collections/roman' },
-  { name: 'Home Décor', href: '/collections/home-decor' },
-  { name: 'Collectibles', href: '/collections/collectibles' },
-  { name: 'Furniture', href: '/collections/furniture' },
-];
+const COLLECTIONS = CATEGORIES.map((c) => ({ name: c.name, href: `/collections/${c.slug}` }));
 
 const TAXONOMY_TREE = [
   {
-    category: 'Medieval',
-    slug: 'medieval',
-    icon: Shield,
+    category: 'Nuts',
+    href: '/products',
+    icon: Nut,
     subcategories: [
-      { name: 'Shields', href: '/products?category=medieval&sub=shields' },
-      { name: 'Helmets', href: '/products?category=medieval&sub=helmets' },
-      { name: 'Armor', href: '/products?category=medieval&sub=armor' },
-      { name: 'Accessories', href: '/products?category=medieval&sub=accessories' },
+      { name: 'Almonds', href: '/collections/almonds' },
+      { name: 'Cashews', href: '/collections/cashews' },
+      { name: 'Walnuts', href: '/collections/walnuts' },
+      { name: 'Mixed Nuts', href: '/collections/mixed-nuts' },
     ],
   },
   {
-    category: 'Vintage',
-    slug: 'vintage',
-    icon: Clock,
+    category: 'Dried Fruits',
+    href: '/products',
+    icon: Grape,
     subcategories: [
-      { name: 'Clocks', href: '/products?category=vintage&sub=clocks' },
-      { name: 'Telescopes', href: '/products?category=vintage&sub=telescopes' },
-      { name: 'Journals', href: '/products?category=vintage&sub=journals' },
-      { name: 'Compasses', href: '/products?category=vintage&sub=compasses' },
+      { name: 'Dates', href: '/collections/dates' },
+      { name: 'Raisins & Berries', href: '/collections/raisins-berries' },
+      { name: 'All Products', href: '/products' },
     ],
   },
   {
-    category: 'Home Décor',
-    slug: 'home-decor',
-    icon: Home,
+    category: 'Gifting',
+    href: '/collections/gift-hampers',
+    icon: Gift,
     subcategories: [
-      { name: 'Wall Art', href: '/products?category=home-decor&sub=wall-art' },
-      { name: 'Lighting', href: '/products?category=home-decor&sub=lighting' },
-      { name: 'Sculptures', href: '/products?category=home-decor&sub=sculptures' },
-      { name: 'Furniture', href: '/products?category=home-decor&sub=furniture' },
+      { name: 'Gift Hampers', href: '/collections/gift-hampers' },
+      { name: 'Bulk & Corporate Orders', href: '/contact-us' },
     ],
   },
   {
-    category: 'Collectibles',
-    slug: 'collectibles',
-    icon: Award,
+    category: 'Help',
+    href: '/pages/help-center',
+    icon: LifeBuoy,
     subcategories: [
-      { name: 'Limited Editions', href: '/products?tag=limited-edition' },
-      { name: 'Artisan Weapons', href: '/products?category=collectibles&sub=weapons' },
-      { name: 'Historical Relics', href: '/products?category=collectibles&sub=relics' },
-      { name: 'View All Collectibles', href: '/products?category=collectibles' },
+      { name: 'Track Your Order', href: '/track-order' },
+      { name: 'Shipping', href: '/pages/shipping' },
+      { name: 'Returns & Replacements', href: '/pages/returns' },
+      { name: 'Contact Us', href: '/contact-us' },
     ],
   },
 ];
 
-const MOCK_SUGGESTIONS: Record<string, { products: any[]; collections: any[]; categories: any[]; articles: any[] }> = {
-  spa: {
-    products: [
-      { id: 'p-sp1', name: 'Spartan Bronze Round Shield', slug: 'spartan-shield-bronze-24', price: 14999, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=200' },
-      { id: 'p-sp2', name: 'Spartan Officer Crested Helmet', slug: 'spartan-officer-helmet', price: 8999, image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=200' },
-      { id: 'p-sp3', name: 'Spartan Hoplite Battle Spear', slug: 'spartan-hoplite-spear', price: 6499, image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=200' },
-    ],
-    collections: [{ name: 'Spartan Collection', slug: 'spartan-collection' }],
-    categories: [{ name: 'Medieval', slug: 'medieval' }],
-    articles: [{ title: 'History of Spartan Warriors', slug: 'history-of-spartan-warriors' }],
-  },
-};
+const EMPTY_SUGGESTIONS = { products: [], collections: [], categories: [], articles: [] };
 
 export default function Header() {
   const router = useRouter();
@@ -126,35 +106,12 @@ export default function Header() {
 
     setSuggestOpen(true);
 
-    if (MOCK_SUGGESTIONS[q]) {
-      setSuggestions(MOCK_SUGGESTIONS[q]);
-      return;
-    }
-
+    // Only real results from the API — never placeholder products
     try {
       const res = await fetch(`${API_URL}/products/suggest?q=${encodeURIComponent(q)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSuggestions(data);
-      } else {
-        setSuggestions({
-          products: [
-            { id: 'p-1', name: `Spartan Shield (${value})`, slug: 'spartan-shield-bronze-24', price: 14999, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=200' },
-          ],
-          collections: [{ name: `${value.toUpperCase()} Collection`, slug: value.toLowerCase() }],
-          categories: [{ name: 'Medieval', slug: 'medieval' }],
-          articles: [{ title: `History of ${value}`, slug: `history-of-${value}` }],
-        });
-      }
+      setSuggestions(res.ok ? await res.json() : EMPTY_SUGGESTIONS);
     } catch {
-      setSuggestions({
-        products: [
-          { id: 'p-1', name: 'Spartan Shield', slug: 'spartan-shield-bronze-24', price: 14999, image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=200' },
-        ],
-        collections: [{ name: 'Spartan Collection', slug: 'spartan' }],
-        categories: [{ name: 'Medieval', slug: 'medieval' }],
-        articles: [{ title: 'History of Spartan Warriors', slug: 'history-of-spartan-warriors' }],
-      });
+      setSuggestions(EMPTY_SUGGESTIONS);
     }
   };
 
@@ -187,7 +144,7 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center font-medium tracking-wide">
           <div className="hidden sm:block" />
-          <p className="text-center flex-1 text-[11px] uppercase tracking-wider text-neutral-600">⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999</p>
+          <p className="text-center flex-1 text-[11px] uppercase tracking-wider text-neutral-600">🌰 FREE SHIPPING ACROSS INDIA ON ORDERS OVER ₹1,999</p>
 
           {/* Currency Selector: Locked to INR in Cart/Checkout to prevent price mismatch */}
           {pathname?.startsWith('/cart') || pathname?.startsWith('/checkout') || pathname?.startsWith('/order-confirmation') ? (
@@ -258,7 +215,7 @@ export default function Header() {
                       return (
                         <div key={group.category} className="space-y-3">
                           <Link
-                            href={`/products?category=${group.slug}`}
+                            href={group.href}
                             className="flex items-center space-x-2 text-xs font-bold text-slate-900 hover:text-amber-600 transition-colors border-b border-slate-100 pb-2"
                           >
                             <Icon className="w-4 h-4 text-amber-500" />
@@ -333,7 +290,7 @@ export default function Header() {
                 <form onSubmit={handleSearchSubmit}>
                   <input
                     type="text"
-                    placeholder="Search catalog..."
+                    placeholder="Search almonds, dates..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onFocus={() => searchQuery.trim().length >= 2 && setSuggestOpen(true)}
@@ -459,7 +416,7 @@ export default function Header() {
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex flex-col p-4 md:hidden">
           <div className="bg-white rounded-2xl p-4 space-y-4 shadow-2xl text-slate-900">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900">Search Catalog &amp; Lore</span>
+              <span className="text-xs font-bold text-slate-900">Search Products</span>
               <button onClick={() => setMobileSearchOpen(false)} className="p-1 text-slate-400 hover:text-slate-700">
                 <X className="w-5 h-5" />
               </button>
@@ -467,7 +424,7 @@ export default function Header() {
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
-                placeholder="Type search terms (e.g. spartan)..."
+                placeholder="Search (e.g. almonds, cashews)..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 autoFocus

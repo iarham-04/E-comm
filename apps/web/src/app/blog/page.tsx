@@ -2,70 +2,21 @@
 
 import Link from 'next/link';
 import { Calendar, Clock, ArrowRight, BookOpen, Feather } from 'lucide-react';
+import { ARTICLES } from '@/lib/articles';
+import { useNewsletter } from '@/lib/useNewsletter';
 
-const FEATURED_ARTICLE = {
-  slug: 'the-art-of-medieval-metallurgy',
-  title: 'The Art of Medieval Metallurgy: How Armorsmiths Forged History',
-  excerpt:
-    'From the glowing furnace of a 12th-century forge to the pristine display cases of the Royal Armouries Museum, discover the painstaking craft behind every authentic piece in the Corazonetouch collection.',
-  category: 'Craftsmanship',
-  readTime: '9 min read',
-  date: 'July 18, 2026',
-  image: 'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=1400',
-};
-
-const ARTICLES = [
-  {
-    slug: 'history-of-the-templar-knights',
-    title: 'The Knights Templar: Myth, Legend & the Armour They Left Behind',
-    excerpt:
-      'Founded in 1119 AD, the Knights Templar became the most feared warriors of the Crusades. Explore the symbolism encoded in every detail of their ceremonial armour.',
-    category: 'Medieval',
-    readTime: '7 min read',
-    date: 'July 12, 2026',
-    image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=800',
-  },
-  {
-    slug: 'viking-weapons-and-daily-life',
-    title: 'More Than Warriors: Viking Weapons as Cultural Artifacts',
-    excerpt:
-      'Norse battle axes were not merely weapons — they were status symbols, gifts to the gods, and markers of identity. A deep look into Scandinavian material culture.',
-    category: 'Viking',
-    readTime: '6 min read',
-    date: 'July 5, 2026',
-    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800',
-  },
-  {
-    slug: 'roman-legionary-equipment',
-    title: 'Lorica Segmentata to Galea: Decoding Roman Legionary Equipment',
-    excerpt:
-      'At its peak, the Roman Legion equipped over 300,000 soldiers. Each component of their armour was engineered with staggering precision for both protection and psychological impact.',
-    category: 'Roman',
-    readTime: '8 min read',
-    date: 'June 28, 2026',
-    image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800',
-  },
-  {
-    slug: 'caring-for-antique-collectibles',
-    title: 'A Collector\'s Guide: Preserving Historical Artefacts at Home',
-    excerpt:
-      'Whether you\'ve acquired a damascene dagger or a bronze centurion helmet, proper care ensures these treasures outlast generations. Our conservation experts share their best practices.',
-    category: 'Restoration',
-    readTime: '5 min read',
-    date: 'June 20, 2026',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800',
-  },
-];
+const [FEATURED_ARTICLE, ...RECENT] = ARTICLES;
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Craftsmanship: 'bg-stone-100 text-stone-700',
-  Medieval: 'bg-slate-100 text-slate-700',
-  Viking: 'bg-blue-50 text-blue-700',
-  Roman: 'bg-amber-50 text-amber-800',
-  Restoration: 'bg-emerald-50 text-emerald-700',
+  'Buying Guide': 'bg-amber-50 text-amber-800',
+  Nutrition: 'bg-emerald-50 text-emerald-700',
+  Storage: 'bg-slate-100 text-slate-700',
+  Gifting: 'bg-rose-50 text-rose-700',
 };
 
 export default function BlogPage() {
+  const newsletter = useNewsletter();
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
 
@@ -76,11 +27,11 @@ export default function BlogPage() {
           <span className="text-xs font-bold uppercase tracking-widest">The Corazonetouch Journal</span>
         </div>
         <h1 className="font-display text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-          Stories of Craft,<br />History & Legacy
+          Nutrition, Storage<br />&amp; Buying Guides
         </h1>
         <p className="text-sm text-slate-500 leading-relaxed">
-          Editorial pieces about the objects we collect, the civilisations that forged them,
-          and the enduring human need to preserve beauty across centuries.
+          Practical guides to choosing, storing and enjoying dry fruits and nuts —
+          written for everyday Indian kitchens.
         </p>
       </div>
 
@@ -128,12 +79,12 @@ export default function BlogPage() {
           <h2 className="font-display text-2xl font-bold text-slate-900">Recent Articles</h2>
           <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-500">
             <BookOpen className="w-4 h-4" />
-            <span>{ARTICLES.length} Articles</span>
+            <span>{RECENT.length} Articles</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {ARTICLES.map((article) => (
+          {RECENT.map((article) => (
             <Link key={article.slug} href={`/blog/${article.slug}`} className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
               <div className="aspect-[4/3] overflow-hidden bg-slate-100">
                 <img
@@ -171,19 +122,25 @@ export default function BlogPage() {
           style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #d4a853 0%, transparent 70%)' }}
         />
         <div className="relative space-y-4 max-w-xl mx-auto">
-          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">For Collectors & Connoisseurs</span>
+          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Newsletter</span>
           <h2 className="font-display text-3xl font-black text-white">
-            Receive the Curator&apos;s Letter
+            Get New Guides &amp; Festive Offers
           </h2>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Monthly editorial essays, new arrivals, historical deep-dives, and exclusive previews delivered to your inbox. No noise. Only craft.
+            New articles, fresh-harvest arrivals and subscriber-only discounts. No spam.
           </p>
+          {newsletter.status === 'done' ? (
+            <p className="text-emerald-300 text-sm font-semibold mt-6">✓ You&apos;re subscribed — thank you!</p>
+          ) : (
           <form
             className="flex flex-col sm:flex-row items-center gap-3 mt-6 max-w-sm mx-auto"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={newsletter.submit}
           >
             <input
               type="email"
+              required
+              value={newsletter.email}
+              onChange={(e) => newsletter.setEmail(e.target.value)}
               placeholder="your@email.com"
               className="flex-1 w-full px-4 py-3 rounded-xl text-xs bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400"
             />
@@ -194,6 +151,10 @@ export default function BlogPage() {
               Subscribe
             </button>
           </form>
+          )}
+          {newsletter.status === 'error' && (
+            <p className="text-rose-300 text-xs">Could not subscribe right now. Please try again.</p>
+          )}
           <p className="text-[11px] text-slate-600">Unsubscribe at any time. We respect your inbox.</p>
         </div>
       </div>

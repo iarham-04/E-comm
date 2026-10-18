@@ -20,7 +20,7 @@ export class HomepageService {
     ]);
 
     return {
-      announcement: '⚡ FREE WORLDWIDE EXPRESS SHIPPING ON ORDERS OVER ₹1,999',
+      announcement: '🌰 FREE SHIPPING ACROSS INDIA ON ORDERS OVER ₹1,999',
       categories: categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug, count: c._count.products })),
       bestSellers,
       newArrivals,

@@ -31,6 +31,8 @@ export default function EditProductPage() {
             metaTitle: data.metaTitle || '',
             metaDescription: data.metaDescription || '',
             craftsmanshipStory: data.craftsmanshipStory || '',
+            material: data.material || '',
+            packGrams: data.weightKg ? String(Math.round(Number(data.weightKg) * 1000)) : '',
             isLimitedEdition: data.isLimitedEdition ?? false,
             editionNumber: data.editionNumber ? String(data.editionNumber) : '',
             editionTotal: data.editionTotal ? String(data.editionTotal) : '',

@@ -5,7 +5,7 @@ import ProductGridCard from '@/components/ProductGridCard';
 import { Search, Package, X, Loader2, SlidersHorizontal, LayoutGrid, List, Check } from 'lucide-react';
 import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { API_URL } from '@/lib/api';
+import { fetchProductCards } from '@/lib/catalog';
 
 const SORT_OPTIONS = [
   { value: 'relevance',  label: 'Relevance' },
@@ -28,30 +28,9 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_URL}/products`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const items = Array.isArray(data) ? data : data?.items;
-        if (Array.isArray(items) && items.length > 0) {
-          setProducts(
-            items.map((p) => ({
-              id: p.id,
-              name: p.name,
-              slug: p.slug,
-              category: typeof p.category === 'object' ? p.category?.name || 'General' : p.category || 'General',
-              price: Number(p.price) || 0,
-              rating: p.rating || 4.9,
-              reviewsCount: p.reviewsCount || 0,
-              image: p.images?.[0] || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=800',
-              images: p.images || [],
-              stock: p.stock ?? 10,
-              material: p.material || 'Artisanal Forged',
-              isLimitedEdition: !!p.isLimitedEdition,
-            }))
-          );
-        }
-      })
-      .catch(() => {})
+    fetchProductCards({ limit: 100 })
+      .then(setProducts)
+      .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);
 
@@ -67,7 +46,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
   const materials = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
-      if (p.material && p.material !== 'Artisanal Forged') set.add(p.material);
+      if (p.material) set.add(p.material);
     });
     return ['All', ...Array.from(set)];
   }, [products]);
@@ -224,7 +203,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
             )}
             {limitedOnly && (
               <span className="inline-flex items-center space-x-1 text-xs bg-slate-100 text-slate-800 px-2.5 py-1 rounded-full">
-                <span>Limited Editions</span>
+                <span>Limited Batches</span>
                 <button onClick={() => setLimitedOnly(false)} className="hover:text-rose-600">
                   <X className="w-3 h-3" />
                 </button>
@@ -308,7 +287,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
         ) : (
           <EmptyState
             icon={<Package className="w-8 h-8" />}
-            title="No pieces found"
+            title="No products found"
             description="Try changing your filters or searching for another term."
             actionLabel="View All Pieces"
             onAction={clearFilters}
@@ -373,11 +352,11 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
             </div>
           </div>
 
-          {/* Materials */}
+          {/* Varieties */}
           {materials.length > 1 && (
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Material
+                Variety
               </h4>
               <div className="space-y-1">
                 {materials.map((mat) => (
@@ -390,7 +369,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
                         : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    <span>{mat === 'All' ? 'All Materials' : mat}</span>
+                    <span>{mat === 'All' ? 'All Varieties' : mat}</span>
                     {material === mat && <Check className="w-3.5 h-3.5 text-white" />}
                   </button>
                 ))}
@@ -401,7 +380,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
           {/* Rarity & Availability */}
           <div className="space-y-3 pt-2 border-t border-slate-100">
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Availability &amp; Editions
+              Availability
             </h4>
             <div className="space-y-2">
               <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
@@ -415,7 +394,7 @@ export default function ProductsPage({ searchParams }: { searchParams?: { search
               </label>
 
               <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
-                <span className="text-xs text-slate-800">Numbered Limited Editions</span>
+                <span className="text-xs text-slate-800">Limited Seasonal Batches</span>
                 <input
                   type="checkbox"
                   checked={limitedOnly}

@@ -188,7 +188,7 @@ export default function AdminCategoriesPage() {
                     slug: form.slug || e.target.value.toLowerCase().replace(/\s+/g, '-'),
                   })
                 }
-                placeholder="e.g. Damascus Steel Artifacts"
+                placeholder="e.g. Pistachios"
                 className="w-full px-3 py-2.5 text-xs bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
@@ -202,7 +202,7 @@ export default function AdminCategoriesPage() {
                     slug: e.target.value.toLowerCase().replace(/\s+/g, '-'),
                   })
                 }
-                placeholder="e.g. damascus-steel-artifacts"
+                placeholder="e.g. pistachios"
                 className="w-full px-3 py-2.5 text-xs bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono"
               />
             </div>

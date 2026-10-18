@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Journal — Corazonetouch | Stories of Craft, History & Legacy',
+  title: 'Journal — Corazonetouch | Dry Fruit Guides, Nutrition & Storage Tips',
   description:
-    'Explore editorial stories about medieval armor, historical weaponry, Viking culture, and the art of collecting authentic historical artifacts.',
+    'Practical guides to choosing, storing and enjoying almonds, cashews, walnuts, dates and other dry fruits — plus festive gifting tips.',
 };
 
 export default function BlogLayout({ children }: { children: React.ReactNode }) {

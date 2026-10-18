@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
                (SELECT COALESCE(SUM(total), 0)::float FROM "Order" WHERE "paymentStatus" = 'PAID') AS "totalRevenue"`),
       query(`SELECT id, name, slug, stock, price FROM "Product" WHERE stock <= 5 AND "isActive" ORDER BY stock ASC LIMIT 5`),
       query(`
-        SELECT o.id, o.total, o.status, o."paymentStatus", o."createdAt",
+        SELECT o.id, o.total, o.status, o."paymentStatus", o."createdAt", o."guestEmail",
                json_build_object('name', u.name, 'email', u.email) AS user
         FROM "Order" o LEFT JOIN "User" u ON o."userId" = u.id
         ORDER BY o."createdAt" DESC LIMIT 5`),

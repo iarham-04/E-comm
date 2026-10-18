@@ -32,7 +32,7 @@ async function main() {
     create: {
       slug: 'about',
       title: 'About Us',
-      content: '# About Our Storefront\n\nWe craft and curate authentic medieval, viking, and ancient historical collectibles, home decor, and handcrafted furniture built for modern spaces.',
+      content: '# About Corazonetouch\n\nWe bring premium almonds, cashews, walnuts, dates, raisins and festive gift hampers to homes across India — hand-sorted and packed fresh.',
       isPublished: true,
     },
   });
