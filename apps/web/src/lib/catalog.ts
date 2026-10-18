@@ -34,6 +34,7 @@ export const categoryBySlug = (slug?: string | null) => CATEGORIES.find((c) => c
 
 /** Maps an API product to ProductGridCard props. Never invents ratings, stock or materials. */
 export function toCard(p: any) {
+  if (!p || typeof p !== 'object') return null;
   const reviews: any[] = Array.isArray(p.reviews) ? p.reviews : [];
   const rating = reviews.length ? reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length : 0;
   return {
@@ -59,5 +60,8 @@ export async function fetchProductCards(params: Record<string, string | number> 
   if (!res.ok) throw new Error(`Failed to load products (${res.status})`);
   const body = await res.json();
   const list = Array.isArray(body) ? body : body?.data ?? [];
-  return list.map(toCard);
+  return list
+    .filter((product: unknown) => product && typeof product === 'object')
+    .map(toCard)
+    .filter(Boolean);
 }

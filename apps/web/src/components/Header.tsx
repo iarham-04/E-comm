@@ -109,7 +109,13 @@ export default function Header() {
     // Only real results from the API — never placeholder products
     try {
       const res = await fetch(`${API_URL}/products/suggest?q=${encodeURIComponent(q)}`);
-      setSuggestions(res.ok ? await res.json() : EMPTY_SUGGESTIONS);
+      const data = res.ok ? await res.json() : EMPTY_SUGGESTIONS;
+      setSuggestions({
+        products: Array.isArray(data?.products) ? data.products.filter(Boolean) : [],
+        collections: Array.isArray(data?.collections) ? data.collections.filter(Boolean) : [],
+        categories: Array.isArray(data?.categories) ? data.categories.filter(Boolean) : [],
+        articles: Array.isArray(data?.articles) ? data.articles.filter(Boolean) : [],
+      });
     } catch {
       setSuggestions(EMPTY_SUGGESTIONS);
     }
