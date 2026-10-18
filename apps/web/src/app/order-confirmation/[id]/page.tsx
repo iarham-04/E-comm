@@ -43,8 +43,6 @@ interface OrderData {
   addressSnapshot?: {
     fullName?: string;
     street?: string;
-    street2?: string;
-    district?: string;
     city?: string;
     state?: string;
     postalCode?: string;
@@ -54,12 +52,14 @@ interface OrderData {
   items: OrderItem[];
 }
 
+/** Order confirmation page: fetches the placed order and displays its payment method (Razorpay, or legacy COD) and status. */
 export default function OrderConfirmationPage({ params }: { params: { id: string } }) {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    /** Loads the order by ID, optionally scoped by the guest email query param. */
     async function fetchOrder() {
       try {
         setLoading(true);
@@ -237,8 +237,6 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
                   <div className="text-xs text-neutral-600 space-y-1 leading-relaxed">
                     <p className="font-bold text-neutral-900 text-sm">{order.addressSnapshot.fullName || 'Customer'}</p>
                     <p>{order.addressSnapshot.street}</p>
-                    {order.addressSnapshot.street2 && <p>{order.addressSnapshot.street2}</p>}
-                    {order.addressSnapshot.district && <p>{order.addressSnapshot.district}</p>}
                     <p>{[order.addressSnapshot.city, order.addressSnapshot.state, order.addressSnapshot.postalCode].filter(Boolean).join(', ')}</p>
                     <p className="text-neutral-500">{order.addressSnapshot.country || 'India'}</p>
                     {order.addressSnapshot.phone && (

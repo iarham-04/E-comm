@@ -14,6 +14,7 @@ import { useNewsletter } from '@/lib/useNewsletter';
 
 const JOURNAL_ARTICLES = ARTICLES.slice(0, 3);
 
+/** Storefront homepage; renders the TrustBadges section (prepaid Razorpay checkout) in place of the former COD card. */
 export default function Home() {
   const newsletter = useNewsletter();
   const [products, setProducts] = useState<any[]>([]);

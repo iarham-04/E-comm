@@ -7,11 +7,8 @@ import { Lock, CreditCard, ShieldCheck, AlertCircle, Loader2 } from 'lucide-reac
 import { API_URL } from '@/lib/api';
 import { loadRazorpayScript, openRazorpayCheckout } from '@/lib/razorpay';
 import { authFetch, errorMessage } from '@/lib/adminApi';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { PhoneInput } from '@/components/ui/PhoneInput';
-import { COUNTRY_OPTIONS, PHONE_COUNTRY_OPTIONS, getAddressRules, getAddressErrors, normalizePhone } from '@corazon/checkout-data';
 
+/** Checkout page: collects buyer/shipping details and completes payment exclusively via Razorpay. */
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCartStore();
@@ -23,41 +20,24 @@ export default function CheckoutPage() {
 
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
-  const [contactPhoneCountry, setContactPhoneCountry] = useState('IN');
-  const [recipientPhoneCountry, setRecipientPhoneCountry] = useState('IN');
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
 
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
     street: '',
-    street2: '',
-    district: '',
     city: '',
     state: '',
     postalCode: '',
-    country: '',
+    country: 'India',
     phone: '',
   });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addressRules = getAddressRules(shippingAddress.country);
-  const setAddressField = (field: keyof typeof shippingAddress, value: string) => {
-    setShippingAddress((previous) => ({ ...previous, [field]: value }));
-    setFieldErrors((previous) => ({ ...previous, [field]: undefined }));
-  };
-
-  const changeDeliveryCountry = (country: string) => {
-    setShippingAddress((previous) => ({ ...previous, country, city: '', state: '', district: '', postalCode: '' }));
-    if (!shippingAddress.phone.trim() && PHONE_COUNTRY_OPTIONS.some((option) => option.value === country)) setRecipientPhoneCountry(country);
-    setFieldErrors({});
-  };
-
   const orderPayload = () => ({
     guestEmail: guestEmail.trim(),
-    guestPhone: normalizePhone(guestPhone, contactPhoneCountry) || '',
-    shippingAddress: { ...shippingAddress, phone: normalizePhone(shippingAddress.phone, recipientPhoneCountry) || '' },
+    guestPhone: guestPhone.trim() || shippingAddress.phone.trim(),
+    shippingAddress,
     paymentMethod: 'RAZORPAY',
     items: items.map(({ productId, variantId, quantity }) => ({ productId, variantId, quantity })),
   });
@@ -80,14 +60,14 @@ export default function CheckoutPage() {
   // Currently, all orders are strictly billed, captured, and settled in Indian Rupees (INR ₹) to prevent customer price mismatch.
 
   // ─── Razorpay Flow ─────────────────────────────────────────────────────────
+  /** Runs the full prepaid checkout: create gateway order, open the Razorpay popup, then verify payment. */
   const handleRazorpay = async () => {
     if (!(await loadRazorpayScript())) {
       throw new Error('Failed to load payment gateway. Please check your connection and try again.');
     }
 
     // Step 1: the server prices the cart and opens a gateway order for that exact amount
-    const payload = orderPayload();
-    const rzpOrderRes = await postJson('/orders/razorpay/create-order', payload);
+    const rzpOrderRes = await postJson('/orders/razorpay/create-order', orderPayload());
     if (!rzpOrderRes.ok) {
       throw new Error(await errorMessage(rzpOrderRes, 'Could not initiate payment. Please try again.'));
     }
@@ -104,7 +84,7 @@ export default function CheckoutPage() {
       prefill: {
         name: shippingAddress.fullName,
         email: guestEmail,
-        contact: payload.guestPhone,
+        contact: shippingAddress.phone || guestPhone,
       },
       theme: { color: '#171717' },
     });
@@ -122,23 +102,13 @@ export default function CheckoutPage() {
   };
 
   // ─── Main Submit Handler ───────────────────────────────────────────────────
+  /** Form submit handler: validates the cart and triggers the Razorpay checkout flow. */
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (items.length === 0) {
       setError('Your cart is empty.');
-      return;
-    }
-
-    const payload = orderPayload();
-    const validation = getAddressErrors(payload.shippingAddress);
-    if (!payload.guestPhone) validation.guestPhone = 'Enter a valid phone number for the selected country calling code.';
-    setFieldErrors(validation);
-    if (Object.keys(validation).length) {
-      setError('Please check the highlighted contact and delivery details.');
-      const first = Object.keys(validation)[0];
-      document.getElementById(first === 'guestPhone' ? 'contact-phone' : first === 'phone' ? 'recipient-phone' : `shipping-${first}`)?.focus();
       return;
     }
 
@@ -202,28 +172,28 @@ export default function CheckoutPage() {
               <span className="text-[10px] text-neutral-400 font-semibold ml-auto">Step 1 of 3</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <Input
-                id="contact-email"
-                label="Email Address"
-                type="email"
-                required
-                autoComplete="email"
-                maxLength={254}
-                placeholder="alex@example.com"
-                value={guestEmail}
-                onChange={(event) => setGuestEmail(event.target.value)}
-                className="min-h-11"
-              />
-              <PhoneInput
-                id="contact-phone"
-                label="Phone Number"
-                country={contactPhoneCountry}
-                onCountryChange={(country) => { setContactPhoneCountry(country); setFieldErrors((previous) => ({ ...previous, guestPhone: undefined })); }}
-                value={guestPhone}
-                onChange={(value) => { setGuestPhone(value); setFieldErrors((previous) => ({ ...previous, guestPhone: undefined })); }}
-                autoComplete="section-contact tel-national"
-                error={fieldErrors.guestPhone}
-              />
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="alex@example.com"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="+91 9876543210"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
+                />
+              </div>
             </div>
           </div>
 
@@ -236,85 +206,53 @@ export default function CheckoutPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="sm:col-span-2">
-                <Select
-                  id="shipping-country"
-                  label="Delivery Country / Region"
-                  required
-                  autoComplete="shipping country"
-                  value={shippingAddress.country}
-                  onChange={(event) => changeDeliveryCountry(event.target.value)}
-                  options={[{ value: '', label: 'Select your country / region' }, ...COUNTRY_OPTIONS]}
-                  error={fieldErrors.country}
-                  className="min-h-11"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Input
-                  id="shipping-fullName"
-                  label="Full Name"
-                  required
-                  autoComplete="shipping name"
-                  maxLength={120}
+                <label className="block font-semibold text-neutral-700 mb-1">Full Name</label>
+                <input type="text" required placeholder="Alexander Vance"
                   value={shippingAddress.fullName}
-                  onChange={(event) => setAddressField('fullName', event.target.value)}
-                  error={fieldErrors.fullName}
-                  className="min-h-11"
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
                 />
               </div>
               <div className="sm:col-span-2">
-                <Input
-                  id="shipping-street"
-                  label="Street Address"
-                  required
-                  autoComplete="shipping address-line1"
-                  maxLength={300}
-                  placeholder="House or building number and street"
+                <label className="block font-semibold text-neutral-700 mb-1">Street Address</label>
+                <input type="text" required placeholder="House / Flat No., Street, Landmark"
                   value={shippingAddress.street}
-                  onChange={(event) => setAddressField('street', event.target.value)}
-                  error={fieldErrors.street}
-                  className="min-h-11"
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
                 />
               </div>
-              <div className="sm:col-span-2">
-                <Input
-                  id="shipping-street2"
-                  label="Apartment, Suite, Building or Landmark (optional)"
-                  autoComplete="shipping address-line2"
-                  maxLength={200}
-                  value={shippingAddress.street2}
-                  onChange={(event) => setAddressField('street2', event.target.value)}
-                  className="min-h-11"
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">City</label>
+                <input type="text" required placeholder="Mumbai"
+                  value={shippingAddress.city}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
                 />
               </div>
-              {(['district', 'city', 'state', 'postalCode'] as const).map((field) => {
-                const rule = addressRules[field];
-                if (!rule.visible) return null;
-                return (
-                  <Input
-                    key={field}
-                    id={`shipping-${field}`}
-                    label={`${rule.label}${rule.required ? '' : ' (optional)'}`}
-                    required={rule.required}
-                    autoComplete={`shipping ${field === 'postalCode' ? 'postal-code' : field === 'state' ? 'address-level1' : field === 'city' ? 'address-level2' : 'address-level3'}`}
-                    maxLength={field === 'postalCode' ? 20 : 100}
-                    placeholder={field === 'postalCode' ? addressRules.postalCode.example : undefined}
-                    value={shippingAddress[field]}
-                    onChange={(event) => setAddressField(field, event.target.value)}
-                    error={fieldErrors[field]}
-                    className="min-h-11"
-                  />
-                );
-              })}
-              <PhoneInput
-                id="recipient-phone"
-                label="Recipient Phone"
-                country={recipientPhoneCountry}
-                onCountryChange={(country) => { setRecipientPhoneCountry(country); setFieldErrors((previous) => ({ ...previous, phone: undefined })); }}
-                value={shippingAddress.phone}
-                onChange={(value) => setAddressField('phone', value)}
-                autoComplete="shipping tel-national"
-                error={fieldErrors.phone}
-              />
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">State</label>
+                <input type="text" required placeholder="Maharashtra"
+                  value={shippingAddress.state}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">Postal Pincode</label>
+                <input type="text" required placeholder="400001"
+                  value={shippingAddress.postalCode}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">Recipient Phone</label>
+                <input type="tel" required placeholder="+91 9876543210"
+                  value={shippingAddress.phone}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+                  className="w-full p-2.5 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-300"
+                />
+              </div>
             </div>
           </div>
 

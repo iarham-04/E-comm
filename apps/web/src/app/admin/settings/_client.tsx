@@ -21,6 +21,7 @@ interface EmailTemplateData {
   updatedAt: string;
 }
 
+/** Admin settings page: manages shipping/tax config, the Razorpay online-payment toggle, and email templates. */
 export default function SettingsPage() {
   const [settings, setSettings] = useState<StoreSettingsData>({
     flatShippingFee: 0,
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  /** Loads store settings and email templates from the admin API. */
   const fetchSettings = async () => {
     try {
       const [resSet, resTpl] = await Promise.all([
@@ -50,6 +52,7 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
+  /** Submits the store settings form (including the Razorpay toggle) to the admin API. */
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
