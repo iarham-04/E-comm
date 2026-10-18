@@ -60,6 +60,7 @@ const LOCAL_ADMIN_ROUTES = [
   /^\/admin\/(me|dashboard)$/,
   /^\/admin\/products(\/(?!bulk-stock$|reindex$)[^/]+)?$/,
   /^\/admin\/categories(\/[^/]+)?$/,
+  /^\/admin\/settings$/,
   /^\/uploads$/,
 ];
 
