@@ -1,11 +1,19 @@
+import InfoPage from '@/components/InfoPage';
+import { SITE } from '@/lib/site';
+
+export const metadata = { title: 'Careers — Corazonetouch' };
+
 export default function CareersPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 mb-4">Careers at Storefront</h1>
-      <div className="bg-white p-8 rounded-xl border border-slate-200 text-slate-600 space-y-4">
-        <p>Join our team of historians, designers, engineers, and artisans building the premier historical collectibles store.</p>
-        <p className="text-sm font-medium text-slate-500">Currently accepting applications for Design & Logistics roles.</p>
-      </div>
-    </div>
+    <InfoPage
+      title="Careers at Corazonetouch"
+      intro="We are a growing dry fruits brand and are always happy to hear from people who care about quality food and great customer service."
+      sections={[
+        {
+          heading: 'How to apply',
+          body: <p>There are no open roles listed right now. To be considered for future openings in packing, operations, customer support or marketing, email your CV to <strong className="text-slate-900">{SITE.supportEmail}</strong>.</p>,
+        },
+      ]}
+    />
   );
 }

@@ -1,19 +1,24 @@
+import InfoPage from '@/components/InfoPage';
+import { SITE, inr } from '@/lib/site';
+
+export const metadata = { title: 'Help Center & FAQ — Corazonetouch' };
+
+const FAQS = [
+  { q: 'How long does delivery take?', a: `Standard delivery takes ${SITE.standardDelivery}; express takes ${SITE.expressDelivery}.` },
+  { q: 'Is shipping free?', a: `Yes, standard shipping is free on orders of ${inr(SITE.freeShippingThreshold)} or more. Below that, it costs ${inr(SITE.standardShippingFee)}.` },
+  { q: 'Do you offer Cash on Delivery?', a: 'Yes. You can pay in cash when your order arrives, or pay online with UPI, cards or net banking.' },
+  { q: 'Can I track my order as a guest?', a: 'Yes — visit the Track Order page and enter your Order ID and the email used at checkout.' },
+  { q: 'How should I store dry fruits?', a: 'Keep them in an airtight container in a cool, dry place. Refrigerate walnuts and opened packs to keep them fresh longer.' },
+  { q: 'What if my order arrives damaged?', a: `Email ${SITE.supportEmail} within 48 hours with photos and your Order ID, and we will replace it or refund you.` },
+  { q: 'Do you take bulk or corporate orders?', a: 'Yes — we pack custom gift hampers for festivals, weddings and companies. Contact us with your requirements.' },
+];
+
 export default function HelpCenterPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 mb-4">Help Center & FAQ</h1>
-      <p className="text-slate-600 mb-8">Find quick answers to common questions about orders, payments, and shipping.</p>
-
-      <div className="space-y-4">
-        <div className="bg-white p-6 rounded-xl border border-slate-200">
-          <h3 className="font-semibold text-slate-900">How long does shipping take?</h3>
-          <p className="text-sm text-slate-600 mt-2">Standard delivery takes 3-5 business days. Express delivery arrives within 2 business days.</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200">
-          <h3 className="font-semibold text-slate-900">Can I track my guest order?</h3>
-          <p className="text-sm text-slate-600 mt-2">Yes, visit our Track Order page and enter your Order ID + Email used at checkout.</p>
-        </div>
-      </div>
-    </div>
+    <InfoPage
+      title="Help Center & FAQ"
+      intro="Quick answers to common questions about orders, delivery, payments and storage."
+      sections={FAQS.map((f) => ({ heading: f.q, body: <p>{f.a}</p> }))}
+    />
   );
 }

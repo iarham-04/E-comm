@@ -168,7 +168,7 @@ export default function BannersPage() {
                 <label className="block font-bold text-neutral-400 mb-1">Headline</label>
                 <input
                   type="text"
-                  placeholder="e.g. Masterwork Toledo Steel Armor"
+                  placeholder="e.g. Diwali Dry Fruit Hampers Are Here"
                   value={form.headline}
                   onChange={(e) => setForm({ ...form, headline: e.target.value })}
                   className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
@@ -179,7 +179,7 @@ export default function BannersPage() {
                 <label className="block font-bold text-neutral-400 mb-1">Subtext</label>
                 <input
                   type="text"
-                  placeholder="e.g. Hand-forged limited edition collection"
+                  placeholder="e.g. Free shipping on orders over ₹1,999"
                   value={form.subtext}
                   onChange={(e) => setForm({ ...form, subtext: e.target.value })}
                   className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900"
@@ -190,7 +190,7 @@ export default function BannersPage() {
                 <label className="block font-bold text-neutral-400 mb-1">Link URL</label>
                 <input
                   type="text"
-                  placeholder="/collections/medieval"
+                  placeholder="/collections/gift-hampers"
                   value={form.linkUrl}
                   onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
                   className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 font-mono"

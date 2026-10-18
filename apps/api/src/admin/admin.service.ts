@@ -442,7 +442,7 @@ export class AdminService {
     return {
       invoiceNumber: `INV-${order.id.slice(-6).toUpperCase()}`,
       orderDate: order.createdAt,
-      customerName: order.user?.name || (order.addressSnapshot as any)?.fullName || 'Guest Collector',
+      customerName: order.user?.name || (order.addressSnapshot as any)?.fullName || 'Guest',
       customerEmail: order.user?.email || order.guestEmail || '',
       address: order.addressSnapshot,
       items: order.items.map((i) => ({

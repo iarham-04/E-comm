@@ -15,12 +15,12 @@ export default function WishlistPage() {
         <div className="bg-white rounded-3xl border border-slate-200 p-12 max-w-md mx-auto shadow-sm">
           <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h1 className="font-display text-2xl font-black text-slate-900">Your Wishlist is Empty</h1>
-          <p className="text-xs text-slate-500 mt-2 mb-6">Save your favorite historical armor and collectibles to view them later.</p>
+          <p className="text-xs text-slate-500 mt-2 mb-6">Save your favourite dry fruits and hampers to find them quickly later.</p>
           <Link
             href="/products"
             className="inline-block bg-slate-900 text-white font-bold text-xs px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors"
           >
-            Explore Catalog
+            Shop Dry Fruits
           </Link>
         </div>
       </div>

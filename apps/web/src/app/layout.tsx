@@ -18,30 +18,26 @@ const inter = Inter({
   display: 'swap',
 });
 
+const SITE_URL = 'https://corazontouch.com';
+const DESCRIPTION =
+  'Shop premium dry fruits and nuts online — Kashmiri Mamra almonds, whole cashews, walnuts, Medjool dates, raisins and festive gift hampers. Hand-sorted, packed fresh, free shipping over ₹1,999.';
+
 export const metadata = {
-  title: 'Corazonetouch — Hand-Forged Medieval Armor, Viking Artifacts & Historical Collectibles',
-  description: 'Discover museum-grade handcrafted medieval armor, viking battle axes, Roman helmets, and bespoke artisanal furniture. Every artifact is historically researched and hand-forged. Free worldwide shipping over ₹1,999.',
+  metadataBase: new URL(SITE_URL),
+  title: 'Corazonetouch — Premium Dry Fruits, Nuts & Gift Hampers Online',
+  description: DESCRIPTION,
   openGraph: {
-    title: 'Corazonetouch — Where Ancient Craftsmanship Meets the Modern Collector',
-    description: 'Hand-forged historical armor, decor, and collectibles by master blacksmiths. Museum-grade. No exceptions.',
-    url: 'https://corazonetouch.com',
+    title: 'Corazonetouch — Premium Dry Fruits & Nuts, Packed Fresh',
+    description: DESCRIPTION,
+    url: SITE_URL,
     siteName: 'Corazonetouch',
-    images: [
-      {
-        url: 'https://d1234.cloudfront.net/meta/og-homepage.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Corazonetouch — Authentic Historical Collectibles',
-      },
-    ],
     locale: 'en_IN',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Corazonetouch — Hand-Forged Historical Artifacts & Collectibles',
-    description: 'Museum-grade historical armor, viking weaponry, and artisanal decor. Forged by hand, built for eternity.',
-    images: ['https://d1234.cloudfront.net/meta/og-homepage.jpg'],
+    title: 'Corazonetouch — Premium Dry Fruits & Nuts',
+    description: DESCRIPTION,
   },
 };
 
@@ -56,12 +52,10 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
     name: 'Corazonetouch',
-    url: 'https://corazonetouch.com',
-    description: 'Museum-grade handcrafted medieval armor, viking battle axes, Roman artifacts, and bespoke artisanal furniture. Every artifact is hand-forged, historically researched, and built to outlast the century it was inspired by.',
-    currenciesAccepted: 'INR, USD, EUR, GBP',
-    paymentAccepted: 'Cash, Credit Card, Razorpay, Stripe',
-    priceRange: '₹3,499 - ₹49,999',
-    slogan: 'Where ancient craftsmanship meets the modern collector\'s heart.',
+    url: SITE_URL,
+    description: DESCRIPTION,
+    currenciesAccepted: 'INR',
+    paymentAccepted: 'Cash on Delivery, UPI, Credit Card, Debit Card, Net Banking',
   };
 
   return (

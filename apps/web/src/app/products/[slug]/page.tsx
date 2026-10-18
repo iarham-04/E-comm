@@ -9,60 +9,22 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import ProductGridCard from '@/components/ProductGridCard';
 import {
   Heart, ShoppingBag, Gift, ChevronLeft, ChevronRight, Star,
-  ShieldCheck, Truck, RotateCcw, Lock, Maximize2, X, MessageSquarePlus, Check, Sparkles
+  ShieldCheck, Truck, RotateCcw, Lock, Maximize2, X, MessageSquarePlus, Check, Sparkles, Loader2
 } from 'lucide-react';
+import { FALLBACK_IMAGE, categoryBySlug } from '@/lib/catalog';
 
 import { API_URL } from '@/lib/api';
 import { authFetch, errorMessage } from '@/lib/adminApi';
 
-// Fallback demo product if backend isn't populated or slug isn't found
-const FALLBACK_PRODUCT = {
-  id: 'p-1',
-  name: 'Full Suit of Templar Knight Armor',
-  slug: 'templar-knight-armor',
-  description:
-    'An awe-inspiring museum-grade reproduction of 14th-century Crusader armor. Each plate is individually articulated for dramatic display, rendered in high-carbon forged steel with an oil-blackened finish that deepens over time.',
-  price: 34999.00,
-  images: [
-    'https://images.unsplash.com/photo-1599753587042-50d4d293883a?q=80&w=1200',
-    'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200',
-    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1200',
-  ],
-  category: { name: 'Medieval', slug: 'medieval' },
-  stock: 5,
-  isActive: true,
-  craftsmanshipStory:
-    'Forged in Toledo, Spain — the city synonymous with European blade mastery since the Roman era — by a third-generation armorsmith. The gorget, pauldrons, and gauntlets are individually hammer-worked from 2mm high-carbon steel at 58 HRC. The finish is authentic oil quenching, which produces the darkened patina that medieval knights relied on for corrosion resistance. The armour is modelled directly after the Lyle-Howard suit preserved in the Royal Armouries Museum, Leeds, and verified for dimensional accuracy against their published catalogue.',
-  material: 'High-Carbon Steel',
-  heightCm: 185,
-  widthCm: 62,
-  depthCm: 40,
-  weightKg: 22.5,
-  isLimitedEdition: true,
-  editionNumber: 127,
-  editionTotal: 500,
-  editionDisplay: '127 of 500',
-  isGiftEligible: true,
-  variants: [
-    { id: 'v-1', size: 'Standard (175–185 cm)', color: 'Oil-Blackened Steel', stock: 3, priceDelta: 0 },
-    { id: 'v-2', size: 'Large (185–195 cm)', color: 'Polished Steel', stock: 2, priceDelta: 2500 },
-  ],
-  reviews: [
-    { id: 'r1', rating: 5, comment: 'Absolutely stunning. The craftsmanship is beyond what I expected. Worth every rupee.', createdAt: '2026-06-14', user: { name: 'Alexander V.' } },
-    { id: 'r2', rating: 5, comment: 'The patina finish is exactly as described. My study has never looked more magnificent.', createdAt: '2026-05-22', user: { name: 'David K.' } },
-    { id: 'r3', rating: 4, comment: 'Remarkable weight and authenticity. Articulation works smoothly.', createdAt: '2026-04-10', user: { name: 'Marcus R.' } },
-  ],
-};
-
 const COMPACT_TRUST_ITEMS = [
-  { icon: ShieldCheck, label: 'Authenticity Guaranteed' },
-  { icon: Truck, label: '3–5 Day Express Delivery' },
-  { icon: RotateCcw, label: '30-Day Easy Returns' },
-  { icon: Lock, label: '256-Bit SSL Encrypted' },
+  { icon: ShieldCheck, label: 'Hand-Sorted & Packed Fresh' },
+  { icon: Truck, label: 'Free Shipping over ₹1,999' },
+  { icon: RotateCcw, label: 'Replacement if Damaged' },
+  { icon: Lock, label: 'Secure Razorpay Checkout' },
 ];
 
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const [product, setProduct] = useState<any>(FALLBACK_PRODUCT);
+  const [product, setProduct] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,7 +70,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           }
         }
       } catch {
-        // Fallback to demo product if slug matches or generic
+        // Network error — the "not found" state below is shown
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -121,6 +83,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   useEffect(() => {
     async function fetchRelated() {
       try {
+        if (!product) return;
         const categorySlug = product.category?.slug;
         const res = await fetch(`${API_URL}/products?limit=6${categorySlug ? `&category=${categorySlug}` : ''}`);
         if (res.ok) {
@@ -133,7 +96,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       }
     }
     fetchRelated();
-  }, [product.id, product.category?.slug]);
+  }, [product?.id, product?.category?.slug]);
 
   // Handle sticky bar visibility on scroll
   useEffect(() => {
@@ -237,7 +200,27 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     }
   };
 
-  const currentImages = product.images && product.images.length > 0 ? product.images : [FALLBACK_PRODUCT.images[0]];
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <Loader2 className="w-7 h-7 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-32 text-center space-y-4">
+        <h1 className="font-display text-2xl font-bold text-slate-900">Product not found</h1>
+        <p className="text-sm text-slate-500">This product may have sold out or been removed.</p>
+        <Link href="/products" className="inline-block text-xs font-bold bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800">
+          Browse All Dry Fruits
+        </Link>
+      </div>
+    );
+  }
+
+  const currentImages = product.images?.length > 0 ? product.images : [categoryBySlug(product.category?.slug)?.image ?? FALLBACK_IMAGE];
   const hasMultipleImages = currentImages.length > 1;
   const hasDimensions = product.heightCm || product.widthCm || product.depthCm || product.weightKg;
 
@@ -249,7 +232,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         items={[
           { label: 'Home', href: '/' },
           { label: 'Collections', href: '/products' },
-          { label: product.category?.name || 'Curated', href: `/search?category=${product.category?.slug || ''}` },
+          { label: product.category?.name || 'Shop', href: product.category?.slug ? `/collections/${product.category.slug}` : '/products' },
           { label: product.name },
         ]}
       />
@@ -358,7 +341,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               <div className="pt-1">
                 <span className="inline-flex items-center space-x-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full">
                   <Sparkles className="w-3 h-3 text-amber-500" />
-                  <span>Limited Edition · {product.editionDisplay || `${product.editionNumber || 1} of ${product.editionTotal || 500}`}</span>
+                  <span>Limited Seasonal Batch{product.editionDisplay ? ` · ${product.editionDisplay}` : ''}</span>
                 </span>
               </div>
             )}
@@ -383,7 +366,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 ))}
               </div>
               <span>{avgRating.toFixed(1)}</span>
-              <span className="text-slate-400 font-normal">({reviews.length} collector {reviews.length === 1 ? 'review' : 'reviews'})</span>
+              <span className="text-slate-400 font-normal">({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
             </a>
           )}
 
@@ -528,29 +511,29 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
         {/* 1. General Description */}
         <section className="space-y-3">
-          <h2 className="font-display text-2xl font-bold text-slate-900">About this Piece</h2>
+          <h2 className="font-display text-2xl font-bold text-slate-900">About this Product</h2>
           <p className="text-sm text-slate-600 leading-relaxed font-sans">{product.description}</p>
         </section>
 
-        {/* 2. Craftsmanship & Origin (Collector Persona) */}
+        {/* 2. Origin & sourcing */}
         {product.craftsmanshipStory && (
           <section className="border-l-4 border-amber-400 pl-6 space-y-3 py-1">
-            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest block">Proven Heritage</span>
-            <h2 className="font-display text-2xl font-bold text-slate-900">Craftsmanship &amp; Origin</h2>
+            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest block">From the Source</span>
+            <h2 className="font-display text-2xl font-bold text-slate-900">Origin &amp; Sourcing</h2>
             <p className="text-sm text-slate-600 leading-relaxed italic">{product.craftsmanshipStory}</p>
           </section>
         )}
 
-        {/* 3. Dimensions & Materials (Designer Persona) */}
+        {/* 3. Product details */}
         {(hasDimensions || product.material) && (
           <section className="space-y-4">
-            <h2 className="font-display text-2xl font-bold text-slate-900">Dimensions &amp; Specifications</h2>
+            <h2 className="font-display text-2xl font-bold text-slate-900">Product Details</h2>
             <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm max-w-xl">
               <table className="w-full text-xs">
                 <tbody className="divide-y divide-slate-100">
                   {product.material && (
                     <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="px-5 py-3.5 text-slate-500 font-bold w-44">Primary Material</td>
+                      <td className="px-5 py-3.5 text-slate-500 font-bold w-44">Variety</td>
                       <td className="px-5 py-3.5 text-slate-900 font-bold">{product.material}</td>
                     </tr>
                   )}
@@ -574,8 +557,8 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                   )}
                   {product.weightKg && (
                     <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="px-5 py-3.5 text-slate-500 font-bold">Weight</td>
-                      <td className="px-5 py-3.5 text-slate-900 font-bold">{Number(product.weightKg)} kg</td>
+                      <td className="px-5 py-3.5 text-slate-500 font-bold">Net Weight</td>
+                      <td className="px-5 py-3.5 text-slate-900 font-bold">{Number(product.weightKg) < 1 ? `${Math.round(Number(product.weightKg) * 1000)} g` : `${Number(product.weightKg)} kg`}</td>
                     </tr>
                   )}
                 </tbody>
@@ -588,7 +571,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         <section id="reviews" className="scroll-mt-24 space-y-8 pt-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
             <div>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Collector Reviews</h2>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Customer Reviews</h2>
               <p className="text-xs text-slate-500 mt-1">Verified buyer experiences &amp; authenticity assessments</p>
             </div>
             {avgRating !== null && (
@@ -630,7 +613,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             <div className="bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center space-y-3">
               <p className="text-sm font-bold text-slate-800">No reviews yet for this piece</p>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Be the first collector to leave feedback after receiving your item.
+                Be the first to review this product after your order arrives.
               </p>
             </div>
           )}
@@ -642,7 +625,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 <div key={rev.id} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-slate-900">{rev.user?.name || 'Verified Collector'}</span>
+                      <span className="text-xs font-bold text-slate-900">{rev.user?.name || 'Verified Buyer'}</span>
                       <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-100">
                         Verified Purchase
                       </span>
@@ -700,7 +683,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                     rows={3}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Describe the craftsmanship, weight, finish, or historical accuracy..."
+                    placeholder="How was the taste, freshness and packaging?"
                     className="w-full p-3 text-xs bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>

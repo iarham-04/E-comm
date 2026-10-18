@@ -1,17 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, Gift, Send, CheckCircle2 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { SITE } from '@/lib/site';
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [sendError, setSendError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setSendError(false);
 
     try {
       const res = await fetch(`${API_URL}/contact`, {
@@ -23,7 +26,7 @@ export default function ContactUsPage() {
       setSubmitted(true);
       setFormData({ name: '', email: '', message: '' });
     } catch {
-      alert('Sorry, your message could not be sent. Please try again or email us directly.');
+      setSendError(true);
     } finally {
       setSubmitting(false);
     }
@@ -38,22 +41,18 @@ export default function ContactUsPage() {
             <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">Customer Support</span>
             <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">Get in Touch with Our Team</h1>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-              Have a question regarding custom armor orders, shipping status, or item specifications? Our specialists are available 7 days a week.
+              Questions about an order, delivery, product freshness or bulk gift hampers? Send us a message and we&apos;ll get back to you, usually within one business day.
             </p>
           </div>
 
           <div className="space-y-4 text-xs font-medium text-slate-700">
             <div className="flex items-center space-x-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
               <Mail className="w-5 h-5 text-amber-600" />
-              <span>support@storefront.com</span>
+              <span>{SITE.supportEmail}</span>
             </div>
             <div className="flex items-center space-x-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <Phone className="w-5 h-5 text-amber-600" />
-              <span>+91 1800-890-7000 (Toll Free)</span>
-            </div>
-            <div className="flex items-center space-x-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <MapPin className="w-5 h-5 text-amber-600" />
-              <span>Artisan Forge Workshop, BKC, Mumbai, Maharashtra 400051</span>
+              <Gift className="w-5 h-5 text-amber-600" />
+              <span>Bulk &amp; corporate gift hampers — mention quantity and delivery date in your message.</span>
             </div>
           </div>
         </div>
@@ -64,7 +63,7 @@ export default function ContactUsPage() {
             <div className="text-center py-12 space-y-4">
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
               <h2 className="text-xl font-bold text-slate-900">Message Sent Successfully!</h2>
-              <p className="text-xs text-slate-500">Thank you for reaching out. Our support team will respond within 24 hours.</p>
+              <p className="text-xs text-slate-500">Thank you for reaching out. We usually reply within one business day.</p>
               <button
                 onClick={() => setSubmitted(false)}
                 className="mt-4 bg-slate-900 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-slate-800"
@@ -74,7 +73,12 @@ export default function ContactUsPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-200 pb-3">Send Support Message</h2>
+              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-200 pb-3">Send Us a Message</h2>
+              {sendError && (
+                <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
+                  Sorry, your message could not be sent. Please try again or email {SITE.supportEmail}.
+                </p>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Your Full Name</label>
                 <input

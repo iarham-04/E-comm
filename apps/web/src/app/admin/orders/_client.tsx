@@ -287,7 +287,7 @@ export default function AdminOrdersPage() {
               <tr key={o.id} className="hover:bg-[#fafafa]/50 transition-colors">
                 <td className="py-3 px-4 font-mono font-bold text-neutral-900">#{o.id.slice(-6).toUpperCase()}</td>
                 <td className="py-3 px-4">
-                  <p className="font-bold text-neutral-900">{o.user?.name || o.guestEmail || 'Collector'}</p>
+                  <p className="font-bold text-neutral-900">{o.user?.name || o.guestEmail || 'Guest'}</p>
                   <p className="text-[10px] text-neutral-500 font-mono">{o.user?.email || o.guestEmail || '—'}</p>
                 </td>
                 <td className="py-3 px-4 font-mono font-bold text-neutral-600">₹{Number(o.total).toLocaleString('en-IN')}</td>

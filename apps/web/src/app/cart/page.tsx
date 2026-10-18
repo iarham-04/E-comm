@@ -17,7 +17,7 @@ export default function CartPage() {
         <div className="bg-white rounded-3xl border border-slate-200 p-12 max-w-md mx-auto shadow-sm">
           <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h1 className="font-display text-2xl font-black text-slate-900">Your Cart is Empty</h1>
-          <p className="text-xs text-slate-500 mt-2 mb-6">Explore our curated collections of authentic medieval armor and collectibles.</p>
+          <p className="text-xs text-slate-500 mt-2 mb-6">Add some hand-sorted almonds, cashews, walnuts or dates to get started.</p>
           <Link
             href="/products"
             className="inline-block bg-slate-900 text-white font-bold text-xs px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors"

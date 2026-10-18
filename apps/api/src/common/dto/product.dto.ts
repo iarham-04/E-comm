@@ -76,7 +76,7 @@ export class CreateProductDto {
   @IsString()
   metaDescription?: string;
 
-  // --- Collector persona ---
+  // --- Origin & sourcing story ---
   @IsOptional()
   @IsString()
   craftsmanshipStory?: string;

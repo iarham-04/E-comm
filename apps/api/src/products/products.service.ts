@@ -170,9 +170,12 @@ export class ProductsService {
     ]);
 
     const articles = [
-      { title: 'History of Spartan Warriors', slug: 'history-of-spartan-warriors' },
-      { title: 'The Forging of Toledo Steel', slug: 'forging-toledo-steel' },
-      { title: 'Armour Preservation & Care', slug: 'armour-preservation-care' },
+      // Mirrors apps/web/src/lib/articles.ts
+      { title: 'Mamra vs. Californian Almonds: What Really Is the Difference?', slug: 'mamra-vs-californian-almonds' },
+      { title: 'How Many Dry Fruits Should You Eat in a Day?', slug: 'how-many-dry-fruits-a-day' },
+      { title: 'Storing Nuts at Home: Keep Them Fresh for Months', slug: 'storing-nuts-at-home' },
+      { title: 'Medjool, Ajwa or Kimia? A Simple Guide to Choosing Dates', slug: 'choosing-dates-medjool-ajwa-kimia' },
+      { title: 'The Festive Dry Fruit Gifting Guide', slug: 'diwali-dry-fruit-gifting-guide' },
     ].filter((a) => a.title.toLowerCase().includes(query));
 
     return { products, collections, categories, articles };

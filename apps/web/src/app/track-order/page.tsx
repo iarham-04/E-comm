@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { API_URL } from '@/lib/api';
 
 const ORDER_STEPS = [
-  { id: 'placed', label: 'Order Placed', icon: Package, description: 'We received your order and it entered our verification queue.' },
-  { id: 'confirmed', label: 'Workshop Confirmed', icon: CheckCircle2, description: 'Our curatorial team has verified authenticity and prepared the item.' },
-  { id: 'shipped', label: 'Shipped', icon: Truck, description: 'Your piece has been handed to our specialist courier partner.' },
-  { id: 'delivered', label: 'Delivered', icon: Star, description: 'Your artifact has arrived. We hope it exceeds every expectation.' },
+  { id: 'placed', label: 'Order Placed', icon: Package, description: 'We have received your order.' },
+  { id: 'confirmed', label: 'Confirmed & Packed', icon: CheckCircle2, description: 'Your dry fruits have been hand-sorted and sealed fresh.' },
+  { id: 'shipped', label: 'Shipped', icon: Truck, description: 'Your order is on its way with our courier partner.' },
+  { id: 'delivered', label: 'Delivered', icon: Star, description: 'Your order has arrived. Enjoy!' },
 ];
 
 function getStepIndex(status: string) {
@@ -58,7 +58,7 @@ export default function TrackOrderPage() {
         ? `${data.addressSnapshot.city || ''}, ${data.addressSnapshot.state || ''} ${data.addressSnapshot.postalCode || ''}`.trim()
         : 'Confirmed Shipping Destination';
 
-      const itemNames = data.items?.map((i: any) => `${i.product?.name || 'Artifact'} (x${i.quantity})`).join(', ') || 'Ordered Items';
+      const itemNames = data.items?.map((i: any) => `${i.product?.name || 'Item'} (x${i.quantity})`).join(', ') || 'Ordered Items';
 
       setTrackedOrder({
         id: data.id,

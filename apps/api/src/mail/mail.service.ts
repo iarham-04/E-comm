@@ -74,14 +74,14 @@ export class MailService {
               <p>Total Amount: <strong>₹{{total}}</strong></p>
               <p>Payment Method: {{paymentMethod}}</p>
               <hr />
-              <p style="font-size: 12px; color: #64748b;">Dispatched in archival velvet wrapping. For support, reply to this email.</p>
+              <p style="font-size: 12px; color: #64748b;">Hand-sorted and sealed fresh. For support, reply to this email.</p>
             </div>
           `,
           updatedAt: new Date(),
         };
       }
 
-      const customerName = order.user?.name || (order.addressSnapshot as any)?.fullName || 'Valued Collector';
+      const customerName = order.user?.name || (order.addressSnapshot as any)?.fullName || 'Customer';
       const orderNumber = order.id.slice(-6).toUpperCase();
       const vars = {
         customerName,
@@ -155,20 +155,20 @@ export class MailService {
               <p>Carrier: <strong>{{carrier}}</strong></p>
               <p>Tracking Number: <strong>{{trackingNumber}}</strong></p>
               <hr />
-              <p style="font-size: 12px; color: #64748b;">Dispatched in archival wood & velvet presentation packaging.</p>
+              <p style="font-size: 12px; color: #64748b;">Packed fresh and sealed for freshness. Enjoy your dry fruits!</p>
             </div>
           `,
           updatedAt: new Date(),
         };
       }
 
-      const customerName = order.user?.name || (order.addressSnapshot as any)?.fullName || 'Valued Collector';
+      const customerName = order.user?.name || (order.addressSnapshot as any)?.fullName || 'Customer';
       const orderNumber = order.id.slice(-6).toUpperCase();
       const vars = {
         customerName,
         orderNumber,
-        carrier: order.carrier || 'Shiprocket Express',
-        trackingNumber: order.trackingNumber || 'AWB-PENDING',
+        carrier: order.carrier || 'our courier partner',
+        trackingNumber: order.trackingNumber || 'will be shared soon',
         total: Number(order.total).toLocaleString('en-IN'),
       };
 
