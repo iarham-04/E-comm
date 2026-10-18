@@ -9,7 +9,7 @@ const DEFAULTS = {
   freeShippingThreshold: 1999,
   taxPercent: 18,
   razorpayEnabled: true,
-  codEnabled: true,
+  codEnabled: false,
 };
 
 async function getSettings() {
@@ -26,7 +26,7 @@ async function getSettings() {
       DEFAULTS.codEnabled,
     ],
   );
-  return settings;
+  return { ...settings, codEnabled: false };
 }
 
 export async function GET(req: NextRequest) {
@@ -56,8 +56,7 @@ export async function PATCH(req: NextRequest) {
     !Number.isFinite(flatShippingFee) || flatShippingFee < 0 ||
     !Number.isFinite(taxPercent) || taxPercent < 0 ||
     (freeShippingThreshold !== null && (!Number.isFinite(freeShippingThreshold) || freeShippingThreshold < 0)) ||
-    typeof input?.razorpayEnabled !== 'boolean' ||
-    typeof input?.codEnabled !== 'boolean'
+    typeof input?.razorpayEnabled !== 'boolean'
   ) {
     return NextResponse.json({ message: 'Settings values must be valid non-negative numbers.' }, { status: 400 });
   }
@@ -74,7 +73,7 @@ export async function PATCH(req: NextRequest) {
          "codEnabled" = EXCLUDED."codEnabled",
          "updatedAt" = NOW()
        RETURNING *`,
-      [flatShippingFee, freeShippingThreshold, taxPercent, input.razorpayEnabled, input.codEnabled],
+      [flatShippingFee, freeShippingThreshold, taxPercent, input.razorpayEnabled, false],
     );
     return NextResponse.json(settings);
   } catch (err) {

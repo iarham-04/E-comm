@@ -120,7 +120,7 @@ export default function CustomersPage() {
                 rows={2}
                 value={notesMap[c.id] ?? ''}
                 onChange={(e) => setNotesMap({ ...notesMap, [c.id]: e.target.value })}
-                placeholder="e.g. Regular customer, orders Mamra almonds monthly. Prefers COD."
+                placeholder="e.g. Regular customer, orders Mamra almonds monthly."
                 className="w-full px-3 py-2 bg-[#fafafa] border border-neutral-200 rounded-xl text-neutral-900 text-xs focus:outline-none focus:border-amber-400"
               />
             </div>

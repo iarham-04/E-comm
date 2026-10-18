@@ -55,7 +55,7 @@ export default function RootLayout({
     url: SITE_URL,
     description: DESCRIPTION,
     currenciesAccepted: 'INR',
-    paymentAccepted: 'Cash on Delivery, UPI, Credit Card, Debit Card, Net Banking',
+    paymentAccepted: 'UPI, Credit Card, Debit Card, Net Banking',
   };
 
   return (

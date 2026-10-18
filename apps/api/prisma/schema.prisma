@@ -215,7 +215,7 @@ model Review {
 model ServiceablePincode {
   id               String   @id @default(cuid())
   pincode          String   @unique
-  codAvailable     Boolean  @default(true)
+  codAvailable     Boolean  @default(false)
   expressAvailable Boolean  @default(true)
   createdAt        DateTime @default(now())
 }
@@ -263,7 +263,7 @@ model StoreSettings {
   freeShippingThreshold Decimal? @db.Decimal(10, 2)
   taxPercent            Decimal  @default(0) @db.Decimal(5, 2)
   razorpayEnabled       Boolean  @default(true)
-  codEnabled            Boolean  @default(true)
+  codEnabled            Boolean  @default(false)
   updatedAt             DateTime @updatedAt
 }
 

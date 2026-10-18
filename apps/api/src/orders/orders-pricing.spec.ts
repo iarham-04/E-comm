@@ -1,5 +1,9 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { validateSync } from 'class-validator';
+import { CreateOrderApiDto } from '../common/dto/api-contract.dto';
+import { OrdersController } from './orders.controller';
 import { OrdersService, OrderInput } from './orders.service';
 
 describe('OrdersService - pricing & checkout integrity', () => {
@@ -17,7 +21,7 @@ describe('OrdersService - pricing & checkout integrity', () => {
 
   const baseDto = (over: Partial<OrderInput> = {}): OrderInput => ({
     guestEmail: 'buyer@example.com',
-    paymentMethod: 'COD',
+    paymentMethod: 'RAZORPAY',
     shippingAddress: {
       fullName: 'A B', street: '1 St', city: 'Pune', state: 'MH', postalCode: '411001', phone: '999',
     },
@@ -81,24 +85,35 @@ describe('OrdersService - pricing & checkout integrity', () => {
     expect(q.total).toBe(1800);
   });
 
-  it('refuses to create a paid order through the COD endpoint', async () => {
-    await expect(service.createCodOrder(baseDto({ paymentMethod: 'RAZORPAY' }))).rejects.toThrow(
-      BadRequestException,
+  it.each([null, { codEnabled: true }])('rejects COD even with legacy settings %j', async (settings) => {
+    prisma.storeSettings.findUnique.mockResolvedValue(settings);
+    await expect(service.quote(baseDto({ paymentMethod: 'COD' as any }))).rejects.toThrow(
+      'Only Razorpay online payments are supported.',
     );
     expect(prisma.order.create).not.toHaveBeenCalled();
   });
 
-  it('creates COD orders as PLACED / PENDING', async () => {
-    prisma.product.updateMany.mockResolvedValue({ count: 1 });
-    const order: any = await service.createCodOrder(baseDto());
-    expect(order.status).toBe('PLACED');
+  it('creates online orders as pending without deducting stock', async () => {
+    const dto = baseDto();
+    const quote = await service.quote(dto);
+    await service.createPendingRazorpayOrder(dto, quote, 'rzp_order');
+    const order = prisma.order.create.mock.calls[0][0].data;
     expect(order.paymentStatus).toBe('PENDING');
+    expect(order.razorpayOrderId).toBe('rzp_order');
     expect(order.total).toBe(2000);
+    expect(prisma.product.updateMany).not.toHaveBeenCalled();
   });
 
-  it('fails instead of overselling when stock is taken concurrently', async () => {
-    prisma.product.updateMany.mockResolvedValue({ count: 0 });
-    await expect(service.createCodOrder(baseDto())).rejects.toThrow(BadRequestException);
+  it('rejects direct checkout without creating an unpaid order', () => {
+    const controller = new OrdersController(service, {} as any, prisma);
+    expect(() => controller.create()).toThrow(BadRequestException);
     expect(prisma.order.create).not.toHaveBeenCalled();
   });
+
+  it('accepts Razorpay and rejects COD at the request validation boundary', () => {
+    expect(validateSync(plainToInstance(CreateOrderApiDto, baseDto()))).toHaveLength(0);
+    const errors = validateSync(plainToInstance(CreateOrderApiDto, { ...baseDto(), paymentMethod: 'COD' }));
+    expect(errors.some((error) => error.property === 'paymentMethod')).toBe(true);
+  });
+
 });

@@ -11,7 +11,6 @@ interface StoreSettingsData {
   freeShippingThreshold?: number;
   taxPercent: number;
   razorpayEnabled: boolean;
-  codEnabled: boolean;
 }
 
 interface EmailTemplateData {
@@ -28,7 +27,6 @@ export default function SettingsPage() {
     freeShippingThreshold: 1999,
     taxPercent: 18,
     razorpayEnabled: true,
-    codEnabled: true,
   });
   const [templates, setTemplates] = useState<EmailTemplateData[]>([]);
   const [activeTab, setActiveTab] = useState<'settings' | 'email'>('settings');
@@ -189,19 +187,6 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={settings.razorpayEnabled}
                 onChange={(e) => setSettings({ ...settings, razorpayEnabled: e.target.checked })}
-                className="w-5 h-5 accent-amber-500 cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-[#fafafa] rounded-xl border border-neutral-200">
-              <div>
-                <span className="font-bold text-neutral-900 block">Cash on Delivery (COD)</span>
-                <span className="text-[10px] text-neutral-400">Allow customers to pay upon delivery</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.codEnabled}
-                onChange={(e) => setSettings({ ...settings, codEnabled: e.target.checked })}
                 className="w-5 h-5 accent-amber-500 cursor-pointer"
               />
             </div>

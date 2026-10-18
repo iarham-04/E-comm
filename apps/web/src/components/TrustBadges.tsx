@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Leaf, Truck, Banknote, Lock } from 'lucide-react';
+import { Leaf, Truck, Lock } from 'lucide-react';
 
 const TRUST_ELEMENTS = [
   {
@@ -13,14 +13,9 @@ const TRUST_ELEMENTS = [
     description: 'Standard delivery in 3–5 business days across India, or choose express at checkout.',
   },
   {
-    icon: Banknote,
-    title: 'Cash on Delivery',
-    description: 'Pay when your order arrives, or online with UPI, cards and net banking.',
-  },
-  {
     icon: Lock,
-    title: 'Secure Payments',
-    description: 'Online payments are processed by Razorpay over an encrypted connection.',
+    title: 'Secure Razorpay Payments',
+    description: 'Pay in advance through Razorpay using UPI, cards or net banking. Orders are confirmed after successful payment.',
   },
 ];
 
@@ -38,7 +33,7 @@ export default function TrustBadges() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {TRUST_ELEMENTS.map(({ icon: Icon, title, description }) => (
             <div key={title} className="flex items-start space-x-4 p-5 bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-150">
               <div className="p-3 bg-slate-900 text-amber-400 rounded-xl flex-shrink-0 shadow-sm">

@@ -21,7 +21,7 @@ export default function ReturnsPage() {
         },
         {
           heading: 'Refunds',
-          body: <p>Approved refunds for online payments go back to the original payment method, usually within 5–7 business days. For Cash on Delivery orders we refund to your bank account or UPI ID.</p>,
+          body: <p>Approved refunds for online payments go back to the original payment method, usually within 5–7 business days. Refunds for existing Cash on Delivery orders go to your bank account or UPI ID.</p>,
         },
         {
           heading: 'Cancellations',

@@ -525,11 +525,11 @@ export class AdminService {
           freeShippingThreshold: 1999,
           taxPercent: 18,
           razorpayEnabled: true,
-          codEnabled: true,
+          codEnabled: false,
         },
       });
     }
-    return settings;
+    return { ...settings, codEnabled: false };
   }
 
   async updateSettings(input: any) {
@@ -539,7 +539,7 @@ export class AdminService {
       freeShippingThreshold: input?.freeShippingThreshold === '' ? null : num(input?.freeShippingThreshold),
       taxPercent: num(input?.taxPercent),
       razorpayEnabled: typeof input?.razorpayEnabled === 'boolean' ? input.razorpayEnabled : undefined,
-      codEnabled: typeof input?.codEnabled === 'boolean' ? input.codEnabled : undefined,
+      codEnabled: false,
     };
     if (Object.values(data).some((v) => typeof v === 'number' && (!Number.isFinite(v) || v < 0))) {
       throw new BadRequestException('Settings values must be non-negative numbers.');

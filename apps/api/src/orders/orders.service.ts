@@ -30,10 +30,10 @@ export class OrdersService {
 
   /** Computes authoritative prices, shipping and discount from the database. Never trusts client prices. */
   async quote(dto: OrderInput, db: Tx = this.prisma) {
-    const settings = await db.storeSettings.findUnique({ where: { id: 'singleton' } });
-    if (dto.paymentMethod === 'COD' && settings && !settings.codEnabled) {
-      throw new BadRequestException('Cash on Delivery is currently disabled.');
+    if (dto.paymentMethod !== 'RAZORPAY') {
+      throw new BadRequestException('Only Razorpay online payments are supported.');
     }
+    const settings = await db.storeSettings.findUnique({ where: { id: 'singleton' } });
     if (dto.paymentMethod === 'RAZORPAY' && settings && !settings.razorpayEnabled) {
       throw new BadRequestException('Razorpay online payments are currently disabled.');
     }
@@ -162,21 +162,6 @@ export class OrdersService {
 
   // ─── Stock & coupon bookkeeping ────────────────────────────────────────────
 
-  /** Atomically reserves stock; fails instead of overselling when two checkouts race. */
-  private async reserveStock(tx: Tx, lines: StockLine[]) {
-    for (const l of lines) {
-      const where = { stock: { gte: l.quantity } };
-      const data = { stock: { decrement: l.quantity } };
-      const product = await tx.product.updateMany({ where: { id: l.productId, ...where }, data });
-      const variant = l.variantId
-        ? await tx.productVariant.updateMany({ where: { id: l.variantId, ...where }, data })
-        : { count: 1 };
-      if (!product.count || !variant.count) {
-        throw new BadRequestException('An item in your cart just sold out. Please review your cart.');
-      }
-    }
-  }
-
   /** Unconditional decrement — used once a payment is already captured and the sale must be recorded. */
   private async deductStock(tx: Tx, lines: StockLine[]) {
     for (const l of lines) {
@@ -200,24 +185,6 @@ export class OrdersService {
   }
 
   // ─── Checkout flows ────────────────────────────────────────────────────────
-
-  /** Cash on Delivery: stock is reserved immediately, payment stays PENDING until delivery. */
-  async createCodOrder(dto: OrderInput) {
-    if (dto.paymentMethod !== 'COD') {
-      throw new BadRequestException('Online payments must go through the payment gateway.');
-    }
-    const order = await this.prisma.$transaction(async (tx) => {
-      const q = await this.quote(dto, tx);
-      await this.reserveStock(tx, q.lines);
-      await this.countCouponUse(tx, q.couponCode);
-      return tx.order.create({
-        data: this.orderData(dto, q, OrderStatus.PLACED, PaymentStatus.PENDING),
-        include: PUBLIC_ORDER_INCLUDE,
-      });
-    });
-    this.sendConfirmation(order.id);
-    return order;
-  }
 
   /**
    * Razorpay step 1: persists a PENDING order bound to the gateway order created for `q.total`.

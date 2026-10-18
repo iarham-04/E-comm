@@ -125,6 +125,26 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     setZoomPos({ x, y });
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <Loader2 className="w-7 h-7 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-32 text-center space-y-4">
+        <h1 className="font-display text-2xl font-bold text-slate-900">Product not found</h1>
+        <p className="text-sm text-slate-500">This product may have sold out or been removed.</p>
+        <Link href="/products" className="inline-block text-xs font-bold bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800">
+          Browse All Dry Fruits
+        </Link>
+      </div>
+    );
+  }
+
   // Pricing calculations
   const priceDelta = Number(selectedVariant?.priceDelta || 0);
   const basePrice = Number(product?.price || 0);
@@ -199,26 +219,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       setSubmittingReview(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-40">
-        <Loader2 className="w-7 h-7 animate-spin text-slate-400" />
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="max-w-lg mx-auto px-4 py-32 text-center space-y-4">
-        <h1 className="font-display text-2xl font-bold text-slate-900">Product not found</h1>
-        <p className="text-sm text-slate-500">This product may have sold out or been removed.</p>
-        <Link href="/products" className="inline-block text-xs font-bold bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800">
-          Browse All Dry Fruits
-        </Link>
-      </div>
-    );
-  }
 
   const currentImages = product.images?.length > 0 ? product.images : [categoryBySlug(product.category?.slug)?.image ?? FALLBACK_IMAGE];
   const hasMultipleImages = currentImages.length > 1;
