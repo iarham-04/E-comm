@@ -1,4 +1,4 @@
-import Razorpay from 'razorpay';
+import Razorpay = require('razorpay');
 import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
