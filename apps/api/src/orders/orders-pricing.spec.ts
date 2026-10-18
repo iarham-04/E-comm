@@ -23,7 +23,7 @@ describe('OrdersService - pricing & checkout integrity', () => {
     guestEmail: 'buyer@example.com',
     paymentMethod: 'RAZORPAY',
     shippingAddress: {
-      fullName: 'A B', street: '1 St', city: 'Pune', state: 'MH', postalCode: '411001', phone: '999',
+      fullName: 'A B', street: '1 St', city: 'Pune', state: 'MH', postalCode: '411001', phone: '+919876543210',
     },
     items: [{ productId: 'p1', quantity: 2, price: 1 }],
     ...over,

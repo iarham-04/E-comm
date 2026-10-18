@@ -2,7 +2,8 @@
   "name": "next-nest-ecommerce",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev:api": "npm run start:dev --prefix apps/api",
