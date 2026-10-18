@@ -22,6 +22,7 @@ export class OrdersController {
     return clerkId ? this.prisma.user.findUnique({ where: { clerkId } }) : null;
   }
 
+  /** Attaches the resolved buyer (logged-in user or guest email) to the order input; requires a contact email for guests. */
   private async withBuyer(dto: CreateOrderApiDto, req: any): Promise<OrderInput> {
     const user = await this.currentUser(req);
     if (!user && !dto.guestEmail) {
@@ -37,6 +38,7 @@ export class OrdersController {
   }
 
   // ─── Razorpay step 1: price the cart server-side and open a gateway order ──
+  /** Prices the cart server-side, opens a Razorpay gateway order, and persists a matching PENDING order (prepaid-only checkout). */
   @Post('razorpay/create-order')
   async createRazorpayOrder(@Body() dto: CreateOrderApiDto, @Req() req: any) {
     const input = await this.withBuyer({ ...dto, paymentMethod: 'RAZORPAY' }, req);
@@ -47,6 +49,7 @@ export class OrdersController {
   }
 
   // ─── Razorpay step 2: verify the checkout signature and confirm ────────────
+  /** Verifies the Razorpay payment signature and confirms the order, rejecting the payment if verification fails. */
   @Post('razorpay/verify')
   async verifyAndConfirmOrder(@Body() body: RazorpayVerifyApiDto) {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
@@ -58,6 +61,7 @@ export class OrdersController {
     return { id: order.id, status: order.status, paymentStatus: order.paymentStatus };
   }
 
+  /** Lists all orders placed by the currently authenticated user. */
   @Get('my-orders')
   @UseGuards(AuthGuard)
   findMyOrders(@Req() req: any) {

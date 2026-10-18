@@ -139,6 +139,7 @@ export class AdminController {
   @RequireRole(UserRole.SUPPORT)
   getAllOrders() { return this.adminService.getAllOrders(); }
 
+  /** Updates an order's fulfillment status; refunds stock when a COD or paid order is cancelled. */
   @Patch('orders/:id/status')
   @RequireRole(UserRole.SUPPORT)
   updateOrderStatus(@Param('id') id: string, @Body('status', new ParseEnumPipe(OrderStatus)) status: OrderStatus) {
@@ -157,6 +158,7 @@ export class AdminController {
     return this.adminService.getOrderInvoice(id);
   }
 
+  /** Refunds a paid order: Razorpay payments are refunded at the gateway, Stripe/COD are rejected. */
   @Patch('orders/:id/refund')
   @RequireRole(UserRole.MANAGER)
   refundOrder(@Param('id') id: string, @Body('refundAmount', ParseFloatPipe) refundAmount: number, @Body('refundReason') refundReason: string) {
@@ -198,10 +200,12 @@ export class AdminController {
   deleteBanner(@Param('id') id: string) { return this.adminService.deleteBanner(id); }
 
   // ─── Settings & Email Templates (Owner-only) ──────────────────────────────
+  /** Returns store settings; COD is always reported disabled since only prepaid Razorpay checkout is supported. */
   @Get('settings')
   @RequireRole(UserRole.OWNER)
   getSettings() { return this.adminService.getSettings(); }
 
+  /** Updates store settings (shipping, tax, Razorpay); COD cannot be re-enabled. */
   @Patch('settings')
   @RequireRole(UserRole.OWNER)
   updateSettings(@Body() dto: any) { return this.adminService.updateSettings(dto); }

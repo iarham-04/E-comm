@@ -19,6 +19,7 @@ const TRUST_ELEMENTS = [
   },
 ];
 
+/** Homepage trust-signal section; highlights prepaid Razorpay checkout in place of the removed COD card. */
 export default function TrustBadges() {
   return (
     <section className="py-16 bg-slate-50 border-y border-slate-200/80">

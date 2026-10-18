@@ -356,6 +356,7 @@ export class AdminService {
     });
   }
 
+  /** Transitions an order to a new status; restores stock on cancellation if it was deducted for COD or a paid order. */
   async updateOrderStatus(id: string, status: OrderStatus) {
     const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true } });
     if (!order) throw new NotFoundException(`Order #${id} not found.`);
@@ -387,6 +388,7 @@ export class AdminService {
     return updated;
   }
 
+  /** Refunds a paid order: Razorpay payments are refunded via the gateway first; Stripe and COD refunds are rejected. */
   async refundOrder(id: string, refundAmount: number, refundReason: string) {
     const order = await this.prisma.order.findUnique({ where: { id } });
     if (!order) throw new NotFoundException(`Order #${id} not found.`);
@@ -515,6 +517,7 @@ export class AdminService {
 
   // ─── Store Settings & Email Templates ─────────────────────────────────────
 
+  /** Fetches (or lazily creates) store settings; COD is always forced off since checkout is prepaid-Razorpay only. */
   async getSettings() {
     let settings = await this.prisma.storeSettings.findUnique({ where: { id: 'singleton' } });
     if (!settings) {
@@ -532,6 +535,7 @@ export class AdminService {
     return { ...settings, codEnabled: false };
   }
 
+  /** Persists store settings; codEnabled is hard-coded false so COD can never be turned back on. */
   async updateSettings(input: any) {
     const num = (v: any) => (v === '' || v == null ? undefined : Number(v));
     const data = {

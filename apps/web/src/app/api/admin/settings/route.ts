@@ -12,6 +12,7 @@ const DEFAULTS = {
   codEnabled: false,
 };
 
+/** Reads (creating defaults on first use) the singleton store settings row. COD is always forced off. */
 async function getSettings() {
   const [settings] = await query(
     `INSERT INTO "StoreSettings" (id, "flatShippingFee", "freeShippingThreshold", "taxPercent", "razorpayEnabled", "codEnabled", "updatedAt")
@@ -29,6 +30,7 @@ async function getSettings() {
   return { ...settings, codEnabled: false };
 }
 
+/** Owner-only: returns the current store settings, including the Razorpay toggle. */
 export async function GET(req: NextRequest) {
   const who = await requireAdmin(req, 'OWNER');
   if (who instanceof NextResponse) return who;
@@ -40,6 +42,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/** Owner-only: validates and persists shipping/tax/Razorpay settings. COD remains disabled. */
 export async function PATCH(req: NextRequest) {
   const who = await requireAdmin(req, 'OWNER');
   if (who instanceof NextResponse) return who;
