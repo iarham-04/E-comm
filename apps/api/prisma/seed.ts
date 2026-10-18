@@ -6,12 +6,13 @@ async function main() {
   console.log('🌱 Seeding database taxonomy & categories...');
 
   const categories = [
-    { name: 'Medieval', slug: 'medieval' },
-    { name: 'Viking', slug: 'viking' },
-    { name: 'Roman', slug: 'roman' },
-    { name: 'Home Décor', slug: 'home-decor' },
-    { name: 'Collectibles', slug: 'collectibles' },
-    { name: 'Furniture', slug: 'furniture' },
+    { name: 'Almonds', slug: 'almonds' },
+    { name: 'Cashews', slug: 'cashews' },
+    { name: 'Pistachios', slug: 'pistachios' },
+    { name: 'Walnuts', slug: 'walnuts' },
+    { name: 'Raisins', slug: 'raisins' },
+    { name: 'Dates', slug: 'dates' },
+    { name: 'Mixed Dry Fruits', slug: 'mixed-dry-fruits' },
   ];
 
   for (const cat of categories) {

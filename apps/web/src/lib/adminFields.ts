@@ -6,8 +6,7 @@ type Kind = 'text' | 'number' | 'int' | 'bool' | 'images' | 'status';
 const PRODUCT_FIELDS: Record<string, Kind> = {
   name: 'text', slug: 'text', description: 'text', price: 'number', categoryId: 'text',
   images: 'images', stock: 'int', isActive: 'bool', status: 'status',
-  metaTitle: 'text', metaDescription: 'text', craftsmanshipStory: 'text', material: 'text',
-  heightCm: 'number', widthCm: 'number', depthCm: 'number', weightKg: 'number',
+  metaTitle: 'text', metaDescription: 'text', craftsmanshipStory: 'text',
   isLimitedEdition: 'bool', editionNumber: 'int', editionTotal: 'int', isGiftEligible: 'bool',
 };
 

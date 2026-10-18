@@ -10,11 +10,6 @@ import {
 import { API_URL } from '@/lib/api';
 import { adminFetch } from '@/lib/adminApi';
 
-const COMMON_MATERIALS = [
-  'Brass', 'Bronze', 'Iron', 'Steel', 'Teak Wood', 'Oak', 'Ceramic',
-  'Terracotta', 'Stone', 'Leather', 'Velvet', 'Glass', 'Silver', 'Gold', 'Copper'
-];
-
 interface ProductFormProps {
   mode: 'create' | 'edit';
   productId?: string;
@@ -34,11 +29,6 @@ interface ProductFormData {
   metaTitle: string;
   metaDescription: string;
   craftsmanshipStory: string;
-  material: string;
-  heightCm: string;
-  widthCm: string;
-  depthCm: string;
-  weightKg: string;
   isLimitedEdition: boolean;
   editionNumber: string;
   editionTotal: string;
@@ -49,8 +39,7 @@ const EMPTY_FORM: ProductFormData = {
   name: '', slug: '', description: '', price: '', categoryId: '',
   stock: '10', images: [], isActive: true, status: 'PUBLISHED',
   metaTitle: '', metaDescription: '',
-  craftsmanshipStory: '', material: '',
-  heightCm: '', widthCm: '', depthCm: '', weightKg: '',
+  craftsmanshipStory: '',
   isLimitedEdition: false, editionNumber: '', editionTotal: '',
   isGiftEligible: true,
 };
@@ -60,6 +49,8 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
   const [form, setForm] = useState<ProductFormData>({ ...EMPTY_FORM, ...initialData });
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [addingCategory, setAddingCategory] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
@@ -79,18 +70,18 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
         } else {
           // Fallback categories
           setCategories([
-            { id: 'cat-medieval', name: 'Medieval Armor & Weapons' },
-            { id: 'cat-viking', name: 'Viking Artifacts' },
-            { id: 'cat-roman', name: 'Roman Collectibles' },
-            { id: 'cat-decor', name: 'Artisanal Home Décor' },
+            { id: 'cat-almonds', name: 'Almonds' },
+            { id: 'cat-cashews', name: 'Cashews' },
+            { id: 'cat-pistachios', name: 'Pistachios' },
+            { id: 'cat-mixed-dry-fruits', name: 'Mixed Dry Fruits' },
           ]);
         }
       })
       .catch(() => {
         setCategories([
-          { id: 'cat-medieval', name: 'Medieval Armor & Weapons' },
-          { id: 'cat-viking', name: 'Viking Artifacts' },
-          { id: 'cat-roman', name: 'Roman Collectibles' },
+          { id: 'cat-almonds', name: 'Almonds' },
+          { id: 'cat-cashews', name: 'Cashews' },
+          { id: 'cat-pistachios', name: 'Pistachios' },
         ]);
       })
       .finally(() => setLoadingCategories(false));
@@ -101,6 +92,33 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
 
   const autoSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const addCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    setAddingCategory(true);
+    setError(null);
+    try {
+      const res = await adminFetch(`${API_URL}/admin/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, slug: autoSlug(name) }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(Array.isArray(body?.message) ? body.message.join(', ') : body?.message || 'Unable to add category.');
+      }
+
+      setCategories((previous) => [...previous, body].sort((a, b) => a.name.localeCompare(b.name)));
+      set('categoryId', body.id);
+      setNewCategoryName('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setAddingCategory(false);
+    }
+  };
 
   // Handle Image Upload to S3
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,11 +224,6 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
       };
 
       if (form.craftsmanshipStory) payload.craftsmanshipStory = form.craftsmanshipStory;
-      if (form.material) payload.material = form.material;
-      if (form.heightCm) payload.heightCm = Number(form.heightCm);
-      if (form.widthCm)  payload.widthCm  = Number(form.widthCm);
-      if (form.depthCm)  payload.depthCm  = Number(form.depthCm);
-      if (form.weightKg) payload.weightKg = Number(form.weightKg);
       if (form.isLimitedEdition) {
         payload.editionNumber = Number(form.editionNumber);
         payload.editionTotal  = Number(form.editionTotal);
@@ -346,18 +359,44 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
               {loadingCategories ? (
                 <div className="text-xs text-neutral-500 py-2.5">Loading categories...</div>
               ) : (
-                <select
-                  required
-                  value={form.categoryId}
-                  onChange={(e) => set('categoryId', e.target.value)}
-                  className={inputCls}
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    required
+                    value={form.categoryId}
+                    onChange={(e) => set('categoryId', e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="" disabled>Select a category</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addCategory();
+                        }
+                      }}
+                      className={inputCls}
+                      placeholder="Type a new category, e.g. Almonds"
+                    />
+                    <button
+                      type="button"
+                      onClick={addCategory}
+                      disabled={addingCategory || !newCategoryName.trim()}
+                      className="shrink-0 rounded-xl bg-neutral-900 px-3 text-xs font-bold text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {addingCategory ? 'Adding...' : 'Add'}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[10px] text-neutral-500">Type a category name to add it and select it for this product.</p>
+                </>
               )}
             </div>
             <div>
@@ -475,66 +514,6 @@ export default function ProductForm({ mode, productId, initialData }: ProductFor
             className={inputCls}
             placeholder="Hand-forged using 1095 high-carbon steel folded 512 times..."
           />
-        </section>
-
-        {/* ── Dimensions & Materials ─────────────────────────────────── */}
-        <section className="bg-[#fafafa] border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-4">
-          <div className="border-b border-neutral-200 pb-3">
-            <h2 className="text-sm font-bold text-white">Dimensions &amp; Materials Spec Sheet</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Primary Material</label>
-              <input
-                list="material-options"
-                value={form.material}
-                onChange={(e) => set('material', e.target.value)}
-                className={inputCls}
-                placeholder="e.g. Hand-Hammered Brass"
-              />
-              <datalist id="material-options">
-                {COMMON_MATERIALS.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
-            </div>
-            <div>
-              <label className={labelCls}>Weight (kg)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.weightKg}
-                onChange={(e) => set('weightKg', e.target.value)}
-                className={inputCls}
-                placeholder="2.4"
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Height (cm)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.heightCm}
-                onChange={(e) => set('heightCm', e.target.value)}
-                className={inputCls}
-                placeholder="45"
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Width (cm)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.widthCm}
-                onChange={(e) => set('widthCm', e.target.value)}
-                className={inputCls}
-                placeholder="30"
-              />
-            </div>
-          </div>
         </section>
 
         {/* ── Limited Edition & Gifting ───────────────────────────────── */}
