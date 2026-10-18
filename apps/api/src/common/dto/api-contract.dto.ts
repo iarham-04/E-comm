@@ -64,8 +64,8 @@ export class CreateOrderApiDto {
   @ValidateNested() @Type(() => AddressDto)
   shippingAddress: AddressDto;
 
-  @IsIn(['COD', 'RAZORPAY'])
-  paymentMethod: 'COD' | 'RAZORPAY';
+  @IsIn(['RAZORPAY'])
+  paymentMethod: 'RAZORPAY';
 
   @IsOptional() @IsIn(['STANDARD', 'EXPRESS'])
   deliverySpeed?: 'STANDARD' | 'EXPRESS';

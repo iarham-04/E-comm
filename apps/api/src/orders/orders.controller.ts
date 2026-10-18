@@ -30,10 +30,10 @@ export class OrdersController {
     return { ...dto, userId: user?.id };
   }
 
-  // ─── Cash on Delivery ──────────────────────────────────────────────────────
+  /** Reject legacy direct checkout requests; all new orders use Razorpay. */
   @Post()
-  async create(@Body() dto: CreateOrderApiDto, @Req() req: any) {
-    return this.ordersService.createCodOrder(await this.withBuyer(dto, req));
+  create() {
+    throw new BadRequestException('Please pay online using Razorpay to place your order.');
   }
 
   // ─── Razorpay step 1: price the cart server-side and open a gateway order ──

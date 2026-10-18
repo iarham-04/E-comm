@@ -112,9 +112,8 @@ export default function TermsPage() {
               6. Payments &amp; Security
             </h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>We accept payments via <strong>Razorpay</strong> (all major Credit &amp; Debit Cards, UPI, Net Banking, and digital wallets), alongside <strong>Cash on Delivery (COD)</strong> for serviceable domestic locations.</li>
+              <li>We accept payments via <strong>Razorpay</strong> (all major Credit &amp; Debit Cards, UPI, Net Banking, and digital wallets).</li>
               <li>Online transactions are handled through 256-bit encrypted, PCI-DSS compliant third-party payment gateways. We do not store sensitive card data on our internal servers.</li>
-              <li>For Cash on Delivery orders, full payment is due to the delivery courier agent upon physical handover of the parcel.</li>
             </ul>
           </section>
 
@@ -138,7 +137,7 @@ export default function TermsPage() {
             <ul className="list-disc pl-5 space-y-2">
               <li><strong>Cancellation:</strong> Orders may be cancelled free of charge prior to warehouse dispatch and courier pickup. Once an order is in transit, it cannot be recalled.</li>
               <li><strong>Returns:</strong> As dry fruits are food products, opened packs cannot be returned for hygiene reasons. Custom gift hampers are final sale unless damaged in transit.</li>
-              <li><strong>Refunds:</strong> Approved refunds are credited to the original payment source within <strong>5 to 7 business days</strong> following our warehouse quality inspection. COD orders are refunded via verified UPI or direct bank transfer (NEFT).</li>
+              <li><strong>Refunds:</strong> Approved refunds for online payments are credited to the original payment source within <strong>5 to 7 business days</strong> following our warehouse quality inspection. Refunds for existing Cash on Delivery orders are paid via verified UPI or direct bank transfer (NEFT).</li>
               <li><strong>Damaged, Wrong or Stale Items:</strong> If an item arrives damaged, incorrect or not fresh, notify our team within <strong>48 hours of delivery</strong> with photographs for a free replacement or full refund.</li>
             </ul>
           </section>

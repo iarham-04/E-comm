@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
-import { Lock, CreditCard, Banknote, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { Lock, CreditCard, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import { loadRazorpayScript, openRazorpayCheckout } from '@/lib/razorpay';
 import { authFetch, errorMessage } from '@/lib/adminApi';
@@ -30,7 +30,6 @@ export default function CheckoutPage() {
     phone: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'RAZORPAY'>('RAZORPAY');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +37,7 @@ export default function CheckoutPage() {
     guestEmail: guestEmail.trim(),
     guestPhone: guestPhone.trim() || shippingAddress.phone.trim(),
     shippingAddress,
-    paymentMethod,
+    paymentMethod: 'RAZORPAY',
     items: items.map(({ productId, variantId, quantity }) => ({ productId, variantId, quantity })),
   });
 
@@ -58,13 +57,6 @@ export default function CheckoutPage() {
   // NOTE: Full multi-currency payment settlement (USD/EUR/GBP) is a planned future enhancement
   // requiring live FX gateway configurations and multi-currency merchant settlement accounts.
   // Currently, all orders are strictly billed, captured, and settled in Indian Rupees (INR ₹) to prevent customer price mismatch.
-
-  // ─── COD Flow ──────────────────────────────────────────────────────────────
-  const handleCOD = async () => {
-    const res = await postJson('/orders', orderPayload());
-    if (!res.ok) throw new Error(await errorMessage(res, 'Failed to place order. Please try again.'));
-    goToConfirmation((await res.json()).id);
-  };
 
   // ─── Razorpay Flow ─────────────────────────────────────────────────────────
   const handleRazorpay = async () => {
@@ -119,11 +111,7 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      if (paymentMethod === 'COD') {
-        await handleCOD();
-      } else {
-        await handleRazorpay();
-      }
+      await handleRazorpay();
     } catch (err: any) {
       // User dismissed Razorpay popup — don't show an error
       if (err?.message?.includes('cancelled by user')) {
@@ -272,64 +260,22 @@ export default function CheckoutPage() {
               <h2 className="text-sm font-bold text-neutral-900">Payment Method</h2>
               <span className="text-[10px] text-neutral-400 font-semibold ml-auto">Step 3 of 3</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              {/* Razorpay — default & recommended */}
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('RAZORPAY')}
-                className={`p-4 rounded-xl border text-left flex items-start space-x-3 transition-all ${
-                  paymentMethod === 'RAZORPAY'
-                    ? 'border-neutral-900 bg-neutral-900 text-white shadow-md'
-                    : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
-                }`}
-              >
-                <CreditCard className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="font-bold text-xs block">
-                    Razorpay · UPI / Cards / Netbanking
-                  </span>
-                  <span className="text-[11px] opacity-75 mt-0.5 block">
-                    Pay securely via India&apos;s #1 payment gateway
-                  </span>
-                  {paymentMethod === 'RAZORPAY' && (
-                    <span className="inline-block mt-1.5 text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">
-                      ✓ Recommended
-                    </span>
-                  )}
-                </div>
-              </button>
-
-              {/* COD */}
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('COD')}
-                className={`p-4 rounded-xl border text-left flex items-start space-x-3 transition-all ${
-                  paymentMethod === 'COD'
-                    ? 'border-neutral-900 bg-neutral-900 text-white shadow-md'
-                    : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
-                }`}
-              >
-                <Banknote className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="font-bold text-xs block">Cash on Delivery (COD)</span>
-                  <span className="text-[11px] opacity-75 mt-0.5 block">
-                    Pay cash when the parcel arrives
-                  </span>
-                </div>
-              </button>
+            <div className="p-4 rounded-xl border border-neutral-900 bg-neutral-900 text-white flex items-start space-x-3">
+              <CreditCard className="w-5 h-5 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-bold text-xs block">Razorpay · UPI / Cards / Netbanking</span>
+                <span className="text-[11px] opacity-75 mt-0.5 block">Pay securely online with Razorpay</span>
+              </div>
             </div>
 
             {/* Razorpay accepted badges */}
-            {paymentMethod === 'RAZORPAY' && (
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                {['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallets', 'EMI'].map((m) => (
-                  <span key={m} className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-full">
-                    {m}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallets', 'EMI'].map((m) => (
+                <span key={m} className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-full">
+                  {m}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -374,14 +320,12 @@ export default function CheckoutPage() {
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>
-                  {paymentMethod === 'RAZORPAY' ? 'Opening Payment Gateway...' : 'Placing Order...'}
+                  Opening Payment Gateway...
                 </span>
               </>
             ) : (
               <span>
-                {paymentMethod === 'RAZORPAY'
-                  ? `Pay ₹${total.toLocaleString('en-IN')} via Razorpay`
-                  : `Place Order · ₹${total.toLocaleString('en-IN')} COD`}
+                {`Pay ₹${total.toLocaleString('en-IN')} via Razorpay`}
               </span>
             )}
           </button>
@@ -389,9 +333,7 @@ export default function CheckoutPage() {
           <div className="pt-1 flex items-center justify-center space-x-1.5 text-[11px] text-neutral-400">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>
-              {paymentMethod === 'RAZORPAY'
-                ? 'Payments secured by Razorpay · PCI DSS compliant'
-                : 'Pay safely on delivery — no upfront risk'}
+              Payments secured by Razorpay · PCI DSS compliant
             </span>
           </div>
         </div>
