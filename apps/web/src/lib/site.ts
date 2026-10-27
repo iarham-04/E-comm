@@ -2,6 +2,7 @@
 export const SITE = {
   name: 'Corazonetouch',
   supportEmail: 'support@corazontouch.com',
+  courier: 'DHL',
   freeShippingThreshold: 1999,
   standardShippingFee: 99,
   expressShippingFee: 250,

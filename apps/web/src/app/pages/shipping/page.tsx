@@ -7,7 +7,7 @@ export default function ShippingPage() {
   return (
     <InfoPage
       title="Shipping & Delivery"
-      intro="We deliver across India. Every order is packed in sealed, food-grade packaging to keep your dry fruits fresh in transit."
+      intro={`We deliver across India with ${SITE.courier}. Every order is packed in sealed, food-grade packaging to keep your dry fruits fresh in transit.`}
       sections={[
         {
           heading: 'Delivery options',

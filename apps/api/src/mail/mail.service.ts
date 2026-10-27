@@ -167,7 +167,7 @@ export class MailService {
       const vars = {
         customerName,
         orderNumber,
-        carrier: order.carrier || 'our courier partner',
+        carrier: order.carrier || 'DHL',
         trackingNumber: order.trackingNumber || 'will be shared soon',
         total: Number(order.total).toLocaleString('en-IN'),
       };
