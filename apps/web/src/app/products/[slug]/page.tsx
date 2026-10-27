@@ -380,7 +380,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 <span className="text-xs text-slate-400 font-medium">Includes variant customization</span>
               )}
             </div>
-            <p className="text-[11px] text-slate-500">Free insured white-glove courier shipping · Inclusive of all taxes</p>
+            <p className="text-[11px] text-slate-500">Free shipping via DHL on orders over ₹1,999 · Inclusive of all taxes</p>
           </div>
 
           {/* 5. Variant Selectors (If product has variants) */}

@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Search, CheckCircle2, MapPin, Package, Truck, Star, Phone, AlertCircle } from 'lucide-react';
+import { SITE } from '@/lib/site';
 import Link from 'next/link';
 import { API_URL } from '@/lib/api';
 
 const ORDER_STEPS = [
   { id: 'placed', label: 'Order Placed', icon: Package, description: 'We have received your order.' },
   { id: 'confirmed', label: 'Confirmed & Packed', icon: CheckCircle2, description: 'Your dry fruits have been hand-sorted and sealed fresh.' },
-  { id: 'shipped', label: 'Shipped', icon: Truck, description: 'Your order is on its way with our courier partner.' },
+  { id: 'shipped', label: 'Shipped', icon: Truck, description: `Your order is on its way with ${SITE.courier}.` },
   { id: 'delivered', label: 'Delivered', icon: Star, description: 'Your order has arrived. Enjoy!' },
 ];
 
@@ -65,7 +66,7 @@ export default function TrackOrderPage() {
         status: data.status,
         estimatedDelivery: data.estimatedDelivery || 'In transit — 3 to 5 business days',
         item: itemNames,
-        courier: data.carrier || data.courierName || 'Delhivery Express',
+        courier: data.carrier || data.courierName || SITE.courier,
         trackingNumber: data.trackingNumber || 'Tracking ID will be issued upon dispatch',
         shippedTo: addr,
       });

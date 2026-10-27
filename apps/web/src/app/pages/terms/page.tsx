@@ -124,7 +124,7 @@ export default function TermsPage() {
             </h2>
             <ul className="list-disc pl-5 space-y-2">
               <li>Estimated delivery timelines provided at checkout (Standard or Express Courier) represent operational estimates and are not rigid guarantees.</li>
-              <li>We partner with top-tier courier networks (including Shiprocket) to ensure safe handling; however, we are not liable for transit delays caused by extreme weather, regional checkpoints, or unforeseen carrier disruptions.</li>
+              <li>We partner with top-tier courier networks (including DHL) to ensure safe handling; however, we are not liable for transit delays caused by extreme weather, regional checkpoints, or unforeseen carrier disruptions.</li>
               <li>Title and risk of loss transfer to you upon verified delivery to the shipping address specified in your order.</li>
             </ul>
           </section>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, Download, Package, CheckCircle2, Truck, Star, XCircle, RefreshCw, Printer, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import { adminFetch } from '@/lib/adminApi';
+import { SITE } from '@/lib/site';
 
 interface OrderItemData {
   id: string;
@@ -52,7 +53,7 @@ export default function AdminOrdersPage() {
 
   // Tracking Modal State
   const [trackingModalOrder, setTrackingModalOrder] = useState<OrderItemData | null>(null);
-  const [carrier, setCarrier] = useState('Shiprocket / Bluedart');
+  const [carrier, setCarrier] = useState(SITE.courier);
   const [trackingNumber, setTrackingNumber] = useState('');
   const [savingTracking, setSavingTracking] = useState(false);
 
